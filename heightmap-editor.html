@@ -1,0 +1,1394 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heightmap Editor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        html,
+        body {
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background: #1e1e2e;
+            color: #cdd6f4
+        }
+
+        #app {
+            display: flex;
+            flex-direction: column;
+            height: 100%
+        }
+
+        /* ── Top bar ── */
+        #topbar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: #181825;
+            border-bottom: 1px solid #313244;
+            flex-shrink: 0;
+            flex-wrap: wrap
+        }
+
+        #topbar button,
+        #topbar select,
+        #topbar label {
+            font-size: 13px
+        }
+
+        #topbar button {
+            padding: 4px 10px;
+            background: #45475a;
+            border: none;
+            color: #cdd6f4;
+            border-radius: 4px;
+            cursor: pointer
+        }
+
+        #topbar button:hover {
+            background: #585b70
+        }
+
+        #topbar label {
+            margin-left: 6px
+        }
+
+        #topbar input[type=number] {
+            width: 65px;
+            background: #313244;
+            border: 1px solid #45475a;
+            color: #cdd6f4;
+            border-radius: 3px;
+            padding: 2px 4px
+        }
+
+        .sep {
+            width: 1px;
+            height: 22px;
+            background: #45475a;
+            margin: 0 4px
+        }
+
+        /* ── Main layout ── */
+        #main {
+            display: flex;
+            flex: 1;
+            overflow: hidden
+        }
+
+        /* ── Left panel ── */
+        #left {
+            width: 220px;
+            background: #181825;
+            border-right: 1px solid #313244;
+            padding: 10px;
+            overflow-y: auto;
+            flex-shrink: 0
+        }
+
+        #left h3 {
+            font-size: 13px;
+            color: #89b4fa;
+            margin: 10px 0 6px;
+            text-transform: uppercase;
+            letter-spacing: 1px
+        }
+
+        #left h3:first-child {
+            margin-top: 0
+        }
+
+        .tool-btn {
+            display: block;
+            width: 100%;
+            padding: 6px 8px;
+            margin-bottom: 4px;
+            background: #313244;
+            border: none;
+            color: #cdd6f4;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: left;
+            font-size: 13px
+        }
+
+        .tool-btn:hover {
+            background: #45475a
+        }
+
+        .tool-btn.active {
+            background: #89b4fa;
+            color: #1e1e2e
+        }
+
+        .slider-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 6px
+        }
+
+        .slider-row label {
+            font-size: 12px;
+            flex-shrink: 0;
+            width: 65px
+        }
+
+        .slider-row input[type=range] {
+            flex: 1;
+            margin: 0 6px
+        }
+
+        .slider-row .val {
+            font-size: 11px;
+            width: 38px;
+            text-align: right;
+            color: #a6adc8
+        }
+
+        select.full {
+            width: 100%;
+            padding: 4px;
+            background: #313244;
+            border: 1px solid #45475a;
+            color: #cdd6f4;
+            border-radius: 3px;
+            margin-bottom: 6px
+        }
+
+        /* ── Center canvas ── */
+        #center {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background: #11111b
+        }
+
+        #canvas2d {
+            position: absolute;
+            top: 0;
+            left: 0;
+            image-rendering: pixelated;
+            cursor: crosshair
+        }
+
+        #brushCursor {
+            position: absolute;
+            pointer-events: none;
+            border: 2px solid rgba(255, 255, 100, 0.7);
+            border-radius: 50%;
+            transform: translate(-50%, -50%)
+        }
+
+        /* ── Right panel (3D) ── */
+        #right {
+            width: 360px;
+            background: #181825;
+            border-left: 1px solid #313244;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0
+        }
+
+        #right h3 {
+            font-size: 13px;
+            color: #89b4fa;
+            padding: 8px 10px 4px;
+            text-transform: uppercase;
+            letter-spacing: 1px
+        }
+
+        #canvas3d {
+            flex: 1;
+            display: block
+        }
+
+        /* ── Status bar ── */
+        #statusbar {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 4px 12px;
+            background: #181825;
+            border-top: 1px solid #313244;
+            font-size: 12px;
+            color: #a6adc8;
+            flex-shrink: 0
+        }
+
+        /* ── Generate modal ── */
+        #modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 100;
+            justify-content: center;
+            align-items: center
+        }
+
+        #modal-overlay.show {
+            display: flex
+        }
+
+        #modal {
+            background: #1e1e2e;
+            border: 1px solid #45475a;
+            border-radius: 8px;
+            padding: 20px;
+            min-width: 320px
+        }
+
+        #modal h2 {
+            font-size: 16px;
+            color: #89b4fa;
+            margin-bottom: 12px
+        }
+
+        #modal .row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            gap: 8px
+        }
+
+        #modal .row label {
+            width: 100px;
+            font-size: 13px
+        }
+
+        #modal .row input {
+            flex: 1;
+            background: #313244;
+            border: 1px solid #45475a;
+            color: #cdd6f4;
+            border-radius: 3px;
+            padding: 4px 6px
+        }
+
+        #modal .actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 14px;
+            justify-content: flex-end
+        }
+
+        #modal .actions button {
+            padding: 6px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px
+        }
+
+        #modal .actions .primary {
+            background: #89b4fa;
+            color: #1e1e2e
+        }
+
+        #modal .actions .secondary {
+            background: #45475a;
+            color: #cdd6f4
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+
+        <!-- Top bar -->
+        <div id="topbar">
+            <button id="btnNew">New</button>
+            <button id="btnGenerate">Generate</button>
+            <div class="sep"></div>
+            <button id="btnLoad">Load</button>
+            <button id="btnSave">Save</button>
+            <button id="btnExportPNG">Export PNG</button>
+            <div class="sep"></div>
+            <label>Res: <span id="infoRes">1024</span></label>
+            <label>Size: <span id="infoSize">2000</span>m</label>
+            <div class="sep"></div>
+            <button id="btnUndo" title="Ctrl+Z">Undo</button>
+            <button id="btnRedo" title="Ctrl+Y">Redo</button>
+        </div>
+
+        <!-- Main area -->
+        <div id="main">
+            <!-- Left panel: tools -->
+            <div id="left">
+                <h3>Brushes</h3>
+                <button class="tool-btn active" data-tool="raise">Raise</button>
+                <button class="tool-btn" data-tool="lower">Lower</button>
+                <button class="tool-btn" data-tool="smooth">Smooth</button>
+                <button class="tool-btn" data-tool="flatten">Flatten</button>
+                <button class="tool-btn" data-tool="noise">Noise</button>
+
+                <h3>Brush Settings</h3>
+                <div class="slider-row">
+                    <label>Radius</label>
+                    <input type="range" id="brushRadius" min="1" max="200" value="30">
+                    <span class="val" id="brushRadiusVal">30m</span>
+                </div>
+                <div class="slider-row">
+                    <label>Strength</label>
+                    <input type="range" id="brushStrength" min="1" max="100" value="30">
+                    <span class="val" id="brushStrengthVal">0.30</span>
+                </div>
+                <div class="slider-row">
+                    <label>Falloff</label>
+                    <select class="full" id="brushFalloff">
+                        <option value="smooth">Smooth</option>
+                        <option value="linear">Linear</option>
+                        <option value="hard">Hard</option>
+                    </select>
+                </div>
+
+                <h3>Display</h3>
+                <div class="slider-row">
+                    <label>Hillshade</label>
+                    <input type="range" id="hillshadeStr" min="0" max="100" value="50">
+                    <span class="val" id="hillshadeVal">0.50</span>
+                </div>
+                <label style="font-size:12px;display:flex;align-items:center;gap:4px;margin-bottom:6px">
+                    <input type="checkbox" id="showGrid"> Show Grid
+                </label>
+            </div>
+
+            <!-- Center: 2D canvas -->
+            <div id="center">
+                <canvas id="canvas2d"></canvas>
+                <div id="brushCursor"></div>
+            </div>
+
+            <!-- Right: 3D preview -->
+            <div id="right">
+                <h3>3D Preview</h3>
+                <canvas id="canvas3d"></canvas>
+            </div>
+        </div>
+
+        <!-- Status bar -->
+        <div id="statusbar">
+            <span id="statPos">X: 0 Z: 0</span>
+            <span id="statHeight">H: 0.00</span>
+            <span id="statBrush">Raise r=30 s=0.30</span>
+        </div>
+
+    </div><!-- /app -->
+
+    <!-- Generate modal -->
+    <div id="modal-overlay">
+        <div id="modal">
+            <h2 id="modalTitle">Generate Heightmap</h2>
+            <div class="row"><label>Resolution</label><input type="number" id="genRes" value="1024" min="64" max="4096"
+                    step="1"></div>
+            <div class="row"><label>World Size (m)</label><input type="number" id="genSize" value="2000" min="100"
+                    max="20000" step="100"></div>
+            <div class="row"><label>Amplitude</label><input type="number" id="genAmp" value="15" min="0" max="500"
+                    step="1"></div>
+            <div class="row"><label>Frequency</label><input type="number" id="genFreq" value="0.02" min="0.001" max="1"
+                    step="0.001"></div>
+            <div class="row"><label>Octaves</label><input type="number" id="genOct" value="4" min="1" max="8" step="1">
+            </div>
+            <div class="row"><label>Origin X</label><input type="number" id="genOX" value="0" step="100"></div>
+            <div class="row"><label>Origin Z</label><input type="number" id="genOZ" value="0" step="100"></div>
+            <div class="actions">
+                <button class="secondary" id="modalCancel">Cancel</button>
+                <button class="primary" id="modalOk">Generate</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* =============================================================
+           Heightmap Editor — standalone, high-performance
+           ============================================================= */
+        "use strict";
+
+        /* ── Noise (same as planet.ts) ── */
+        function fract(x) { return x - Math.floor(x) }
+        function hash(x, y) { const a = 50 * fract(x * .3183099 + .71), b = 50 * fract(y * .3183099 + .113); return -1 + 2 * fract(a * b * (a + b)) }
+        function valueNoise(x, y) {
+            const ix = Math.floor(x), iy = Math.floor(y), fx = fract(x), fy = fract(y);
+            const ux = fx * fx * (3 - 2 * fx), uy = fy * fy * (3 - 2 * fy);
+            const v00 = hash(ix, iy), v10 = hash(ix + 1, iy), v01 = hash(ix, iy + 1), v11 = hash(ix + 1, iy + 1);
+            return v00 + ux * (v10 - v00) + uy * (v01 - v00) + ux * uy * (v00 - v10 - v01 + v11);
+        }
+
+        /* ── State ── */
+        let resolution = 1024;
+        let worldSize = 2000;
+        let originX = 0, originZ = 0;
+        let heightData = new Float32Array(resolution * resolution);
+        let minH = 0, maxH = 0;
+
+        /* Undo */
+        const undoStack = [];
+        const redoStack = [];
+        const MAX_UNDO = 30;
+        let snapshotBeforeStroke = null;
+
+        /* View */
+        let viewX = 0, viewY = 0, viewZoom = 1;
+
+        /* Brush */
+        let currentTool = 'raise';
+        let brushRadius = 30;
+        let brushStrength = 0.30;
+        let brushFalloff = 'smooth';
+        let flattenTarget = 0;
+        let painting = false;
+
+        /* Display */
+        let hillshadeStrength = 0.5;
+        let showGrid = false;
+
+        /* ── Offscreen heightmap image (THE key optimization) ── */
+        let hmCanvas = null;
+        let hmCtx = null;
+        let hmImageData = null;
+        let hmPixels = null;
+
+        /* 2D display canvas */
+        const c2d = document.getElementById('canvas2d');
+        const ctx = c2d.getContext('2d');
+
+        /* 3D */
+        const c3d = document.getElementById('canvas3d');
+        let gl = null;
+
+        /* Elements */
+        const $radius = document.getElementById('brushRadius');
+        const $radiusVal = document.getElementById('brushRadiusVal');
+        const $strength = document.getElementById('brushStrength');
+        const $strengthVal = document.getElementById('brushStrengthVal');
+        const $falloff = document.getElementById('brushFalloff');
+        const $hillshade = document.getElementById('hillshadeStr');
+        const $hillshadeVal = document.getElementById('hillshadeVal');
+        const $showGrid = document.getElementById('showGrid');
+        const $center = document.getElementById('center');
+        const $brushCursor = document.getElementById('brushCursor');
+        const $statPos = document.getElementById('statPos');
+        const $statHeight = document.getElementById('statHeight');
+        const $statBrush = document.getElementById('statBrush');
+        const $infoRes = document.getElementById('infoRes');
+        const $infoSize = document.getElementById('infoSize');
+
+        /* ═══════════════════════════════════════════
+           Color LUT (pre-computed 256-entry table)
+           ═══════════════════════════════════════════ */
+        const COLOR_LUT = new Uint8Array(256 * 3);
+        (function buildLUT() {
+            for (let i = 0; i < 256; i++)
+            {
+                const t = i / 255;
+                let r, g, b;
+                if (t < 0.2)
+                {
+                    const s = t / 0.2;
+                    r = 30 + s * 30; g = 60 + s * 100; b = 180 - s * 80;
+                } else if (t < 0.5)
+                {
+                    const s = (t - 0.2) / 0.3;
+                    r = 60 + s * 80; g = 160 - s * 30; b = 100 - s * 60;
+                } else if (t < 0.8)
+                {
+                    const s = (t - 0.5) / 0.3;
+                    r = 140 + s * 60; g = 130 - s * 40; b = 40 + s * 20;
+                } else
+                {
+                    const s = (t - 0.8) / 0.2;
+                    r = 200 + s * 55; g = 90 + s * 165; b = 60 + s * 195;
+                }
+                COLOR_LUT[i * 3] = r | 0;
+                COLOR_LUT[i * 3 + 1] = g | 0;
+                COLOR_LUT[i * 3 + 2] = b | 0;
+            }
+        })();
+
+        function heightColorLUT(h) {
+            let t = (maxH - minH) > 0 ? (h - minH) / (maxH - minH) : 0;
+            const idx = (Math.max(0, Math.min(255, (t * 255) | 0))) * 3;
+            return [COLOR_LUT[idx], COLOR_LUT[idx + 1], COLOR_LUT[idx + 2]];
+        }
+
+        /* ═══════════════════════════════════════════
+           Offscreen heightmap image management
+           ═══════════════════════════════════════════ */
+        function allocHeightmapImage() {
+            hmCanvas = document.createElement('canvas');
+            hmCanvas.width = resolution;
+            hmCanvas.height = resolution;
+            hmCtx = hmCanvas.getContext('2d', { willReadFrequently: true });
+            hmImageData = hmCtx.createImageData(resolution, resolution);
+            hmPixels = hmImageData.data;
+        }
+
+        /** Rebuild the entire offscreen image from heightData. */
+        function rebuildFullImage() {
+            const res = resolution;
+            const spacing = worldSize / res;
+            const range = (maxH - minH) || 1;
+            const invRange = 1 / range;
+            const px = hmPixels;
+            const hd = heightData;
+            const hs = hillshadeStrength;
+
+            const lx = -0.5, ly = 0.8, lz = -0.3;
+            const ll = Math.sqrt(lx * lx + ly * ly + lz * lz);
+            const slx = lx / ll, sly = ly / ll, slz = lz / ll;
+            const invSpacing2 = 1 / (2 * spacing);
+
+            for (let row = 0; row < res; row++)
+            {
+                const r0 = Math.max(0, row - 1);
+                const r1 = Math.min(res - 1, row + 1);
+                const rowOff = row * res;
+                const r0Off = r0 * res;
+                const r1Off = r1 * res;
+
+                for (let col = 0; col < res; col++)
+                {
+                    const idx = rowOff + col;
+                    const h = hd[idx];
+
+                    let t = (h - minH) * invRange;
+                    const li = (Math.max(0, Math.min(255, (t * 255) | 0))) * 3;
+                    let r = COLOR_LUT[li], g = COLOR_LUT[li + 1], b = COLOR_LUT[li + 2];
+
+                    if (hs > 0)
+                    {
+                        const c0 = Math.max(0, col - 1);
+                        const c1 = Math.min(res - 1, col + 1);
+                        const nx = (hd[rowOff + c0] - hd[rowOff + c1]) * invSpacing2;
+                        const nz = (hd[r0Off + col] - hd[r1Off + col]) * invSpacing2;
+                        const ny = 1;
+                        const len = 1 / (Math.sqrt(nx * nx + ny * ny + nz * nz) || 1);
+                        const dot = nx * len * slx + ny * len * sly + nz * len * slz;
+                        const shade = Math.max(0, Math.min(1, dot));
+                        const factor = 0.4 + 0.6 * shade;
+                        const m1 = 1 - hs;
+                        r = r * m1 + r * factor * hs;
+                        g = g * m1 + g * factor * hs;
+                        b = b * m1 + b * factor * hs;
+                    }
+
+                    const off = idx * 4;
+                    px[off] = r > 255 ? 255 : r < 0 ? 0 : r;
+                    px[off + 1] = g > 255 ? 255 : g < 0 ? 0 : g;
+                    px[off + 2] = b > 255 ? 255 : b < 0 ? 0 : b;
+                    px[off + 3] = 255;
+                }
+            }
+            hmCtx.putImageData(hmImageData, 0, 0);
+        }
+
+        /** Update only a rectangular region of the offscreen image. */
+        function updateImageRect(x0, z0, x1, z1) {
+            const res = resolution;
+            const spacing = worldSize / res;
+            const range = (maxH - minH) || 1;
+            const invRange = 1 / range;
+            const px = hmPixels;
+            const hd = heightData;
+            const hs = hillshadeStrength;
+
+            const lx = -0.5, ly = 0.8, lz = -0.3;
+            const ll = Math.sqrt(lx * lx + ly * ly + lz * lz);
+            const slx = lx / ll, sly = ly / ll, slz = lz / ll;
+            const invSpacing2 = 1 / (2 * spacing);
+
+            const rz0 = Math.max(0, z0 - 1);
+            const rz1 = Math.min(res - 1, z1 + 1);
+            const rx0 = Math.max(0, x0 - 1);
+            const rx1 = Math.min(res - 1, x1 + 1);
+
+            for (let row = rz0; row <= rz1; row++)
+            {
+                const r0 = Math.max(0, row - 1);
+                const r1 = Math.min(res - 1, row + 1);
+                const rowOff = row * res;
+                const r0Off = r0 * res;
+                const r1Off = r1 * res;
+
+                for (let col = rx0; col <= rx1; col++)
+                {
+                    const idx = rowOff + col;
+                    const h = hd[idx];
+
+                    let t = (h - minH) * invRange;
+                    const li = (Math.max(0, Math.min(255, (t * 255) | 0))) * 3;
+                    let r = COLOR_LUT[li], g = COLOR_LUT[li + 1], b = COLOR_LUT[li + 2];
+
+                    if (hs > 0)
+                    {
+                        const c0 = Math.max(0, col - 1);
+                        const c1 = Math.min(res - 1, col + 1);
+                        const nx = (hd[rowOff + c0] - hd[rowOff + c1]) * invSpacing2;
+                        const nz = (hd[r0Off + col] - hd[r1Off + col]) * invSpacing2;
+                        const ny = 1;
+                        const len = 1 / (Math.sqrt(nx * nx + ny * ny + nz * nz) || 1);
+                        const dot = nx * len * slx + ny * len * sly + nz * len * slz;
+                        const shade = Math.max(0, Math.min(1, dot));
+                        const factor = 0.4 + 0.6 * shade;
+                        const m1 = 1 - hs;
+                        r = r * m1 + r * factor * hs;
+                        g = g * m1 + g * factor * hs;
+                        b = b * m1 + b * factor * hs;
+                    }
+
+                    const off = idx * 4;
+                    px[off] = r > 255 ? 255 : r < 0 ? 0 : r;
+                    px[off + 1] = g > 255 ? 255 : g < 0 ? 0 : g;
+                    px[off + 2] = b > 255 ? 255 : b < 0 ? 0 : b;
+                    px[off + 3] = 255;
+                }
+            }
+            const dw = rx1 - rx0 + 1;
+            const dh = rz1 - rz0 + 1;
+            hmCtx.putImageData(hmImageData, 0, 0, rx0, rz0, dw, dh);
+        }
+
+        /* ═══════════════════════════════════════════
+           Display 2D — just drawImage with transform
+           ═══════════════════════════════════════════ */
+        function render2D() {
+            const cw = $center.clientWidth;
+            const ch = $center.clientHeight;
+            if (c2d.width !== cw || c2d.height !== ch)
+            {
+                c2d.width = cw;
+                c2d.height = ch;
+            }
+
+            ctx.fillStyle = '#11111b';
+            ctx.fillRect(0, 0, cw, ch);
+
+            const pixPerMeter = viewZoom * (Math.min(cw, ch) / worldSize);
+            const imgScreenSize = worldSize * pixPerMeter;
+            const cx = cw / 2 + viewX;
+            const cy = ch / 2 + viewY;
+            const dx = cx - imgScreenSize / 2;
+            const dy = cy - imgScreenSize / 2;
+
+            ctx.imageSmoothingEnabled = viewZoom < 3;
+            ctx.drawImage(hmCanvas, dx, dy, imgScreenSize, imgScreenSize);
+
+            if (showGrid) drawGrid();
+        }
+
+        function drawGrid() {
+            const cw = c2d.width, ch = c2d.height;
+            ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+            ctx.lineWidth = 1;
+            ctx.font = '10px monospace';
+            ctx.fillStyle = 'rgba(255,255,255,0.4)';
+
+            const pixPerMeter = viewZoom * (Math.min(cw, ch) / worldSize);
+            let step = 10;
+            for (const s of [10, 20, 50, 100, 200, 500, 1000, 2000]) { step = s; if (s * pixPerMeter > 50) break; }
+
+            const halfW = worldSize * 0.5;
+            const startX = Math.ceil((originX - halfW) / step) * step;
+            const endX = originX + halfW;
+            const startZ = Math.ceil((originZ - halfW) / step) * step;
+            const endZ = originZ + halfW;
+
+            ctx.beginPath();
+            for (let wx = startX; wx <= endX; wx += step)
+            {
+                const [sx] = worldToScreen(wx, 0);
+                if (sx >= 0 && sx <= cw) { ctx.moveTo(sx, 0); ctx.lineTo(sx, ch); }
+            }
+            for (let wz = startZ; wz <= endZ; wz += step)
+            {
+                const [, sy] = worldToScreen(0, wz);
+                if (sy >= 0 && sy <= ch) { ctx.moveTo(0, sy); ctx.lineTo(cw, sy); }
+            }
+            ctx.stroke();
+
+            for (let wx = startX; wx <= endX; wx += step)
+            {
+                const [sx, sy] = worldToScreen(wx, startZ);
+                if (sx > 0 && sx < cw) ctx.fillText(wx.toFixed(0), sx + 2, Math.min(ch - 4, Math.max(12, sy)));
+            }
+        }
+
+        /* ═══════════════════════════════════════════
+           Coordinate transforms
+           ═══════════════════════════════════════════ */
+        function screenToWorld(sx, sy) {
+            const cw = $center.clientWidth, ch = $center.clientHeight;
+            const cx = cw / 2, cy = ch / 2;
+            const pixPerMeter = viewZoom * (Math.min(cw, ch) / worldSize);
+            return [
+                originX + (sx - cx - viewX) / pixPerMeter,
+                originZ + (sy - cy - viewY) / pixPerMeter
+            ];
+        }
+        function worldToScreen(wx, wz) {
+            const cw = $center.clientWidth, ch = $center.clientHeight;
+            const cx = cw / 2, cy = ch / 2;
+            const pixPerMeter = viewZoom * (Math.min(cw, ch) / worldSize);
+            return [
+                cx + viewX + (wx - originX) * pixPerMeter,
+                cy + viewY + (wz - originZ) * pixPerMeter
+            ];
+        }
+
+        /* ═══════════════════════════════════════════
+           Min / Max tracking
+           ═══════════════════════════════════════════ */
+        function recalcMinMax() {
+            minH = Infinity; maxH = -Infinity;
+            for (let i = 0; i < heightData.length; i++)
+            {
+                const v = heightData[i];
+                if (v < minH) minH = v;
+                if (v > maxH) maxH = v;
+            }
+            if (!isFinite(minH)) { minH = 0; maxH = 1; }
+        }
+
+        function updateMinMaxRect(x0, z0, x1, z1) {
+            const res = resolution;
+            for (let zz = z0; zz <= z1; zz++)
+            {
+                const off = zz * res;
+                for (let xx = x0; xx <= x1; xx++)
+                {
+                    const v = heightData[off + xx];
+                    if (v < minH) minH = v;
+                    if (v > maxH) maxH = v;
+                }
+            }
+        }
+
+        /* ═══════════════════════════════════════════
+           Brush application — returns dirty rect
+           ═══════════════════════════════════════════ */
+        function falloffFn(dist, radius) {
+            let t = dist / radius;
+            if (t >= 1) return 0;
+            if (brushFalloff === 'hard') return 1;
+            if (brushFalloff === 'linear') return 1 - t;
+            t = 1 - t;
+            return t * t * (3 - 2 * t);
+        }
+
+        function applyBrush(wx, wz, dt) {
+            const res = resolution;
+            const metersPerPixel = worldSize / res;
+            const radiusPx = brushRadius / metersPerPixel;
+            const strength = brushStrength * dt * 60;
+
+            const uCenter = (wx - originX) / worldSize + 0.5;
+            const vCenter = (wz - originZ) / worldSize + 0.5;
+            const cxPx = uCenter * res;
+            const czPx = vCenter * res;
+
+            const x0 = Math.max(0, Math.floor(cxPx - radiusPx));
+            const x1 = Math.min(res - 1, Math.ceil(cxPx + radiusPx));
+            const z0 = Math.max(0, Math.floor(czPx - radiusPx));
+            const z1 = Math.min(res - 1, Math.ceil(czPx + radiusPx));
+
+            const radiusPxSq = radiusPx * radiusPx;
+
+            for (let zz = z0; zz <= z1; zz++)
+            {
+                const dz = zz - czPx;
+                const dz2 = dz * dz;
+                const rowOff = zz * res;
+                for (let xx = x0; xx <= x1; xx++)
+                {
+                    const dx = xx - cxPx;
+                    const distSq = dx * dx + dz2;
+                    if (distSq >= radiusPxSq) continue;
+                    const dist = Math.sqrt(distSq);
+                    const f = falloffFn(dist, radiusPx);
+                    if (f <= 0) continue;
+
+                    const idx = rowOff + xx;
+                    switch (currentTool)
+                    {
+                        case 'raise':
+                            heightData[idx] += strength * f * 2;
+                            break;
+                        case 'lower':
+                            heightData[idx] -= strength * f * 2;
+                            break;
+                        case 'smooth': {
+                            let sum = 0, count = 0;
+                            const kr = Math.max(1, Math.min(3, Math.round(radiusPx * 0.15)));
+                            for (let dz2 = -kr; dz2 <= kr; dz2++)
+                            {
+                                const nz = zz + dz2;
+                                if (nz < 0 || nz >= res) continue;
+                                const nzOff = nz * res;
+                                for (let dx2 = -kr; dx2 <= kr; dx2++)
+                                {
+                                    const nx = xx + dx2;
+                                    if (nx >= 0 && nx < res)
+                                    {
+                                        sum += heightData[nzOff + nx];
+                                        count++;
+                                    }
+                                }
+                            }
+                            heightData[idx] += (sum / count - heightData[idx]) * f * strength * 0.5;
+                            break;
+                        }
+                        case 'flatten':
+                            heightData[idx] += (flattenTarget - heightData[idx]) * f * strength;
+                            break;
+                        case 'noise': {
+                            const px = (originX + (xx / res - 0.5) * worldSize) * 0.05;
+                            const pz = (originZ + (zz / res - 0.5) * worldSize) * 0.05;
+                            heightData[idx] += valueNoise(px, pz) * f * strength * 4;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            return [x0, z0, x1, z1];
+        }
+
+        /* ═══════════════════════════════════════════
+           Undo / Redo
+           ═══════════════════════════════════════════ */
+        function pushUndo() {
+            if (!snapshotBeforeStroke) return;
+            undoStack.push(snapshotBeforeStroke);
+            if (undoStack.length > MAX_UNDO) undoStack.shift();
+            redoStack.length = 0;
+            snapshotBeforeStroke = null;
+        }
+
+        function fullRefresh() {
+            recalcMinMax();
+            rebuildFullImage();
+            render2D();
+            update3D();
+        }
+
+        function undo() {
+            if (undoStack.length === 0) return;
+            redoStack.push(new Float32Array(heightData));
+            heightData = undoStack.pop();
+            fullRefresh();
+        }
+        function redo() {
+            if (redoStack.length === 0) return;
+            undoStack.push(new Float32Array(heightData));
+            heightData = redoStack.pop();
+            fullRefresh();
+        }
+
+        /* ═══════════════════════════════════════════
+           File I/O
+           ═══════════════════════════════════════════ */
+        function initMap() {
+            allocHeightmapImage();
+            $infoRes.textContent = resolution;
+            $infoSize.textContent = worldSize;
+            viewX = 0; viewY = 0; viewZoom = 1;
+            undoStack.length = 0; redoStack.length = 0;
+        }
+
+        function newHeightmap(res, ws) {
+            resolution = res; worldSize = ws;
+            heightData = new Float32Array(res * res);
+            minH = 0; maxH = 0;
+            initMap();
+            rebuildFullImage();
+            render2D();
+            build3DMesh(); update3D();
+        }
+
+        function generateHeightmap(res, ws, amp, freq, oct, ox, oz) {
+            resolution = res; worldSize = ws; originX = ox; originZ = oz;
+            heightData = new Float32Array(res * res);
+            let idx = 0; minH = Infinity; maxH = -Infinity;
+            for (let row = 0; row < res; row++)
+            {
+                for (let col = 0; col < res; col++)
+                {
+                    const u = (col + 0.5) / res, v = (row + 0.5) / res;
+                    const wx = ox + (u - 0.5) * ws, wz = oz + (v - 0.5) * ws;
+                    let h = 0, px = wx * freq, pz = wz * freq, a = amp;
+                    for (let o = 0; o < oct; o++) { h += valueNoise(px, pz) * a; px *= 2; pz *= 2; a *= 0.5; }
+                    heightData[idx++] = h;
+                    if (h < minH) minH = h;
+                    if (h > maxH) maxH = h;
+                }
+            }
+            initMap();
+            rebuildFullImage();
+            render2D();
+            build3DMesh(); update3D();
+        }
+
+        function saveHeightmap() {
+            const blob = new Blob([heightData.buffer], { type: 'application/octet-stream' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob); a.download = 'terrain.heightmap.bin'; a.click();
+            URL.revokeObjectURL(a.href);
+
+            const meta = { version: 1, resolution, worldSize, originX, originZ, minHeight: minH, maxHeight: maxH };
+            const blob2 = new Blob([JSON.stringify(meta, null, 2)], { type: 'application/json' });
+            const a2 = document.createElement('a');
+            a2.href = URL.createObjectURL(blob2); a2.download = 'terrain.heightmap.json'; a2.click();
+            URL.revokeObjectURL(a2.href);
+        }
+
+        async function loadHeightmap() {
+            const input = document.createElement('input');
+            input.type = 'file'; input.multiple = true; input.accept = '.bin,.json';
+            input.onchange = async () => {
+                const files = Array.from(input.files);
+                const binFile = files.find(f => f.name.endsWith('.bin'));
+                const jsonFile = files.find(f => f.name.endsWith('.json'));
+                if (!binFile || !jsonFile) { alert('Select both .heightmap.bin and .heightmap.json'); return; }
+                try
+                {
+                    const [binBuf, jsonText] = await Promise.all([binFile.arrayBuffer(), jsonFile.text()]);
+                    const meta = JSON.parse(jsonText);
+                    if (!meta.resolution || !meta.worldSize) { alert('Invalid metadata'); return; }
+                    resolution = meta.resolution; worldSize = meta.worldSize;
+                    originX = meta.originX || 0; originZ = meta.originZ || 0;
+                    heightData = new Float32Array(binBuf);
+                    if (heightData.length !== resolution * resolution)
+                    {
+                        alert(`Size mismatch: expected ${resolution * resolution}, got ${heightData.length}`); return;
+                    }
+                    recalcMinMax();
+                    initMap();
+                    rebuildFullImage();
+                    render2D();
+                    build3DMesh(); update3D();
+                } catch (e) { alert('Error: ' + e.message); }
+            };
+            input.click();
+        }
+
+        function exportPNG() {
+            const tmpCanvas = document.createElement('canvas');
+            tmpCanvas.width = resolution; tmpCanvas.height = resolution;
+            const tmpCtx = tmpCanvas.getContext('2d');
+            const img = tmpCtx.createImageData(resolution, resolution);
+            const range = (maxH - minH) || 1;
+            for (let i = 0; i < heightData.length; i++)
+            {
+                const v = Math.max(0, Math.min(255, ((heightData[i] - minH) / range) * 255)) | 0;
+                const off = i * 4;
+                img.data[off] = v; img.data[off + 1] = v; img.data[off + 2] = v; img.data[off + 3] = 255;
+            }
+            tmpCtx.putImageData(img, 0, 0);
+            const a = document.createElement('a');
+            a.href = tmpCanvas.toDataURL('image/png'); a.download = 'terrain_heightmap.png'; a.click();
+        }
+
+        /* ═══════════════════════════════════════════
+           3D Preview (WebGL2)
+           ═══════════════════════════════════════════ */
+        const PREVIEW_MAX_RES = 256;
+        let meshVBO = null, meshIBO = null, meshVAO = null, meshIndexCount = 0;
+        let shaderProgram = null;
+        let cam3dYaw = -0.4, cam3dPitch = 0.5, cam3dDist = 3.0;
+
+        function init3D() {
+            gl = c3d.getContext('webgl2', { antialias: true, alpha: false });
+            if (!gl) return;
+            gl.clearColor(0.07, 0.07, 0.11, 1);
+            gl.enable(gl.DEPTH_TEST);
+
+            const vsrc = `#version 300 es
+layout(location=0) in vec3 aPos;
+layout(location=1) in vec3 aNormal;
+layout(location=2) in vec3 aColor;
+uniform mat4 uMVP;
+out vec3 vColor;
+out vec3 vNormal;
+void main(){
+    gl_Position = uMVP * vec4(aPos, 1.0);
+    vColor = aColor;
+    vNormal = aNormal;
+}`;
+            const fsrc = `#version 300 es
+precision mediump float;
+in vec3 vColor;
+in vec3 vNormal;
+out vec4 fragColor;
+void main(){
+    vec3 L = normalize(vec3(-0.5, 0.8, -0.3));
+    float diff = max(dot(normalize(vNormal), L), 0.0);
+    vec3 col = vColor * (0.3 + 0.7 * diff);
+    fragColor = vec4(col, 1.0);
+}`;
+            function compile(type, src) {
+                const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
+                if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(s));
+                return s;
+            }
+            const vs = compile(gl.VERTEX_SHADER, vsrc);
+            const fs = compile(gl.FRAGMENT_SHADER, fsrc);
+            shaderProgram = gl.createProgram();
+            gl.attachShader(shaderProgram, vs);
+            gl.attachShader(shaderProgram, fs);
+            gl.linkProgram(shaderProgram);
+        }
+
+        function build3DMesh() {
+            if (!gl) return;
+            const res = Math.min(resolution, PREVIEW_MAX_RES);
+            const step = resolution / res;
+
+            const heights = new Float32Array(res * res);
+            for (let r = 0; r < res; r++)
+            {
+                const sr = Math.min(resolution - 1, Math.round(r * step));
+                const srOff = sr * resolution;
+                for (let c = 0; c < res; c++)
+                {
+                    heights[r * res + c] = heightData[srOff + Math.min(resolution - 1, Math.round(c * step))];
+                }
+            }
+
+            const verts = new Float32Array(res * res * 9);
+            const hScale = 2.0 / worldSize;
+            let vi = 0;
+            for (let r = 0; r < res; r++)
+            {
+                for (let c = 0; c < res; c++)
+                {
+                    const h = heights[r * res + c];
+                    const x = (c / (res - 1) - 0.5) * 2;
+                    const z = (r / (res - 1) - 0.5) * 2;
+                    const y = h * hScale;
+
+                    const hL = heights[r * res + Math.max(0, c - 1)];
+                    const hR = heights[r * res + Math.min(res - 1, c + 1)];
+                    const hD = heights[Math.max(0, r - 1) * res + c];
+                    const hU = heights[Math.min(res - 1, r + 1) * res + c];
+                    let nx = (hL - hR) * hScale, ny = 2.0 / (res - 1) * 2, nz = (hD - hU) * hScale;
+                    const len = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1;
+                    nx /= len; ny /= len; nz /= len;
+
+                    const [cr, cg, cb] = heightColorLUT(h);
+                    verts[vi++] = x; verts[vi++] = y; verts[vi++] = z;
+                    verts[vi++] = nx; verts[vi++] = ny; verts[vi++] = nz;
+                    verts[vi++] = cr / 255; verts[vi++] = cg / 255; verts[vi++] = cb / 255;
+                }
+            }
+
+            const idxCount = 6 * (res - 1) * (res - 1);
+            const indices = new Uint32Array(idxCount);
+            let ii = 0;
+            for (let r = 0; r < res - 1; r++)
+            {
+                for (let c = 0; c < res - 1; c++)
+                {
+                    const tl = r * res + c;
+                    indices[ii++] = tl; indices[ii++] = tl + res; indices[ii++] = tl + 1;
+                    indices[ii++] = tl + 1; indices[ii++] = tl + res; indices[ii++] = tl + res + 1;
+                }
+            }
+            meshIndexCount = idxCount;
+
+            if (meshVAO) gl.deleteVertexArray(meshVAO);
+            if (meshVBO) gl.deleteBuffer(meshVBO);
+            if (meshIBO) gl.deleteBuffer(meshIBO);
+
+            meshVAO = gl.createVertexArray();
+            gl.bindVertexArray(meshVAO);
+
+            meshVBO = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, meshVBO);
+            gl.bufferData(gl.ARRAY_BUFFER, verts, gl.DYNAMIC_DRAW);
+            gl.enableVertexAttribArray(0);
+            gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 36, 0);
+            gl.enableVertexAttribArray(1);
+            gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 36, 12);
+            gl.enableVertexAttribArray(2);
+            gl.vertexAttribPointer(2, 3, gl.FLOAT, false, 36, 24);
+
+            meshIBO = gl.createBuffer();
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, meshIBO);
+            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
+            gl.bindVertexArray(null);
+        }
+
+        function update3D() {
+            if (!gl) return;
+            build3DMesh();
+            render3D();
+        }
+
+        function render3D() {
+            if (!gl || !shaderProgram || !meshVAO) return;
+            const w = c3d.clientWidth * devicePixelRatio;
+            const h = c3d.clientHeight * devicePixelRatio;
+            c3d.width = w; c3d.height = h;
+            gl.viewport(0, 0, w, h);
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+            gl.useProgram(shaderProgram);
+
+            const aspect = w / h || 1;
+            const fov = 45 * Math.PI / 180;
+            const proj = perspectiveMat4(fov, aspect, 0.01, 100);
+            const eyeX = Math.cos(cam3dYaw) * Math.cos(cam3dPitch) * cam3dDist;
+            const eyeY = Math.sin(cam3dPitch) * cam3dDist;
+            const eyeZ = Math.sin(cam3dYaw) * Math.cos(cam3dPitch) * cam3dDist;
+            const view = lookAtMat4(eyeX, eyeY, eyeZ, 0, 0, 0, 0, 1, 0);
+            const mvp = mulMat4(proj, view);
+
+            gl.uniformMatrix4fv(gl.getUniformLocation(shaderProgram, 'uMVP'), false, mvp);
+            gl.bindVertexArray(meshVAO);
+            gl.drawElements(gl.TRIANGLES, meshIndexCount, gl.UNSIGNED_INT, 0);
+            gl.bindVertexArray(null);
+        }
+
+        function perspectiveMat4(fov, aspect, near, far) {
+            const f = 1 / Math.tan(fov / 2), nf = 1 / (near - far);
+            return new Float32Array([f / aspect, 0, 0, 0, 0, f, 0, 0, 0, 0, (far + near) * nf, -1, 0, 0, 2 * far * near * nf, 0]);
+        }
+        function lookAtMat4(ex, ey, ez, tx, ty, tz, ux, uy, uz) {
+            let fx = tx - ex, fy = ty - ey, fz = tz - ez;
+            let fl = Math.sqrt(fx * fx + fy * fy + fz * fz) || 1; fx /= fl; fy /= fl; fz /= fl;
+            let sx = fy * uz - fz * uy, sy = fz * ux - fx * uz, sz = fx * uy - fy * ux;
+            let sl = Math.sqrt(sx * sx + sy * sy + sz * sz) || 1; sx /= sl; sy /= sl; sz /= sl;
+            let uux = sy * fz - sz * fy, uuy = sz * fx - sx * fz, uuz = sx * fy - sy * fx;
+            return new Float32Array([sx, uux, -fx, 0, sy, uuy, -fy, 0, sz, uuz, -fz, 0,
+                -(sx * ex + sy * ey + sz * ez), -(uux * ex + uuy * ey + uuz * ez), (fx * ex + fy * ey + fz * ez), 1]);
+        }
+        function mulMat4(a, b) {
+            const o = new Float32Array(16);
+            for (let i = 0; i < 4; i++)for (let j = 0; j < 4; j++)
+            {
+                let s = 0; for (let k = 0; k < 4; k++)s += a[k * 4 + j] * b[i * 4 + k]; o[i * 4 + j] = s;
+            }
+            return o;
+        }
+
+        /* ═══════════════════════════════════════════
+           Event Handlers
+           ═══════════════════════════════════════════ */
+        document.querySelectorAll('.tool-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentTool = btn.dataset.tool;
+                updateStatusBrush();
+            });
+        });
+
+        $radius.oninput = () => { brushRadius = +$radius.value; $radiusVal.textContent = $radius.value + 'm'; updateStatusBrush(); };
+        $strength.oninput = () => { brushStrength = +$strength.value / 100; $strengthVal.textContent = brushStrength.toFixed(2); updateStatusBrush(); };
+        $falloff.onchange = () => { brushFalloff = $falloff.value; };
+        $hillshade.oninput = () => { hillshadeStrength = +$hillshade.value / 100; $hillshadeVal.textContent = hillshadeStrength.toFixed(2); rebuildFullImage(); render2D(); };
+        $showGrid.onchange = () => { showGrid = $showGrid.checked; render2D(); };
+
+        /* ── 2D painting ── */
+        let panning = false, panStartX = 0, panStartY = 0, panViewX = 0, panViewY = 0;
+        let spaceDown = false;
+        let paintRAF = 0;
+        let pendingBrushX = 0, pendingBrushZ = 0;
+        let hasPendingBrush = false;
+        let lastPaintTime = 0;
+
+        document.addEventListener('keydown', e => {
+            if (e.code === 'Space') { spaceDown = true; c2d.style.cursor = 'grab'; e.preventDefault(); }
+            if (e.ctrlKey && e.code === 'KeyZ') { e.preventDefault(); undo(); }
+            if (e.ctrlKey && e.code === 'KeyY') { e.preventDefault(); redo(); }
+        });
+        document.addEventListener('keyup', e => {
+            if (e.code === 'Space') { spaceDown = false; c2d.style.cursor = 'crosshair'; }
+        });
+
+        c2d.addEventListener('mousedown', e => {
+            const rect = c2d.getBoundingClientRect();
+            const sx = e.clientX - rect.left, sy = e.clientY - rect.top;
+
+            if (e.button === 1 || (e.button === 0 && spaceDown))
+            {
+                panning = true;
+                panStartX = e.clientX; panStartY = e.clientY;
+                panViewX = viewX; panViewY = viewY;
+                c2d.style.cursor = 'grabbing';
+                e.preventDefault();
+                return;
+            }
+
+            if (e.button === 0)
+            {
+                if (currentTool === 'flatten')
+                {
+                    const [wx, wz] = screenToWorld(sx, sy);
+                    const u = (wx - originX) / worldSize + 0.5;
+                    const v = (wz - originZ) / worldSize + 0.5;
+                    if (u >= 0 && u <= 1 && v >= 0 && v <= 1)
+                    {
+                        const gx = Math.min(resolution - 1, Math.max(0, Math.round(u * (resolution - 1))));
+                        const gz = Math.min(resolution - 1, Math.max(0, Math.round(v * (resolution - 1))));
+                        flattenTarget = heightData[gz * resolution + gx];
+                    }
+                }
+                painting = true;
+                snapshotBeforeStroke = new Float32Array(heightData);
+                lastPaintTime = 0;
+                schedulePaint(sx, sy);
+            }
+        });
+
+        document.addEventListener('mousemove', e => {
+            const rect = c2d.getBoundingClientRect();
+            const sx = e.clientX - rect.left, sy = e.clientY - rect.top;
+
+            const cw = $center.clientWidth, ch = $center.clientHeight;
+            const pixPerMeter = viewZoom * (Math.min(cw, ch) / worldSize);
+            const brushPx = brushRadius * pixPerMeter * 2;
+            $brushCursor.style.width = brushPx + 'px';
+            $brushCursor.style.height = brushPx + 'px';
+            $brushCursor.style.left = (e.clientX - rect.left) + 'px';
+            $brushCursor.style.top = (e.clientY - rect.top) + 'px';
+
+            const [wx, wz] = screenToWorld(sx, sy);
+            $statPos.textContent = `X: ${wx.toFixed(1)}  Z: ${wz.toFixed(1)}`;
+            const u = (wx - originX) / worldSize + 0.5;
+            const v = (wz - originZ) / worldSize + 0.5;
+            if (u >= 0 && u <= 1 && v >= 0 && v <= 1)
+            {
+                const gx = Math.min(resolution - 1, Math.max(0, Math.round(u * (resolution - 1))));
+                const gz = Math.min(resolution - 1, Math.max(0, Math.round(v * (resolution - 1))));
+                $statHeight.textContent = `H: ${heightData[gz * resolution + gx].toFixed(2)}`;
+            }
+
+            if (panning)
+            {
+                viewX = panViewX + (e.clientX - panStartX);
+                viewY = panViewY + (e.clientY - panStartY);
+                render2D();
+                return;
+            }
+
+            if (painting) schedulePaint(sx, sy);
+        });
+
+        document.addEventListener('mouseup', e => {
+            if (panning) { panning = false; c2d.style.cursor = spaceDown ? 'grab' : 'crosshair'; }
+            if (painting)
+            {
+                painting = false;
+                if (paintRAF) { cancelAnimationFrame(paintRAF); paintRAF = 0; }
+                recalcMinMax();
+                rebuildFullImage();
+                render2D();
+                update3D();
+                pushUndo();
+            }
+        });
+
+        function schedulePaint(sx, sy) {
+            const [wx, wz] = screenToWorld(sx, sy);
+            pendingBrushX = wx;
+            pendingBrushZ = wz;
+            hasPendingBrush = true;
+            if (!paintRAF) paintRAF = requestAnimationFrame(paintFrame);
+        }
+
+        function paintFrame() {
+            paintRAF = 0;
+            if (!hasPendingBrush || !painting) return;
+            hasPendingBrush = false;
+
+            const now = performance.now();
+            const dt = lastPaintTime ? Math.min((now - lastPaintTime) / 1000, 0.1) : 0.016;
+            lastPaintTime = now;
+
+            const [x0, z0, x1, z1] = applyBrush(pendingBrushX, pendingBrushZ, dt);
+            updateMinMaxRect(x0, z0, x1, z1);
+            updateImageRect(x0, z0, x1, z1);
+            render2D();
+
+            if (painting) paintRAF = requestAnimationFrame(paintFrame);
+        }
+
+        c2d.addEventListener('wheel', e => {
+            e.preventDefault();
+            viewZoom = Math.max(0.05, Math.min(50, viewZoom * (e.deltaY < 0 ? 1.15 : 1 / 1.15)));
+            render2D();
+        }, { passive: false });
+
+        c2d.addEventListener('contextmenu', e => e.preventDefault());
+
+        /* ── 3D interaction ── */
+        let dragging3d = false, drag3dX = 0, drag3dY = 0;
+        c3d.addEventListener('mousedown', e => {
+            if (e.button === 0) { dragging3d = true; drag3dX = e.clientX; drag3dY = e.clientY; }
+        });
+        document.addEventListener('mousemove', e => {
+            if (!dragging3d) return;
+            cam3dYaw += (e.clientX - drag3dX) * 0.005;
+            cam3dPitch = Math.max(-1.4, Math.min(1.4, cam3dPitch + (e.clientY - drag3dY) * 0.005));
+            drag3dX = e.clientX; drag3dY = e.clientY;
+            render3D();
+        });
+        document.addEventListener('mouseup', e => { if (e.button === 0) dragging3d = false; });
+        c3d.addEventListener('wheel', e => {
+            e.preventDefault();
+            cam3dDist = Math.max(0.5, Math.min(20, cam3dDist * (e.deltaY > 0 ? 1.1 : 0.9)));
+            render3D();
+        }, { passive: false });
+
+        /* ── Buttons ── */
+        document.getElementById('btnNew').onclick = () => {
+            const res = parseInt(prompt('Resolution (e.g. 1024):', '1024'));
+            const ws = parseFloat(prompt('World Size in meters (e.g. 2000):', '2000'));
+            if (res && ws) newHeightmap(res, ws);
+        };
+        document.getElementById('btnGenerate').onclick = () => document.getElementById('modal-overlay').classList.add('show');
+        document.getElementById('modalCancel').onclick = () => document.getElementById('modal-overlay').classList.remove('show');
+        document.getElementById('modalOk').onclick = () => {
+            document.getElementById('modal-overlay').classList.remove('show');
+            generateHeightmap(
+                parseInt(document.getElementById('genRes').value),
+                parseFloat(document.getElementById('genSize').value),
+                parseFloat(document.getElementById('genAmp').value),
+                parseFloat(document.getElementById('genFreq').value),
+                parseInt(document.getElementById('genOct').value),
+                parseFloat(document.getElementById('genOX').value),
+                parseFloat(document.getElementById('genOZ').value)
+            );
+        };
+        document.getElementById('btnLoad').onclick = loadHeightmap;
+        document.getElementById('btnSave').onclick = saveHeightmap;
+        document.getElementById('btnExportPNG').onclick = exportPNG;
+        document.getElementById('btnUndo').onclick = undo;
+        document.getElementById('btnRedo').onclick = redo;
+
+        function updateStatusBrush() {
+            $statBrush.textContent = `${currentTool} r=${brushRadius} s=${brushStrength.toFixed(2)}`;
+        }
+
+        window.addEventListener('resize', () => { render2D(); render3D(); });
+
+        /* ═══════════════════════════════════════════
+           Init
+           ═══════════════════════════════════════════ */
+        init3D();
+        generateHeightmap(1024, 2000, 15, 0.02, 4, 0, 0);
+        updateStatusBrush();
+    </script>
+</body>
+
+</html>

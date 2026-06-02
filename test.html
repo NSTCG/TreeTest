@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Infinite Terrain</title>
+  <style>
+    /* Styles for the terrain */
+    body {
+      margin: 0;
+      padding: 0;
+    }
+    
+    #terrain-container {
+      position: relative;
+      width: 800px; /* adjust this to change the size of the terrain */
+      height: 600px;
+      background-color: #964B00; /* brown grass color */
+    }
+    
+    /* Styles for the player controller */
+    .player-controller {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 20px;
+      height: 40px;
+      background-color: #F5F5DC; /* light gray color */
+      border-radius: 10px;
+    }
+    
+    .player-controller img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    /* Add some basic CSS for styling the terrain and player controller */
+    #terrain-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 50vh;
+      background-color: rgba(128, 128, 128, 0.5); /* light gray fill */
+    }
+    
+    .player-controller::before {
+      content: 'Controller';
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      width: 100%;
+      height: 20px;
+      font-size: 16px;
+      font-weight: bold;
+      color: #F5F5DC; /* light gray text */
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Create the terrain container -->
+  <div id="terrain-container">
+    <canvas id="terrain" width="800" height="600"></canvas>
+  </div>
+
+<svg width="200" height="150" xmlns="http://www.w3.org/2000/svg">
+  <rect width="200" height="150" fill="#87CEEB" />  <!-- Sky -->
+
+  <circle cx="100" cy="60" r="40" fill="#228B22" /> <!-- Sun -->
+
+  <!-- Trees -->
+  <rect x="50" y="60" width="20" height="80" fill="#8B4513" stroke="black" stroke-width="1" />
+  <rect x="120" y="70" width="20" height="70" fill="#8B4513" stroke="black" stroke-width="1" />
+  <rect x="180" y="50" width="20" height="90" fill="#8B4513" stroke="black" stroke-width="1" />
+
+  <!-- Clouds -->
+  <ellipse cx="70" cy="30" rx="30" ry="20" fill="white" opacity="0.7"/>
+  <ellipse cx="130" cy="40" rx="40" ry="25" fill="white" opacity="0.7"/>
+</svg>
+
+  
+  <!-- Initialize the player controller at the center of the terrain -->
+  <script>
+    const canvas = document.getElementById('terrain');
+    let ctx = canvas.getContext('2d');
+    
+    // Function to draw the terrain
+    function drawTerrain() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Draw the background (brown grass)
+      ctx.fillStyle = '#964B00';
+      for (let y = -100; y <= 100; y++) {
+        for (let x = -100; x <= 100; x++) {
+          const distance = Math.sqrt(x ** 2 + y ** 2);
+          if (distance < 10) { // adjust this to change the size of the grass
+            ctx.fillStyle = '#C5CAE9'; // light green color for grass
+            ctx.fillRect(x * 8, y * 8, 8, 8); // draw a small rectangle for each pixel on the grid
+          }
+        }
+      }
+      
+      // Draw the player controller at the center of the terrain
+      ctx.fillStyle = '#F5F5DC';
+      ctx.beginPath();
+      ctx.arc(canvas.width / 2, canvas.height / 2, 10, 0, 2 * Math.PI);
+      ctx.fill();
+    }
+    
+    // Function to handle key presses (for movement and jumping)
+    function handleKeyPress(event) {
+      if (event.key === 'ArrowUp') {
+        drawTerrain();
+      } else if (event.key === 'ArrowDown' && terrainHeight > 0) {
+        drawTerrain();
+      } else if (event.key === 'Space') {
+        // Jumping functionality can be implemented here
+        console.log('Jumping');
+      }
+    }
+    
+    // Initialize the canvas and add an event listener for key presses
+    let canvasWidth = canvas.width;
+    let terrainHeight = 400;
+    let x, y;
+    document.addEventListener('keydown', handleKeyPress);
+    
+    // Draw the initial state of the terrain
+    drawTerrain();
+    
+    function update() {
+      requestAnimationFrame(update);
+      
+      // Move the player controller up and down on each frame
+      if (event.key === 'ArrowUp') {
+        x = Math.floor(canvasWidth / 2 - canvas.width / 4);
+      } else if (event.key === 'ArrowDown' && terrainHeight > 0) {
+        y = Math.floor(canvasHeight / 2 - canvas.height / 4);
+      }
+      
+      // Clear the canvas and draw the updated terrain
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let y = -100; y <= 100; y++) {
+        for (let x = -100; x <= 100; x++) {
+          const distance = Math.sqrt(x ** 2 + y ** 2);
+          if (distance < 10) { // adjust this to change the size of the grass
+            ctx.fillStyle = '#C5CAE9'; // light green color for grass
+            ctx.fillRect(x * 8, y * 8, 8, 8); // draw a small rectangle for each pixel on the grid
+          }
+        }
+      }
+      
+      // Draw the player controller at its updated position
+      ctx.fillStyle = '#F5F5DC';
+      ctx.beginPath();
+      ctx.arc(canvasWidth / 2 + (x - canvasWidth / 4), canvasHeight / 2 + (y - canvas.height / 4), 10, 0, 2 * Math.PI);
+      ctx.fill();
+      
+      // Update the terrain height based on user input
+      if (event.key === 'ArrowUp' && y < terrainHeight - 20) {
+        terrainHeight -= 5;
+      } else if (event.key === 'ArrowDown' && y > 0) {
+        terrainHeight += 5;
+      }
+      
+      // Check for win condition and end the game
+      if (terrainHeight <= 10 || x < -100) { // adjust these to change the win condition
+        alert('Game Over!');
+        
+        // Clean up and exit the application
+        document.removeEventListener('keydown', handleKeyPress);
+    }
+    
+    update();
+  </script>
+  
+  <!-- View the HTML code in a browser -->
+  <button id="view-btn">View Code</button>
+  <script src="index.js"></script>
+</body>
+</html>

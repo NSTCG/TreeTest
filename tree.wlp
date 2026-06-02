@@ -1,0 +1,3753 @@
+{
+    "objects": {
+        "14": {
+            "name": "Player",
+            "components": [
+                {
+                    "type": "stats-html",
+                    "stats-html": {
+                        "statsType": "fps"
+                    }
+                },
+                {
+                    "type": "fixed-foveation",
+                    "fixed-foveation": {
+                        "fixedFoveation": 1.0
+                    }
+                },
+                {
+                    "type": "wasd-movement",
+                    "wasd-movement": {
+                        "headObject": "17",
+                        "vrCamera": "18",
+                        "planetObject": "1684",
+                        "lockY": false,
+                        "speed": 5.0,
+                        "maxZoom": 30.0,
+                        "floatingOriginThreshold": 50.0
+                    }
+                },
+                {
+                    "type": "target-framerate",
+                    "target-framerate": {
+                        "framerate": 72.0
+                    }
+                }
+            ],
+            "scaling": [
+                0.9999877,
+                1.0,
+                0.9999877
+            ],
+            "translation": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rotation": [
+                2.443642870275653e-7,
+                0.9651141,
+                8.052620614762418e-7,
+                -0.2618286
+            ],
+            "parent": null
+        },
+        "133": {
+            "link": {
+                "name": "WonderlandLogo",
+                "file": "models\\WonderlandLogo.glb"
+            },
+            "translation": [
+                -3.7999997,
+                -38.9443969,
+                0.0100002
+            ],
+            "rotation": [
+                0.7070947,
+                0.0,
+                0.0,
+                0.7071185
+            ],
+            "scaling": [
+                1.5,
+                1.4999418,
+                1.4999418
+            ],
+            "parent": "138"
+        },
+        "17": {
+            "name": "NonVrCamera",
+            "parent": "14",
+            "components": [
+                {
+                    "type": "view",
+                    "view": {
+                        "far": 2500.0
+                    }
+                }
+            ]
+        },
+        "18": {
+            "name": "EyeLeft",
+            "parent": "14",
+            "components": [
+                {
+                    "type": "view",
+                    "view": {
+                        "far": 2500.0,
+                        "exposure": 2.0
+                    }
+                },
+                {
+                    "type": "input",
+                    "input": {
+                        "type": "eye left"
+                    }
+                }
+            ]
+        },
+        "19": {
+            "name": "EyeRight",
+            "parent": "14",
+            "components": [
+                {
+                    "type": "view",
+                    "view": {
+                        "far": 2500.0,
+                        "exposure": 2.0
+                    }
+                },
+                {
+                    "type": "input",
+                    "input": {
+                        "type": "eye right"
+                    }
+                }
+            ]
+        },
+        "21": {
+            "name": "Sun",
+            "components": [
+                {
+                    "type": "light",
+                    "light": {
+                        "intensity": 5.5999999,
+                        "shadows": true,
+                        "type": "sun",
+                        "shadowRange": 100.0,
+                        "shadowNormalBias": 0.039,
+                        "cascadeCount": 1,
+                        "shadowBias": 0.001
+                    },
+                    "active": true
+                },
+                {
+                    "type": "move",
+                    "move": {
+                        "speed": 4.0
+                    },
+                    "active": true
+                }
+            ],
+            "translation": [
+                -21.7503242,
+                0.000236,
+                -0.0000261
+            ],
+            "rotation": [
+                -0.1550696,
+                -0.6840869,
+                -0.1626625,
+                0.6939159
+            ],
+            "parent": "121",
+            "scaling": [
+                0.9999997,
+                0.9999994,
+                0.9999994
+            ]
+        },
+        "84": {
+            "name": "Text",
+            "components": [
+                {
+                    "type": "text",
+                    "text": {
+                        "effect": "outline",
+                        "characterSpacing": 0.1,
+                        "justified": false,
+                        "text": "Default Physical"
+                    },
+                    "active": false
+                }
+            ],
+            "translation": [
+                0.0,
+                0.002,
+                0.0
+            ],
+            "rotation": [
+                -0.707103,
+                0.0,
+                0.0,
+                0.7071104
+            ],
+            "scaling": [
+                1.0,
+                0.9999709,
+                0.9999709
+            ],
+            "parent": "125"
+        },
+        "90": {
+            "name": "FloorPlane",
+            "components": [
+                {
+                    "type": "mesh",
+                    "mesh": {
+                        "mesh": "7",
+                        "material": "20"
+                    },
+                    "active": true
+                }
+            ],
+            "scaling": [
+                1000.0093994,
+                1000.0097656,
+                1000.001831
+            ],
+            "translation": [
+                -0.0000681,
+                -261.9616699,
+                -0.0000152
+            ],
+            "rotation": [
+                -0.7072702,
+                6.546011377395189e-8,
+                2.980238988925521e-8,
+                0.7069432
+            ],
+            "parent": "1692"
+        },
+        "121": {
+            "name": "Environment"
+        },
+        "123": {
+            "name": "TextShadow",
+            "components": [
+                {
+                    "type": "text",
+                    "text": {
+                        "effect": "outline",
+                        "characterSpacing": 0.1,
+                        "justified": false,
+                        "text": "Default Physical",
+                        "material": "124"
+                    },
+                    "active": false
+                }
+            ],
+            "translation": [
+                -0.0050184,
+                3.725290298461914e-8,
+                -0.0035808
+            ],
+            "rotation": [
+                -0.7070986,
+                0.0,
+                0.0,
+                0.7071148
+            ],
+            "scaling": [
+                1.0,
+                0.9999564,
+                0.9999564
+            ],
+            "parent": "125"
+        },
+        "125": {
+            "name": "Text",
+            "translation": [
+                0.0,
+                0.0216946,
+                2.1346309
+            ],
+            "scaling": [
+                7.0,
+                6.9998669,
+                6.9998669
+            ],
+            "parent": "121",
+            "rotation": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ]
+        },
+        "138": {
+            "name": "Wall",
+            "parent": "121",
+            "translation": [
+                0.0,
+                0.0,
+                -4.0
+            ]
+        },
+        "1681": {
+            "name": "instance",
+            "components": [
+                {
+                    "type": "lod-spawner",
+                    "lod-spawner": {
+                        "spawnArea": 500.0,
+                        "prefabHigh": "1704",
+                        "cameraObject": "17",
+                        "prefabLow": "1713",
+                        "lodDistance": 100.0,
+                        "count": 1000,
+                        "planetObject": "1684",
+                        "maxHighPrefab": 10
+                    },
+                    "active": true
+                }
+            ],
+            "translation": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rotation": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "scaling": [
+                3.0211999,
+                3.0211999,
+                3.0211999
+            ],
+            "parent": "121"
+        },
+        "201": {
+            "name": "Post",
+            "components": [],
+            "parent": "121",
+            "translation": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rotation": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "scaling": [
+                1.0,
+                1.0,
+                1.0
+            ]
+        },
+        "194": {
+            "name": "Tree",
+            "components": [
+                {
+                    "originalIndex": 0,
+                    "mesh": {
+                        "mesh": "151",
+                        "material": "139"
+                    }
+                },
+                {
+                    "type": "mesh",
+                    "mesh": {
+                        "mesh": "151",
+                        "material": "139"
+                    }
+                }
+            ],
+            "translation": [
+                0.0,
+                -18.7570438,
+                0.0
+            ],
+            "rotation": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "scaling": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "parent": "121"
+        },
+        "1684": {
+            "name": "planet",
+            "components": [
+                {
+                    "type": "planet",
+                    "planet": {
+                        "cameraObject": "17",
+                        "material": "22",
+                        "size": 500.0,
+                        "resolution": 64,
+                        "bakedMapUrl": "terrain.heightmap (1).bin",
+                        "amplitude": 15.0
+                    }
+                }
+            ],
+            "parent": "121",
+            "translation": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rotation": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "scaling": [
+                1.0,
+                1.0,
+                1.0
+            ]
+        },
+        "1686": {
+            "name": "Mesh.000",
+            "components": [
+                {
+                    "type": "mesh",
+                    "mesh": {
+                        "mesh": "8",
+                        "material": "22"
+                    },
+                    "active": false
+                }
+            ],
+            "translation": [
+                0.0,
+                -0.0478404,
+                0.0
+            ],
+            "rotation": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "scaling": [
+                1.95,
+                1.95,
+                1.95
+            ],
+            "parent": "121"
+        },
+        "1687": {
+            "name": "Mesh.001",
+            "parent": "14",
+            "components": [
+                {
+                    "type": "mesh",
+                    "mesh": {
+                        "mesh": "11",
+                        "material": "22"
+                    }
+                }
+            ],
+            "translation": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rotation": [
+                0.0000054,
+                -9.536739753457368e-7,
+                0.0,
+                1.0
+            ],
+            "scaling": [
+                1.000004,
+                1.0,
+                1.000004
+            ]
+        },
+        "1688": {
+            "name": "Grass",
+            "components": [
+                {
+                    "type": "simpleCircularGrass",
+                    "simpleCircularGrass": {
+                        "material": "140",
+                        "bladesPerBlock": 100,
+                        "blockSide": 10.0,
+                        "radius": 80.0,
+                        "terrain": "1684",
+                        "useInstancing": false,
+                        "useCircularMask": false,
+                        "bladeWidth": 0.6,
+                        "bladeHeightVariation": 0.6999999
+                    }
+                }
+            ],
+            "parent": "121",
+            "translation": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rotation": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "scaling": [
+                1.0,
+                1.0,
+                1.0
+            ]
+        },
+        "1689": {
+            "name": "PlayerLight",
+            "parent": "14",
+            "components": [
+                {
+                    "type": "light",
+                    "light": {
+                        "intensity": 0.001
+                    }
+                }
+            ],
+            "translation": [
+                -0.0000387,
+                0.0000092,
+                0.1659536
+            ],
+            "rotation": [
+                -0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "scaling": [
+                1.0,
+                1.0,
+                1.0
+            ]
+        },
+        "1690": {
+            "link": {
+                "name": "Fog Cylinder",
+                "file": "models\\fog-cylinder.glb"
+            },
+            "parent": "1692",
+            "translation": [
+                0.0000067,
+                -206.0917358,
+                -0.0003632
+            ],
+            "rotation": [
+                0.0000029,
+                4.172517833467282e-7,
+                5.6627911249051976e-8,
+                1.0
+            ],
+            "scaling": [
+                1.4600001,
+                1.8227256,
+                1.4600001
+            ],
+            "components": [
+                {
+                    "originalIndex": 0,
+                    "active": true
+                }
+            ]
+        },
+        "1691": {
+            "name": "Mesh",
+            "components": [
+                {
+                    "type": "mesh",
+                    "mesh": {
+                        "mesh": "12",
+                        "material": "143"
+                    },
+                    "active": false
+                }
+            ],
+            "translation": [
+                -0.0000593,
+                -519.9635009,
+                0.0000304
+            ],
+            "rotation": [
+                -0.7070791,
+                1.2519839742708427e-7,
+                -0.0,
+                0.7071341
+            ],
+            "scaling": [
+                1706.7822265,
+                1706.7316894,
+                1706.724121
+            ],
+            "parent": "1692"
+        },
+        "1692": {
+            "name": "Fog",
+            "components": [
+                {
+                    "type": "follow-xz",
+                    "follow-xz": {
+                        "target": "14"
+                    }
+                }
+            ],
+            "translation": [
+                0.0,
+                261.9617004,
+                0.0
+            ],
+            "rotation": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "scaling": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "parent": "121"
+        },
+        "1693": {
+            "name": "Mesh.002",
+            "parent": "1692",
+            "components": [
+                {
+                    "type": "mesh",
+                    "mesh": {
+                        "mesh": "7",
+                        "material": "144"
+                    }
+                }
+            ],
+            "translation": [
+                257.732788,
+                -192.5034484,
+                -1917.37854
+            ],
+            "rotation": [
+                5.808912462157423e-8,
+                -0.2240816,
+                -2.718232572362922e-8,
+                0.9745702
+            ],
+            "scaling": [
+                1621.7446289,
+                596.7273559,
+                596.727539
+            ]
+        },
+        "1694": {
+            "name": "Mesh.002",
+            "translation": [
+                -1941.6401367,
+                -192.5060882,
+                935.3635864
+            ],
+            "rotation": [
+                1.0746096990033038e-7,
+                0.8430113,
+                -6.280924935708754e-7,
+                0.5378956
+            ],
+            "scaling": [
+                1968.3752441,
+                543.4482421,
+                543.4488525
+            ],
+            "parent": "1692",
+            "components": [
+                {
+                    "type": "mesh",
+                    "mesh": {
+                        "material": "144",
+                        "mesh": "7"
+                    }
+                }
+            ]
+        },
+        "1695": {
+            "name": "Mesh.002",
+            "translation": [
+                -1013.0963745,
+                -192.5036315,
+                -505.4965515
+            ],
+            "rotation": [
+                2.534041811941279e-7,
+                0.5263438,
+                -0.0000013,
+                0.8502717
+            ],
+            "scaling": [
+                1463.8782958,
+                543.4482421,
+                543.4486083
+            ],
+            "parent": "1692",
+            "components": [
+                {
+                    "type": "mesh",
+                    "mesh": {
+                        "material": "144",
+                        "mesh": "7"
+                    }
+                }
+            ]
+        },
+        "1696": {
+            "name": "Mesh.002",
+            "translation": [
+                -22.2479743,
+                -104.825653,
+                1787.6916503
+            ],
+            "rotation": [
+                -0.0370245,
+                0.9992792,
+                -0.0003038,
+                -0.0083681
+            ],
+            "scaling": [
+                1512.1762695,
+                596.7260131,
+                596.7476806
+            ],
+            "parent": "1692",
+            "components": [
+                {
+                    "type": "mesh",
+                    "mesh": {
+                        "material": "144",
+                        "mesh": "7"
+                    }
+                }
+            ]
+        },
+        "1697": {
+            "name": "Mesh.002",
+            "translation": [
+                1105.8652343,
+                -114.7463684,
+                -414.2972106
+            ],
+            "rotation": [
+                4.546266438865132e-7,
+                -0.5308188,
+                2.986251388392702e-7,
+                0.8474853
+            ],
+            "scaling": [
+                1317.1816406,
+                543.4482421,
+                543.4487915
+            ],
+            "parent": "1692",
+            "components": [
+                {
+                    "type": "mesh",
+                    "mesh": {
+                        "material": "144",
+                        "mesh": "7"
+                    }
+                }
+            ]
+        },
+        "1698": {
+            "name": "Mesh.002",
+            "translation": [
+                1698.0667724,
+                108.8114395,
+                1616.9250488
+            ],
+            "rotation": [
+                6.355222694764961e-7,
+                -0.7919027,
+                7.55220128212386e-7,
+                0.610647
+            ],
+            "scaling": [
+                2117.567871,
+                543.4482421,
+                543.4551391
+            ],
+            "parent": "1692",
+            "components": [
+                {
+                    "type": "mesh",
+                    "mesh": {
+                        "material": "144",
+                        "mesh": "7"
+                    }
+                }
+            ]
+        },
+        "1699": {
+            "name": "Treelow",
+            "components": [
+                {
+                    "type": "mesh",
+                    "mesh": {
+                        "mesh": "7",
+                        "material": "145"
+                    },
+                    "active": false
+                }
+            ],
+            "translation": [
+                0.0000026,
+                2.9172153,
+                -0.0
+            ],
+            "rotation": [
+                -1.560071325457102e-7,
+                -0.5524991,
+                -2.26707939532389e-7,
+                0.8335133
+            ],
+            "scaling": [
+                2.2959167,
+                3.1579837,
+                3.1579852
+            ],
+            "parent": "1700"
+        },
+        "1700": {
+            "name": "TreeLow",
+            "parent": "121",
+            "translation": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rotation": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "scaling": [
+                1.0,
+                1.0,
+                1.0
+            ]
+        },
+        "1701": {
+            "name": "Mesh.003",
+            "components": [
+                {
+                    "type": "mesh",
+                    "mesh": {
+                        "mesh": "9",
+                        "material": "111"
+                    }
+                }
+            ],
+            "translation": [
+                -2.7460203,
+                -14.9646472,
+                0.0
+            ],
+            "rotation": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "scaling": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "parent": "121"
+        },
+        "1702": {
+            "name": "Mesh.003",
+            "translation": [
+                -2.7460203,
+                -14.9646472,
+                -2.0654087
+            ],
+            "rotation": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "scaling": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "components": [
+                {
+                    "type": "mesh",
+                    "mesh": {
+                        "material": "111",
+                        "mesh": "9"
+                    }
+                }
+            ],
+            "parent": "121"
+        },
+        "1703": {
+            "name": "Grass",
+            "translation": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "rotation": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "scaling": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "parent": "121",
+            "components": [
+                {
+                    "type": "simpleCircularGrass",
+                    "simpleCircularGrass": {
+                        "bladeHeightVariation": 0.6999999,
+                        "bladeWidth": 0.6,
+                        "bladesPerBlock": 100,
+                        "blockSide": 10.0,
+                        "material": "140",
+                        "radius": 80.0,
+                        "terrain": "1684",
+                        "useCircularMask": false,
+                        "useInstancing": false
+                    }
+                }
+            ]
+        },
+        "1704": {
+            "name": "Tree",
+            "translation": [
+                0.0,
+                -13.1327104,
+                0.0
+            ],
+            "rotation": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "scaling": [
+                1.0,
+                1.0,
+                1.0
+            ]
+        },
+        "1709": {
+            "link": {
+                "name": "bark10_0",
+                "file": "tree.fbx"
+            },
+            "parent": null,
+            "components": [
+                {
+                    "originalIndex": 0,
+                    "mesh": {
+                        "material": "146"
+                    },
+                    "active": false
+                }
+            ],
+            "translation": [
+                0.0,
+                8.7982378,
+                0.0
+            ],
+            "rotation": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "scaling": [
+                0.0099999,
+                0.0099999,
+                0.0099999
+            ]
+        },
+        "1710": {
+            "link": {
+                "name": "grass_albedo_1<bark10_0",
+                "file": "tree.fbx"
+            },
+            "parent": "1709",
+            "components": [
+                {
+                    "originalIndex": 0,
+                    "mesh": {
+                        "material": "147"
+                    },
+                    "active": false
+                }
+            ]
+        },
+        "1711": {
+            "link": {
+                "name": "node_0",
+                "file": "models\\treeai.glb"
+            },
+            "parent": "1704",
+            "translation": [
+                0.0,
+                0.0,
+                9.5367431640625e-7
+            ],
+            "rotation": [
+                0.7071068,
+                0.0,
+                0.0,
+                0.7071067
+            ],
+            "scaling": [
+                5.15,
+                5.1499729,
+                5.1499729
+            ],
+            "components": [
+                {
+                    "originalIndex": 0,
+                    "active": true
+                }
+            ]
+        },
+        "1712": {
+            "link": {
+                "name": "Billboard",
+                "file": "billboard.glb"
+            },
+            "translation": [
+                0.0,
+                11.9800205,
+                0.0
+            ],
+            "rotation": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "scaling": [
+                6.4377102,
+                6.4377102,
+                6.4377102
+            ],
+            "parent": null,
+            "components": [
+                {
+                    "originalIndex": 0,
+                    "active": false
+                }
+            ]
+        },
+        "1713": {
+            "name": "Low",
+            "translation": [
+                0.0,
+                -13.1327104,
+                0.0
+            ],
+            "rotation": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "scaling": [
+                1.0,
+                1.0,
+                1.0
+            ]
+        },
+        "1714": {
+            "link": {
+                "name": "Billboard",
+                "file": "billboard (2).glb"
+            },
+            "parent": "1713",
+            "translation": [
+                -9.999999974752427e-7,
+                2.1810755,
+                -0.0
+            ],
+            "rotation": [
+                -6.524349487335712e-7,
+                -0.6234536,
+                -7.811743785168801e-7,
+                0.7818601
+            ],
+            "scaling": [
+                6.5264945,
+                6.5264887,
+                6.5264945
+            ],
+            "components": [
+                {
+                    "originalIndex": 0,
+                    "active": true
+                }
+            ]
+        }
+    },
+    "meshes": {
+        "7": {
+            "link": {
+                "name": "PrimitivePlane",
+                "file": "default"
+            },
+            "meshlets": false
+        },
+        "8": {
+            "link": {
+                "name": "PrimitiveCube",
+                "file": "default"
+            },
+            "meshlets": false
+        },
+        "9": {
+            "link": {
+                "name": "PrimitiveSphere",
+                "file": "default"
+            }
+        },
+        "10": {
+            "link": {
+                "name": "PrimitiveCone",
+                "file": "default"
+            }
+        },
+        "11": {
+            "link": {
+                "name": "PrimitiveCylinder",
+                "file": "default"
+            }
+        },
+        "12": {
+            "link": {
+                "name": "PrimitiveCircle",
+                "file": "default"
+            }
+        },
+        "100": {
+            "link": {
+                "name": "WL_ShaderBall",
+                "file": "models\\WonderlandShaderBall.glb"
+            }
+        },
+        "131": {
+            "link": {
+                "name": "WonderlandLogo",
+                "file": "models\\WonderlandLogo.glb"
+            }
+        },
+        "141": {
+            "link": {
+                "name": "WL_ShaderBall.0",
+                "file": "models\\WonderlandShaderBall.glb"
+            }
+        },
+        "142": {
+            "link": {
+                "name": "WonderlandLogo.0",
+                "file": "models\\WonderlandLogo.glb"
+            }
+        },
+        "143": {
+            "link": {
+                "name": "tree_Bark_0",
+                "file": "stylized_tree (1).glb"
+            },
+            "simplify": false,
+            "simplifyTarget": 0.1,
+            "meshlets": true
+        },
+        "144": {
+            "link": {
+                "name": "Leaves_Leaves_0",
+                "file": "stylized_tree (1).glb"
+            },
+            "simplify": false,
+            "simplifyTarget": 0.5,
+            "meshlets": true
+        },
+        "145": {
+            "link": {
+                "name": "Farm_Tree_Leaves_Tree2_Leaves_0",
+                "file": "free_stylized_tree_asset.glb"
+            }
+        },
+        "146": {
+            "link": {
+                "name": "Farm_Tree_Body_low_Farm_Tree_Body_0",
+                "file": "free_stylized_tree_asset.glb"
+            }
+        },
+        "147": {
+            "link": {
+                "name": "Palm Tree 1_Plam Tree_0",
+                "file": "stylized_palm_tree.glb"
+            },
+            "meshlets": true,
+            "simplify": false,
+            "simplifyTarget": 0.0
+        },
+        "148": {
+            "link": {
+                "name": "tree_low.001_StylizedTree_0",
+                "file": "stylized_pine_tree_tree.glb"
+            },
+            "simplify": false,
+            "simplifyTarget": 0.0,
+            "meshlets": true
+        },
+        "149": {
+            "link": {
+                "name": "Tree_1_Bark_0",
+                "file": "low_poly_stylized_tree.glb"
+            }
+        },
+        "150": {
+            "link": {
+                "name": "Tree_1_Tree_Leaves_0",
+                "file": "low_poly_stylized_tree.glb"
+            }
+        },
+        "151": {
+            "link": {
+                "name": "coconut_tree_coconut_tree_mat_0",
+                "file": "coconut_tree.glb"
+            },
+            "meshlets": false,
+            "simplify": false,
+            "simplifyTarget": 0.0
+        },
+        "152": {
+            "link": {
+                "name": "Fog Cylinder",
+                "file": "models\\fog-cylinder.glb"
+            }
+        },
+        "153": {
+            "link": {
+                "name": "mesh_0",
+                "file": "tree.fbx"
+            },
+            "meshlets": true
+        },
+        "154": {
+            "link": {
+                "name": "mesh_1",
+                "file": "tree.fbx"
+            },
+            "meshlets": true
+        },
+        "155": {
+            "link": {
+                "name": "node_0",
+                "file": "models\\treeai.glb"
+            },
+            "simplify": true,
+            "simplifyTarget": 0.5,
+            "meshlets": false
+        },
+        "156": {
+            "link": {
+                "name": "PerforatedBillboard",
+                "file": "billboard.glb"
+            }
+        },
+        "157": {
+            "link": {
+                "name": "PerforatedBillboard",
+                "file": "billboard (2).glb"
+            }
+        }
+    },
+    "materials": {
+        "DefaultFontMaterial": {
+            "link": {
+                "name": "DefaultFontMaterial",
+                "file": "default"
+            },
+            "Text": {
+                "font": "55",
+                "color": [
+                    0.8823528,
+                    0.8823528,
+                    0.8823528,
+                    1.0
+                ],
+                "effectColor": [
+                    0.1782391,
+                    0.2054992,
+                    0.2392154,
+                    1.0
+                ]
+            }
+        },
+        "20": {
+            "name": "WaterMaterial",
+            "Phong": {
+                "specularColor": [
+                    9.999899930335232e-7,
+                    9.99993744699168e-7,
+                    9.999999974752427e-7,
+                    1.0
+                ],
+                "shininess": 1,
+                "emissiveColor": [
+                    0.2,
+                    0.2,
+                    0.2,
+                    1.0
+                ],
+                "ambientColor": [
+                    0.05,
+                    0.05,
+                    0.05,
+                    1.0
+                ],
+                "diffuseColor": [
+                    0.5,
+                    0.5,
+                    0.5,
+                    1.0
+                ]
+            },
+            "pipeline": "146",
+            "Physical": {
+                "metallicFactor": 0.0,
+                "albedoColor": [
+                    1.0,
+                    1.0,
+                    1.0,
+                    1.0
+                ],
+                "fogColor": [
+                    0.5,
+                    0.6999999,
+                    1.0,
+                    0.5
+                ]
+            },
+            "Water": {
+                "skyboxTexture": "14",
+                "fogColor": [
+                    0.9882351,
+                    0.9107266,
+                    0.9107266,
+                    0.0941174
+                ],
+                "scroll": 0.1
+            }
+        },
+        "22": {
+            "name": "GroundMaterial",
+            "Phong": {
+                "diffuseColor": [
+                    1.0,
+                    0.0,
+                    0.5948274,
+                    1.0
+                ],
+                "specularColor": [
+                    9.999899930335232e-7,
+                    9.999911299019004e-7,
+                    9.999999974752427e-7,
+                    1.0
+                ],
+                "shininess": 10,
+                "ambientColor": [
+                    1.0,
+                    1.0,
+                    1.0,
+                    1.0
+                ],
+                "emissiveColor": [
+                    0.317647,
+                    0.0,
+                    0.2165776,
+                    1.0
+                ],
+                "diffuseTexture": "12"
+            },
+            "pipeline": "149",
+            "Physical": {
+                "albedoColor": [
+                    0.8705883,
+                    1.0,
+                    0.0,
+                    1.0
+                ],
+                "metallicFactor": 0.0,
+                "roughnessFactor": 1.0,
+                "albedoTexture": null,
+                "fogColor": [
+                    0.5,
+                    0.6999999,
+                    1.0,
+                    0.5
+                ]
+            },
+            "PhysicalTerrainGrass": {
+                "albedoColor": [
+                    0.4708031,
+                    0.5058823,
+                    0.1745789,
+                    1.0
+                ],
+                "fogColor": [
+                    0.9882351,
+                    0.9107266,
+                    0.9107266,
+                    0.0199999
+                ],
+                "roughnessFactor": 1.0,
+                "terrainMaterial": 1.0,
+                "terrainBlendHeight": 0.0,
+                "terrainTextureTiling": 0.6,
+                "terrainWindStrength": 0.0,
+                "albedoTexture": null,
+                "fogStart": 1.0,
+                "metallicFactor": 0.0
+            }
+        },
+        "25": {
+            "name": "Stand",
+            "Phong": {
+                "diffuseColor": [
+                    1.0,
+                    0.8039215,
+                    0.0,
+                    1.0
+                ],
+                "specularColor": [
+                    9.999999974752427e-7,
+                    9.999899930335232e-7,
+                    9.999899930335232e-7,
+                    1.0
+                ],
+                "ambientColor": [
+                    0.05,
+                    0.05,
+                    0.05,
+                    1.0
+                ],
+                "emissiveColor": [
+                    0.3843137,
+                    0.3089579,
+                    0.0,
+                    1.0
+                ]
+            },
+            "pipeline": "48",
+            "Physical": {
+                "metallicFactor": 0.0,
+                "roughnessFactor": 1.0,
+                "albedoColor": [
+                    0.5647057,
+                    0.5647057,
+                    0.5647057,
+                    0.9254902
+                ],
+                "albedoTexture": "8",
+                "fogColor": [
+                    0.5,
+                    0.6999999,
+                    1.0,
+                    0.5
+                ]
+            },
+            "PhysicalTerrainGrass": {
+                "albedoColor": [
+                    0.0,
+                    0.0,
+                    0.0,
+                    1.0
+                ],
+                "fogColor": [
+                    0.5,
+                    0.6999999,
+                    1.0,
+                    0.5
+                ]
+            }
+        },
+        "26": {
+            "name": "Sky",
+            "Phong": {
+                "diffuseColor": [
+                    0.152941,
+                    0.7882353,
+                    0.5411763,
+                    1.0
+                ],
+                "specularColor": [
+                    9.999999974752427e-7,
+                    9.999899930335232e-7,
+                    9.999899930335232e-7,
+                    1.0
+                ],
+                "ambientColor": [
+                    0.05,
+                    0.05,
+                    0.05,
+                    1.0
+                ],
+                "emissiveColor": [
+                    0.0,
+                    0.2352941,
+                    0.1437907,
+                    1.0
+                ]
+            },
+            "pipeline": "140",
+            "Sky": {
+                "colorStop3": [
+                    0.5,
+                    0.6999999,
+                    1.0,
+                    1.0
+                ],
+                "colorStop2": [
+                    0.5,
+                    0.6999999,
+                    1.0,
+                    1.0
+                ],
+                "direction": [
+                    0.0,
+                    0.3,
+                    1.0
+                ],
+                "exposure": 0.4
+            },
+            "AtmosphericSky": {
+                "direction": [
+                    1.0,
+                    1.0,
+                    0.0
+                ],
+                "exposure": 0.5
+            }
+        },
+        "98": {
+            "link": {
+                "name": "WL_ShaderBall_Custom",
+                "file": "models\\WonderlandShaderBall.glb"
+            },
+            "pipeline": "144",
+            "name": "WL_ShaderBall_Custom",
+            "Physical": {
+                "fogColor": [
+                    0.5,
+                    0.6999999,
+                    1.0,
+                    0.5
+                ]
+            }
+        },
+        "99": {
+            "link": {
+                "name": "WL_ShaderBall_grey",
+                "file": "models\\WonderlandShaderBall.glb"
+            },
+            "pipeline": "144",
+            "Physical": {
+                "roughnessFactor": 0.3,
+                "metallicFactor": 0.3,
+                "fogColor": [
+                    0.5,
+                    0.6999999,
+                    1.0,
+                    0.5
+                ]
+            }
+        },
+        "111": {
+            "name": "Green",
+            "Phong": {
+                "specularColor": [
+                    9.999899930335232e-7,
+                    9.99993744699168e-7,
+                    9.999999974752427e-7,
+                    1.0
+                ],
+                "shininess": 1,
+                "emissiveColor": [
+                    0.2,
+                    0.2,
+                    0.2,
+                    1.0
+                ],
+                "ambientColor": [
+                    0.05,
+                    0.05,
+                    0.05,
+                    1.0
+                ],
+                "diffuseColor": [
+                    0.5,
+                    0.5,
+                    0.5,
+                    1.0
+                ]
+            },
+            "pipeline": "144",
+            "Physical": {
+                "metallicFactor": 0.3,
+                "albedoColor": [
+                    0.4290657,
+                    0.8823528,
+                    0.6850395,
+                    1.0
+                ],
+                "roughnessFactor": 0.6,
+                "fogColor": [
+                    0.5,
+                    0.6999999,
+                    1.0,
+                    0.5
+                ]
+            }
+        },
+        "112": {
+            "name": "Pink",
+            "Phong": {
+                "specularColor": [
+                    9.999899930335232e-7,
+                    9.99993744699168e-7,
+                    9.999999974752427e-7,
+                    1.0
+                ],
+                "shininess": 1,
+                "emissiveColor": [
+                    0.2,
+                    0.2,
+                    0.2,
+                    1.0
+                ],
+                "ambientColor": [
+                    0.05,
+                    0.05,
+                    0.05,
+                    1.0
+                ],
+                "diffuseColor": [
+                    0.5,
+                    0.5,
+                    0.5,
+                    1.0
+                ]
+            },
+            "pipeline": "144",
+            "Physical": {
+                "metallicFactor": 1.0,
+                "albedoColor": [
+                    0.9607843,
+                    0.0,
+                    0.5568627,
+                    1.0
+                ],
+                "roughnessFactor": 0.0,
+                "fogColor": [
+                    0.5,
+                    0.6999999,
+                    1.0,
+                    0.5
+                ]
+            }
+        },
+        "122": {
+            "name": "Wall",
+            "Phong": {
+                "specularColor": [
+                    9.999899930335232e-7,
+                    9.99993744699168e-7,
+                    9.999999974752427e-7,
+                    1.0
+                ],
+                "shininess": 1,
+                "emissiveColor": [
+                    0.2,
+                    0.2,
+                    0.2,
+                    1.0
+                ],
+                "ambientColor": [
+                    0.05,
+                    0.05,
+                    0.05,
+                    1.0
+                ],
+                "diffuseColor": [
+                    0.5,
+                    0.5,
+                    0.5,
+                    1.0
+                ]
+            },
+            "pipeline": "144",
+            "Physical": {
+                "metallicFactor": 1.0,
+                "albedoColor": [
+                    0.5294116,
+                    0.5294116,
+                    0.5294116,
+                    1.0
+                ],
+                "roughnessFactor": 1.0,
+                "fogColor": [
+                    0.5,
+                    0.6999999,
+                    1.0,
+                    0.5
+                ]
+            }
+        },
+        "124": {
+            "link": {
+                "name": "DefaultFontMaterial",
+                "file": "default"
+            },
+            "Text": {
+                "font": "55",
+                "color": [
+                    0.0980392,
+                    0.0980392,
+                    0.0980392,
+                    1.0
+                ],
+                "effectColor": [
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.1921568
+                ]
+            },
+            "name": "FontShadowMaterial"
+        },
+        "129": {
+            "link": {
+                "name": "WonderlandPink",
+                "file": "models\\WonderlandLogo.glb"
+            },
+            "pipeline": "144"
+        },
+        "130": {
+            "link": {
+                "name": "WonderlandWhite",
+                "file": "models\\WonderlandLogo.glb"
+            },
+            "pipeline": "144"
+        },
+        "131": {
+            "link": {
+                "name": "Bark",
+                "file": "stylized_tree (1).glb"
+            },
+            "Physical": {
+                "roughnessFactor": 1.0,
+                "metallicFactor": 0.0,
+                "fogColor": [
+                    0.5,
+                    0.6999999,
+                    1.0,
+                    0.5
+                ]
+            },
+            "pipeline": "144"
+        },
+        "132": {
+            "link": {
+                "name": "Leaves",
+                "file": "stylized_tree (1).glb"
+            },
+            "Physical": {
+                "roughnessFactor": 1.0,
+                "metallicFactor": 0.0,
+                "albedoColor": [
+                    0.352941,
+                    1.0,
+                    0.0,
+                    1.0
+                ],
+                "alphaMaskThreshold": 0.8999999,
+                "emissiveColor": [
+                    0.0,
+                    0.0,
+                    0.0,
+                    1.0
+                ],
+                "fogColor": [
+                    0.5,
+                    0.6999999,
+                    1.0,
+                    0.5
+                ]
+            },
+            "pipeline": "144"
+        },
+        "133": {
+            "link": {
+                "name": "Tree2_Leaves",
+                "file": "free_stylized_tree_asset.glb"
+            },
+            "pipeline": "144",
+            "Physical": {
+                "fogColor": [
+                    0.5,
+                    0.6999999,
+                    1.0,
+                    0.5
+                ]
+            }
+        },
+        "134": {
+            "link": {
+                "name": "Farm_Tree_Body",
+                "file": "free_stylized_tree_asset.glb"
+            },
+            "pipeline": "144",
+            "Physical": {
+                "fogColor": [
+                    0.5,
+                    0.6999999,
+                    1.0,
+                    0.5
+                ]
+            }
+        },
+        "135": {
+            "link": {
+                "name": "Plam_Tree",
+                "file": "stylized_palm_tree.glb"
+            },
+            "pipeline": "144",
+            "Physical": {
+                "metallicFactor": 0.0,
+                "roughnessFactor": 1.0,
+                "fogColor": [
+                    0.5,
+                    0.6999999,
+                    1.0,
+                    0.5
+                ]
+            }
+        },
+        "136": {
+            "link": {
+                "name": "StylizedTree",
+                "file": "stylized_pine_tree_tree.glb"
+            },
+            "Physical": {
+                "metallicFactor": 0.0,
+                "roughnessFactor": 1.0,
+                "occlusionRoughnessMetallicTexture": null,
+                "albedoTexture": "2",
+                "albedoColor": [
+                    0.9803919,
+                    0.9721599,
+                    0.2806611,
+                    0.6666666
+                ],
+                "fogColor": [
+                    0.5,
+                    0.6999999,
+                    1.0,
+                    0.5
+                ]
+            },
+            "pipeline": "144"
+        },
+        "137": {
+            "link": {
+                "name": "Bark",
+                "file": "low_poly_stylized_tree.glb"
+            },
+            "pipeline": "144",
+            "Physical": {
+                "fogColor": [
+                    0.5,
+                    0.6999999,
+                    1.0,
+                    0.5
+                ]
+            }
+        },
+        "138": {
+            "link": {
+                "name": "Tree_Leaves",
+                "file": "low_poly_stylized_tree.glb"
+            },
+            "Physical": {
+                "roughnessFactor": 1.0,
+                "alphaMaskThreshold": 0.6999999,
+                "fogColor": [
+                    0.5,
+                    0.6999999,
+                    1.0,
+                    0.5
+                ]
+            },
+            "pipeline": "144"
+        },
+        "139": {
+            "link": {
+                "name": "coconut_tree_mat",
+                "file": "coconut_tree.glb"
+            },
+            "pipeline": "151",
+            "Physical": {
+                "albedoTexture": "13",
+                "metallicFactor": 0.0,
+                "normalTexture": null,
+                "roughnessFactor": 1.0,
+                "albedoColor": [
+                    1.0,
+                    1.0,
+                    1.0,
+                    1.0
+                ],
+                "fogColor": [
+                    0.9882351,
+                    0.9107266,
+                    0.9107266,
+                    0.0199999
+                ]
+            },
+            "Phong": {
+                "ambientColor": [
+                    1.0,
+                    1.0,
+                    1.0,
+                    1.0
+                ],
+                "emissiveColor": [
+                    0.0,
+                    0.0,
+                    0.0,
+                    1.0
+                ]
+            },
+            "PhysicalTerrainGrass": {
+                "albedoColor": [
+                    0.7253326,
+                    0.7647057,
+                    0.3928489,
+                    1.0
+                ],
+                "albedoTexture": "13",
+                "roughnessFactor": 1.0,
+                "fogColor": [
+                    0.9882351,
+                    0.9107266,
+                    0.9107266,
+                    0.1
+                ],
+                "terrainMaterial": 0.0,
+                "terrainBlendHeight": 0.0,
+                "terrainTextureTiling": 0.6,
+                "terrainWindStrength": 1.0,
+                "fogStart": 40.0,
+                "fogEnd": 100.0,
+                "metallicFactor": 0.0
+            },
+            "name": "TreeMaterial"
+        },
+        "140": {
+            "name": "GrassMaterial",
+            "pipeline": "148",
+            "Physical": {
+                "roughnessFactor": 1.0,
+                "albedoColor": [
+                    0.8121311,
+                    0.9803919,
+                    0.0269127,
+                    1.0
+                ],
+                "fogColor": [
+                    0.5,
+                    0.6999999,
+                    1.0,
+                    0.5
+                ],
+                "metallicFactor": 0.0
+            },
+            "PhysicalTerrainGrass": {
+                "albedoColor": [
+                    0.4708031,
+                    0.5058823,
+                    0.1745789,
+                    1.0
+                ],
+                "fogColor": [
+                    0.9882351,
+                    0.9107266,
+                    0.9107266,
+                    0.0199999
+                ],
+                "roughnessFactor": 1.0,
+                "terrainBlendHeight": 1.0,
+                "albedoTexture": null,
+                "terrainTextureTiling": 0.6,
+                "terrainMaterial": 0.0,
+                "terrainWindStrength": 0.0
+            }
+        },
+        "141": {
+            "name": "Yellow Copy",
+            "Phong": {
+                "diffuseColor": [
+                    1.0,
+                    0.0,
+                    0.5948274,
+                    1.0
+                ],
+                "specularColor": [
+                    9.999899930335232e-7,
+                    9.999911299019004e-7,
+                    9.999999974752427e-7,
+                    1.0
+                ],
+                "shininess": 10,
+                "ambientColor": [
+                    1.0,
+                    1.0,
+                    1.0,
+                    1.0
+                ],
+                "emissiveColor": [
+                    0.317647,
+                    0.0,
+                    0.2165776,
+                    1.0
+                ],
+                "diffuseTexture": "12"
+            },
+            "pipeline": "34",
+            "Physical": {
+                "albedoColor": [
+                    0.8705883,
+                    1.0,
+                    0.0,
+                    1.0
+                ],
+                "metallicFactor": 0.0,
+                "roughnessFactor": 1.0,
+                "albedoTexture": null,
+                "fogColor": [
+                    1.0,
+                    1.0,
+                    1.0,
+                    0.0901959
+                ]
+            },
+            "PhysicalTerrainGrass": {
+                "albedoColor": [
+                    0.7253326,
+                    0.7647057,
+                    0.3928489,
+                    1.0
+                ],
+                "fogColor": [
+                    0.5,
+                    0.6999999,
+                    1.0,
+                    0.5
+                ],
+                "roughnessFactor": 1.0,
+                "terrainMaterial": 1.0,
+                "terrainBlendHeight": 0.0,
+                "terrainTextureTiling": 0.6,
+                "terrainWindStrength": 0.0,
+                "albedoTexture": null
+            },
+            "Flat": {
+                "color": [
+                    0.9529411,
+                    0.0597921,
+                    0.0597921,
+                    1.0
+                ]
+            },
+            "Water": {
+                "fogColor": [
+                    0.5,
+                    0.6999999,
+                    1.0,
+                    0.5
+                ]
+            }
+        },
+        "142": {
+            "link": {
+                "name": "Material",
+                "file": "models\\fog-cylinder.glb"
+            },
+            "pipeline": "35",
+            "Flat": {
+                "alphaMaskThreshold": 0.0,
+                "color": [
+                    0.9882351,
+                    0.9107266,
+                    0.9107266,
+                    1.0
+                ]
+            },
+            "Phong": {
+                "ambientColor": [
+                    1.0,
+                    1.0,
+                    1.0,
+                    1.0
+                ],
+                "alphaMaskThreshold": 0.0
+            },
+            "name": "FogMaterial",
+            "Fog": {
+                "color": [
+                    0.9882351,
+                    0.9107266,
+                    0.9107266,
+                    1.0
+                ],
+                "flatTexture": "15"
+            }
+        },
+        "143": {
+            "link": {
+                "name": "Material",
+                "file": "models\\fog-cylinder.glb"
+            },
+            "pipeline": "34",
+            "Flat": {
+                "alphaMaskThreshold": 0.0,
+                "color": [
+                    0.9882351,
+                    0.9107266,
+                    0.9107266,
+                    1.0
+                ],
+                "flatTexture": null
+            },
+            "Phong": {
+                "ambientColor": [
+                    1.0,
+                    1.0,
+                    1.0,
+                    1.0
+                ],
+                "alphaMaskThreshold": 0.0
+            },
+            "name": "FogMaterial Copy"
+        },
+        "144": {
+            "name": "mount",
+            "pipeline": "152",
+            "Flat": {
+                "flatTexture": "17",
+                "alphaMaskThreshold": 0.8999999
+            }
+        },
+        "145": {
+            "name": "treeLow",
+            "pipeline": "144",
+            "Flat": {
+                "flatTexture": "18",
+                "alphaMaskThreshold": 0.0
+            },
+            "PhysicalTerrainGrass": {
+                "albedoColor": [
+                    1.0,
+                    1.0,
+                    1.0,
+                    1.0
+                ],
+                "fogColor": [
+                    1.0,
+                    1.0,
+                    1.0,
+                    0.0099999
+                ],
+                "roughnessFactor": 1.0
+            },
+            "Physical": {
+                "albedoTexture": "18",
+                "metallicFactor": 0.0,
+                "albedoColor": [
+                    1.0,
+                    1.0,
+                    1.0,
+                    1.0
+                ],
+                "fogColor": [
+                    0.9882351,
+                    0.9107266,
+                    0.9107266,
+                    0.0799999
+                ]
+            }
+        },
+        "146": {
+            "name": "TreeBranch",
+            "pipeline": "155",
+            "Physical": {
+                "albedoTexture": "20",
+                "fogColor": [
+                    0.9882351,
+                    0.9107266,
+                    0.9107266,
+                    0.0199999
+                ]
+            },
+            "PhysicalTerrainGrass": {
+                "fogColor": [
+                    0.9882351,
+                    0.9107266,
+                    0.9107266,
+                    0.0199999
+                ],
+                "albedoColor": [
+                    1.0,
+                    1.0,
+                    1.0,
+                    1.0
+                ],
+                "metallicFactor": 0.0,
+                "roughnessFactor": 1.0,
+                "albedoTexture": "23"
+            }
+        },
+        "147": {
+            "name": "foliage",
+            "pipeline": "155",
+            "Phong": {
+                "diffuseTexture": "22"
+            },
+            "Physical": {
+                "albedoTexture": "21",
+                "metallicFactor": 0.0,
+                "alphaMaskThreshold": 0.2,
+                "fogColor": [
+                    0.9882351,
+                    0.9107266,
+                    0.9107266,
+                    0.0199999
+                ],
+                "roughnessFactor": 1.0,
+                "albedoColor": [
+                    1.0,
+                    1.0,
+                    1.0,
+                    1.0
+                ]
+            },
+            "PhysicalTerrainGrass": {
+                "fogColor": [
+                    0.9882351,
+                    0.9107266,
+                    0.9107266,
+                    0.0199999
+                ],
+                "roughnessFactor": 1.0,
+                "albedoColor": [
+                    1.0,
+                    1.0,
+                    1.0,
+                    1.0
+                ],
+                "albedoTexture": "14",
+                "metallicFactor": 0.0
+            }
+        },
+        "148": {
+            "link": {
+                "name": "Material.001",
+                "file": "models\\treeai.glb"
+            },
+            "Physical": {
+                "metallicFactor": 1.0
+            },
+            "pipeline": "155",
+            "PhysicalTerrainGrass": {
+                "albedoTexture": "26",
+                "albedoColor": [
+                    1.0,
+                    1.0,
+                    1.0,
+                    1.0
+                ],
+                "metallicFactor": 0.0,
+                "roughnessFactor": 1.0,
+                "fogColor": [
+                    0.9882351,
+                    0.9107266,
+                    0.9107266,
+                    0.0199999
+                ]
+            }
+        },
+        "149": {
+            "link": {
+                "name": "BillboardMat",
+                "file": "billboard.glb"
+            },
+            "pipeline": "156",
+            "Flat": {
+                "alphaMaskThreshold": 0.4
+            }
+        },
+        "150": {
+            "link": {
+                "name": "BillboardMat",
+                "file": "billboard (2).glb"
+            },
+            "pipeline": "158",
+            "Flat": {
+                "alphaMaskThreshold": 0.5
+            },
+            "Fog": {
+                "flatTexture": "29",
+                "color": [
+                    1.0,
+                    1.0,
+                    1.0,
+                    1.0
+                ]
+            },
+            "FlatCustom": {
+                "color": [
+                    1.0,
+                    1.0,
+                    1.0,
+                    1.0
+                ],
+                "flatTexture": "29",
+                "fogColor": [
+                    0.9882351,
+                    0.9107266,
+                    0.9107266,
+                    0.0199999
+                ]
+            }
+        }
+    },
+    "shaders": {
+        "2": {
+            "link": {
+                "name": "Flat.frag",
+                "file": "default"
+            }
+        },
+        "4": {
+            "link": {
+                "name": "MeshVisualizer.frag",
+                "file": "default"
+            }
+        },
+        "5": {
+            "link": {
+                "name": "Phong.frag",
+                "file": "default"
+            }
+        },
+        "28": {
+            "link": {
+                "name": "Dynamic.vert",
+                "file": "default"
+            }
+        },
+        "30": {
+            "link": {
+                "name": "Skinning.vert",
+                "file": "default"
+            }
+        },
+        "32": {
+            "link": {
+                "name": "DistanceFieldVector.frag",
+                "file": "default"
+            }
+        },
+        "39": {
+            "link": {
+                "name": "Particle.frag",
+                "file": "default"
+            }
+        },
+        "42": {
+            "link": {
+                "name": "Background.frag",
+                "file": "default"
+            }
+        },
+        "43": {
+            "link": {
+                "name": "Depth.frag",
+                "file": "default"
+            }
+        },
+        "45": {
+            "link": {
+                "name": "FullScreenTriangle.vert",
+                "file": "default"
+            }
+        },
+        "46": {
+            "link": {
+                "name": "Physical.frag",
+                "file": "default"
+            }
+        },
+        "49": {
+            "link": {
+                "name": "Sky.frag",
+                "file": "default"
+            }
+        },
+        "50": {
+            "link": {
+                "name": "Text.frag",
+                "file": "default"
+            }
+        },
+        "52": {
+            "link": {
+                "name": "Text.vert",
+                "file": "default"
+            }
+        },
+        "53": {
+            "link": {
+                "name": "TileFeedback.frag",
+                "file": "default"
+            }
+        },
+        "139": {
+            "link": {
+                "name": "AtmosphericSky.frag",
+                "file": "default"
+            }
+        },
+        "140": {
+            "link": {
+                "name": "Color.frag",
+                "file": "default"
+            }
+        },
+        "141": {
+            "link": {
+                "name": "Water.frag",
+                "file": "default"
+            }
+        },
+        "142": {
+            "link": {
+                "name": "infiniteInstance.vert",
+                "file": "default"
+            }
+        },
+        "143": {
+            "link": {
+                "name": "PhysicalTerrainGrass.frag",
+                "file": "default"
+            }
+        },
+        "144": {
+            "link": {
+                "name": "Fog.frag",
+                "file": "default"
+            }
+        },
+        "145": {
+            "link": {
+                "name": "FlatLookat.vert",
+                "file": "default"
+            }
+        },
+        "146": {
+            "link": {
+                "name": "FlatCustom.frag",
+                "file": "default"
+            }
+        }
+    },
+    "settings": {
+        "project": {
+            "name": "tree.wlp",
+            "version": [
+                1,
+                6,
+                0
+            ]
+        },
+        "xr": {
+            "leftEyeObject": "18",
+            "rightEyeObject": "19"
+        },
+        "scripting": {
+            "application": {
+                "output": "tree.wlp-app.js"
+            },
+            "components": {
+                "output": "tree.wlp-bundle.js"
+            }
+        },
+        "rendering": {
+            "hdr": {
+                "tonemapping": "khronos pbr neutral"
+            },
+            "sky": {
+                "enabled": true,
+                "material": "26"
+            },
+            "environment": {
+                "enabled": true,
+                "maxSpecularEnvironmentSize": 512,
+                "intensity": 1.0,
+                "bakeExposure": 1.0,
+                "tint": [
+                    0.5,
+                    0.6999999,
+                    1.0
+                ],
+                "mode": "spherical-harmonic-2",
+                "bakingMode": "sky",
+                "material": "26"
+            },
+            "bloom": {
+                "threshold": 1.6,
+                "enabled": false,
+                "passes": 16,
+                "intensity": 2.0999999,
+                "width": 1.0
+            },
+            "useMultiDraw": false,
+            "usePreZ": false,
+            "ssao": {
+                "enabled": false,
+                "thickness": 0.001,
+                "radius": 0.001,
+                "samplesPerSlice": 1,
+                "slicesCount": 1,
+                "blurPreset": "low",
+                "useNormals": false,
+                "intensity": 1.0
+            },
+            "clearColor": [
+                0.5,
+                0.6999999,
+                1.0,
+                1.0
+            ]
+        },
+        "editor": {
+            "importPhysicalAsPhongMaterials": false,
+            "camera": {
+                "far": 5000.0
+            }
+        },
+        "runtime": {
+            "loadUncompressedImagesAsBitmap": false,
+            "visualizeOverdraw": false
+        }
+    },
+    "animations": {},
+    "skins": {},
+    "pipelines": {
+        "33": {
+            "link": {
+                "name": "DistanceFieldVector",
+                "file": "default"
+            }
+        },
+        "34": {
+            "link": {
+                "name": "Flat Opaque",
+                "file": "default"
+            },
+            "blending": false,
+            "features": {
+                "TONEMAPPING": false
+            }
+        },
+        "36": {
+            "link": {
+                "name": "MeshVisualizer",
+                "file": "default"
+            }
+        },
+        "37": {
+            "link": {
+                "name": "Phong Opaque",
+                "file": "default"
+            },
+            "features": {
+                "TONEMAPPING": false,
+                "WITH_EMISSIVE": true
+            }
+        },
+        "38": {
+            "link": {
+                "name": "Phong Opaque Textured",
+                "file": "default"
+            },
+            "features": {
+                "GLOBAL_ILLUMINATION": true,
+                "ALPHA_MASKED": true,
+                "WITH_EMISSIVE": true,
+                "DEPRECATED_AMBIENT_FACTOR": false,
+                "DEPRECATED_LIGHT_ATTENUATION": false,
+                "WATER_INTERACTION": true,
+                "NORMAL_MAPPING": false
+            },
+            "blending": true
+        },
+        "40": {
+            "link": {
+                "name": "Foliage",
+                "file": "default"
+            },
+            "features": {}
+        },
+        "41": {
+            "link": {
+                "name": "Particle",
+                "file": "default"
+            }
+        },
+        "44": {
+            "link": {
+                "name": "Depth",
+                "file": "default"
+            }
+        },
+        "47": {
+            "link": {
+                "name": "Physical Opaque",
+                "file": "default"
+            },
+            "features": {
+                "GLOBAL_ILLUMINATION": true,
+                "TONEMAPPING": true,
+                "SSAO": true
+            },
+            "doubleSided": false
+        },
+        "48": {
+            "link": {
+                "name": "Physical Opaque Textured",
+                "file": "default"
+            },
+            "shader": "46",
+            "features": {
+                "ALPHA_MASKED": true,
+                "TONEMAPPING": true,
+                "GLOBAL_ILLUMINATION": true,
+                "WITH_EMISSIVE": false,
+                "CLEARCOAT": false,
+                "WITH_FOG": true,
+                "NORMAL_MAPPING": true,
+                "SEPARATE_OCCLUSION_TEXTURE": true,
+                "OCCLUSION_TEXTURE": true,
+                "SSAO": false,
+                "VERTEX_COLORS": false,
+                "TEXTURED": false,
+                "SHADOW_NORMAL_OFFSET_SCALE_BY_SHADOW_DEPTH": false,
+                "SHADOW_PCF": true,
+                "WATER_INTERACTION": true
+            },
+            "colorWrite": {
+                "alpha": false
+            },
+            "meshlets": false,
+            "meshSorting": "z",
+            "castShadows": false,
+            "doubleSided": false
+        },
+        "51": {
+            "link": {
+                "name": "Text",
+                "file": "default"
+            },
+            "sampleAlphaToCoverage": true
+        },
+        "54": {
+            "link": {
+                "name": "Sky",
+                "file": "default"
+            },
+            "features": {
+                "GRADIENT_4_STOPS": false,
+                "TEXTURED": false,
+                "GRADIENT": false,
+                "ENVIRONMENT_PROBE": false,
+                "PROCEDURAL": true,
+                "TONEMAPPING": true
+            }
+        },
+        "66": {
+            "link": {
+                "name": "Phong Normalmapped",
+                "file": "default"
+            },
+            "features": {
+                "DEPRECATED_LIGHT_ATTENUATION": true,
+                "WITH_EMISSIVE": true
+            }
+        },
+        "67": {
+            "link": {
+                "name": "Phong Lightmapped",
+                "file": "default"
+            },
+            "features": {
+                "DEPRECATED_LIGHT_ATTENUATION": true,
+                "WITH_EMISSIVE": true
+            }
+        },
+        "74": {
+            "link": {
+                "name": "TileFeedback",
+                "file": "default"
+            }
+        },
+        "140": {
+            "link": {
+                "name": "AtmosphericSky",
+                "file": "default"
+            }
+        },
+        "141": {
+            "link": {
+                "name": "Color",
+                "file": "default"
+            }
+        },
+        "142": {
+            "link": {
+                "name": "VertexColor",
+                "file": "default"
+            }
+        },
+        "143": {
+            "link": {
+                "name": "Physical Opaque",
+                "file": "default"
+            },
+            "features": {
+                "GLOBAL_ILLUMINATION": true,
+                "TONEMAPPING": true
+            },
+            "doubleSided": false,
+            "name": "Test",
+            "shader": "140",
+            "viewVertexShader": "45",
+            "castShadows": false
+        },
+        "144": {
+            "link": {
+                "name": "Physical Opaque Textured",
+                "file": "default"
+            },
+            "features": {
+                "ALPHA_MASKED": false,
+                "TONEMAPPING": true,
+                "GLOBAL_ILLUMINATION": true,
+                "WITH_EMISSIVE": false,
+                "CLEARCOAT": false,
+                "WITH_FOG": true,
+                "NORMAL_MAPPING": false,
+                "SEPARATE_OCCLUSION_TEXTURE": false,
+                "OCCLUSION_TEXTURE": false,
+                "SSAO": false,
+                "VERTEX_COLORS": false,
+                "TEXTURED": false,
+                "SHADOW_PCF": true,
+                "WATER_INTERACTION": true
+            },
+            "colorWrite": {
+                "alpha": false
+            },
+            "meshlets": false,
+            "meshSorting": "z",
+            "name": "Physical Opaque Textured Double",
+            "doubleSided": true,
+            "castShadows": true
+        },
+        "145": {
+            "link": {
+                "name": "Water",
+                "file": "default"
+            },
+            "blending": true
+        },
+        "147": {
+            "link": {
+                "name": "Phong Opaque Textured",
+                "file": "default"
+            },
+            "features": {
+                "GLOBAL_ILLUMINATION": true,
+                "ALPHA_MASKED": true,
+                "WITH_EMISSIVE": false,
+                "DEPRECATED_AMBIENT_FACTOR": false,
+                "DEPRECATED_LIGHT_ATTENUATION": false,
+                "WATER_INTERACTION": true,
+                "SHADOW_NORMAL_OFFSET_SLOPE_SCALE": true,
+                "SHADOW_NORMAL_OFFSET_UV_ONLY": true,
+                "TEXTURED": true
+            },
+            "name": "Phong Opaque Textured Double",
+            "doubleSided": true,
+            "meshlets": false,
+            "colorWrite": {
+                "alpha": true
+            },
+            "castShadows": true,
+            "depthWrite": true,
+            "blending": false
+        },
+        "150": {
+            "link": {
+                "name": "PhysicalTerrainGrass Opaque Textured",
+                "file": "default"
+            },
+            "features": {
+                "GLOBAL_ILLUMINATION": true,
+                "WITH_FOG": true,
+                "NORMAL_MAPPING": false,
+                "OCCLUSION_TEXTURE": false,
+                "TONEMAPPING": true,
+                "WATER_INTERACTION": true,
+                "ALPHA_MASKED": false,
+                "CLEARCOAT": false,
+                "TEXTURED": true
+            },
+            "name": "PhysicalTerrainGrass Opaque Textured Meshlets",
+            "meshlets": true,
+            "doubleSided": false,
+            "castShadows": true,
+            "blending": false
+        },
+        "148": {
+            "link": {
+                "name": "Physical Opaque Textured",
+                "file": "default"
+            },
+            "shader": "143",
+            "features": {
+                "ALPHA_MASKED": false,
+                "TONEMAPPING": true,
+                "GLOBAL_ILLUMINATION": true,
+                "WITH_EMISSIVE": false,
+                "CLEARCOAT": false,
+                "WITH_FOG": true,
+                "NORMAL_MAPPING": false,
+                "SEPARATE_OCCLUSION_TEXTURE": false,
+                "OCCLUSION_TEXTURE": false,
+                "SSAO": false,
+                "VERTEX_COLORS": false,
+                "TEXTURED": true,
+                "SHADOW_NORMAL_OFFSET_SCALE_BY_SHADOW_DEPTH": false,
+                "SHADOW_PCF": false,
+                "WATER_INTERACTION": true
+            },
+            "colorWrite": {
+                "alpha": false
+            },
+            "meshlets": false,
+            "meshSorting": "z",
+            "castShadows": false,
+            "doubleSided": false,
+            "name": "Grass",
+            "viewVertexShader": "142",
+            "depthTest": true
+        },
+        "149": {
+            "link": {
+                "name": "PhysicalTerrainGrass Opaque",
+                "file": "default"
+            },
+            "features": {
+                "WITH_FOG": true,
+                "GLOBAL_ILLUMINATION": true,
+                "WATER_INTERACTION": true,
+                "TEXTURED": false,
+                "VERTEX_COLORS": false,
+                "TONEMAPPING": true,
+                "ALPHA_MASKED": false,
+                "SHADOW_PCF": true
+            },
+            "colorWrite": {
+                "alpha": false
+            },
+            "depthTest": true,
+            "sampleAlphaToCoverage": false
+        },
+        "146": {
+            "link": {
+                "name": "Water Textured",
+                "file": "default"
+            },
+            "blending": true,
+            "blendSrcRgb": "one",
+            "features": {
+                "FADE": false,
+                "WITH_FOG": true,
+                "TEXTURED": false
+            },
+            "colorWrite": {
+                "alpha": true
+            },
+            "doubleSided": true,
+            "depthTest": true
+        },
+        "151": {
+            "link": {
+                "name": "PhysicalTerrainGrass Opaque Textured",
+                "file": "default"
+            },
+            "features": {
+                "WITH_FOG": true,
+                "ALPHA_MASKED": true
+            },
+            "doubleSided": true,
+            "meshlets": false,
+            "castShadows": false
+        },
+        "152": {
+            "link": {
+                "name": "Flat Opaque Textured",
+                "file": "default"
+            },
+            "features": {
+                "ALPHA_MASKED": true,
+                "WITH_FOG": true,
+                "LOOKAT": true
+            },
+            "depthTest": true,
+            "sampleAlphaToCoverage": false,
+            "doubleSided": false,
+            "blending": false,
+            "blendSrcRgb": "one",
+            "colorWrite": {
+                "alpha": true
+            },
+            "viewVertexShader": "145"
+        },
+        "35": {
+            "link": {
+                "name": "Flat Opaque Textured",
+                "file": "default"
+            },
+            "features": {
+                "ALPHA_MASKED": false,
+                "TONEMAPPING": false,
+                "WITH_FOG": true,
+                "TEXTURED": true,
+                "LOOKAT": false
+            },
+            "sampleAlphaToCoverage": false,
+            "blending": true,
+            "blendSrcRgb": "source alpha",
+            "blendSrcAlpha": "one minus destination alpha",
+            "colorWrite": {
+                "alpha": true
+            },
+            "blendEqRgb": "add",
+            "blendEqAlpha": "add",
+            "depthTest": true,
+            "depthWrite": true,
+            "depthFunction": "less",
+            "blendDestAlpha": "one",
+            "doubleSided": false,
+            "name": "Fog",
+            "shader": "144",
+            "viewVertexShader": null
+        },
+        "153": {
+            "link": {
+                "name": "Fog Opaque",
+                "file": "default"
+            }
+        },
+        "154": {
+            "link": {
+                "name": "Fog Opaque Textured",
+                "file": "default"
+            },
+            "features": {
+                "WITH_FOG": false
+            }
+        },
+        "155": {
+            "link": {
+                "name": "PhysicalTerrainGrass Opaque Textured",
+                "file": "default"
+            },
+            "features": {
+                "GLOBAL_ILLUMINATION": true,
+                "WITH_FOG": true,
+                "NORMAL_MAPPING": false,
+                "OCCLUSION_TEXTURE": false,
+                "TONEMAPPING": true,
+                "WATER_INTERACTION": true,
+                "ALPHA_MASKED": false,
+                "CLEARCOAT": false,
+                "TEXTURED": true
+            },
+            "name": "PhysicalTerrainGrass Opaque Textured.",
+            "meshlets": false,
+            "doubleSided": false,
+            "castShadows": true,
+            "blending": false,
+            "sampleAlphaToCoverage": false,
+            "depthTest": true,
+            "colorWrite": {
+                "alpha": false
+            }
+        },
+        "156": {
+            "link": {
+                "name": "Flat Opaque Textured",
+                "file": "default"
+            },
+            "features": {
+                "ALPHA_MASKED": true,
+                "WITH_FOG": true,
+                "LOOKAT": false,
+                "VERTEX_COLORS": true
+            },
+            "depthTest": true,
+            "sampleAlphaToCoverage": false,
+            "doubleSided": false,
+            "blending": false,
+            "blendSrcRgb": "one",
+            "colorWrite": {
+                "alpha": true
+            },
+            "viewVertexShader": "145",
+            "name": "FoliageLookat",
+            "castShadows": false
+        },
+        "157": {
+            "link": {
+                "name": "FlatCustom Opaque",
+                "file": "default"
+            }
+        },
+        "158": {
+            "link": {
+                "name": "FlatCustom Opaque Textured",
+                "file": "default"
+            },
+            "features": {
+                "LOOKAT": true,
+                "WITH_FOG": true,
+                "ALPHA_MASKED": true
+            },
+            "viewVertexShader": "145",
+            "doubleSided": true,
+            "sampleAlphaToCoverage": true,
+            "colorWrite": {
+                "alpha": false
+            },
+            "blending": true
+        }
+    },
+    "textures": {
+        "1": {
+            "link": {
+                "name": "texture_0",
+                "file": "stylized_tree (1).glb"
+            }
+        },
+        "2": {
+            "link": {
+                "name": "texture_0",
+                "file": "free_stylized_tree_asset.glb"
+            }
+        },
+        "3": {
+            "link": {
+                "name": "texture_1",
+                "file": "free_stylized_tree_asset.glb"
+            }
+        },
+        "4": {
+            "link": {
+                "name": "texture_2",
+                "file": "free_stylized_tree_asset.glb"
+            }
+        },
+        "5": {
+            "link": {
+                "name": "texture_0",
+                "file": "stylized_palm_tree.glb"
+            }
+        },
+        "6": {
+            "link": {
+                "name": "texture_1",
+                "file": "stylized_palm_tree.glb"
+            }
+        },
+        "7": {
+            "link": {
+                "name": "texture_2",
+                "file": "stylized_palm_tree.glb"
+            }
+        },
+        "8": {
+            "link": {
+                "name": "texture_0",
+                "file": "stylized_pine_tree_tree.glb"
+            }
+        },
+        "9": {
+            "link": {
+                "name": "texture_1",
+                "file": "stylized_pine_tree_tree.glb"
+            }
+        },
+        "10": {
+            "link": {
+                "name": "texture_2",
+                "file": "stylized_pine_tree_tree.glb"
+            }
+        },
+        "11": {
+            "link": {
+                "name": "texture_0",
+                "file": "low_poly_stylized_tree.glb"
+            }
+        },
+        "12": {
+            "link": {
+                "name": "texture_1",
+                "file": "low_poly_stylized_tree.glb"
+            }
+        },
+        "13": {
+            "link": {
+                "name": "texture_0",
+                "file": "coconut_tree.glb"
+            }
+        },
+        "14": {
+            "link": {
+                "name": "Grass_Albedo.png",
+                "file": "models\\Grass_Albedo.png"
+            }
+        },
+        "15": {
+            "link": {
+                "name": "texture_0",
+                "file": "models\\fog-cylinder.glb"
+            }
+        },
+        "16": {
+            "link": {
+                "name": "image-removebg-preview (64).png",
+                "file": "models\\image-removebg-preview (64).png"
+            }
+        },
+        "17": {
+            "link": {
+                "name": "mount.png",
+                "file": "models\\mount.png"
+            }
+        },
+        "18": {
+            "link": {
+                "name": "image-removebg-preview (65).png",
+                "file": "models\\image-removebg-preview (65).png"
+            }
+        },
+        "19": {
+            "link": {
+                "name": "grass (4).jpg",
+                "file": "grass (4).jpg"
+            }
+        },
+        "20": {
+            "link": {
+                "name": "bark03",
+                "file": "tree.fbx"
+            }
+        },
+        "21": {
+            "link": {
+                "name": "branch03_transmission",
+                "file": "tree.fbx"
+            }
+        },
+        "22": {
+            "link": {
+                "name": "branch03_transmission.png",
+                "file": "branch03_transmission.png"
+            }
+        },
+        "23": {
+            "link": {
+                "name": "bark10",
+                "file": "tree.fbx"
+            }
+        },
+        "24": {
+            "link": {
+                "name": "grass_albedo",
+                "file": "tree.fbx"
+            }
+        },
+        "25": {
+            "link": {
+                "name": "texture_0",
+                "file": "models\\treeai.glb"
+            }
+        },
+        "26": {
+            "link": {
+                "name": "texture_1",
+                "file": "models\\treeai.glb"
+            }
+        },
+        "27": {
+            "link": {
+                "name": "texture_2",
+                "file": "models\\treeai.glb"
+            }
+        },
+        "28": {
+            "link": {
+                "name": "texture_0",
+                "file": "billboard.glb"
+            }
+        },
+        "29": {
+            "link": {
+                "name": "texture_0",
+                "file": "billboard (2).glb"
+            }
+        }
+    },
+    "images": {
+        "1": {
+            "link": {
+                "name": "image_0",
+                "file": "stylized_tree (1).glb"
+            },
+            "maxSize": [
+                64,
+                64
+            ]
+        },
+        "2": {
+            "link": {
+                "name": "image_0",
+                "file": "free_stylized_tree_asset.glb"
+            },
+            "maxSize": [
+                512,
+                512
+            ]
+        },
+        "3": {
+            "link": {
+                "name": "image_1",
+                "file": "free_stylized_tree_asset.glb"
+            },
+            "maxSize": [
+                512,
+                512
+            ]
+        },
+        "4": {
+            "link": {
+                "name": "image_2",
+                "file": "free_stylized_tree_asset.glb"
+            },
+            "maxSize": [
+                512,
+                512
+            ]
+        },
+        "5": {
+            "link": {
+                "name": "image_0",
+                "file": "stylized_palm_tree.glb"
+            },
+            "maxSize": [
+                512,
+                512
+            ]
+        },
+        "6": {
+            "link": {
+                "name": "image_1",
+                "file": "stylized_palm_tree.glb"
+            },
+            "maxSize": [
+                64,
+                64
+            ]
+        },
+        "7": {
+            "link": {
+                "name": "image_2",
+                "file": "stylized_palm_tree.glb"
+            },
+            "maxSize": [
+                512,
+                512
+            ],
+            "compression": "none"
+        },
+        "8": {
+            "link": {
+                "name": "image_0",
+                "file": "stylized_pine_tree_tree.glb"
+            },
+            "maxSize": [
+                512,
+                512
+            ]
+        },
+        "9": {
+            "link": {
+                "name": "image_1",
+                "file": "stylized_pine_tree_tree.glb"
+            },
+            "maxSize": [
+                512,
+                512
+            ]
+        },
+        "10": {
+            "link": {
+                "name": "image_2",
+                "file": "stylized_pine_tree_tree.glb"
+            },
+            "maxSize": [
+                512,
+                512
+            ]
+        },
+        "11": {
+            "link": {
+                "name": "image_0",
+                "file": "low_poly_stylized_tree.glb"
+            },
+            "maxSize": [
+                512,
+                512
+            ]
+        },
+        "12": {
+            "link": {
+                "name": "image_1",
+                "file": "low_poly_stylized_tree.glb"
+            },
+            "maxSize": [
+                512,
+                512
+            ]
+        },
+        "13": {
+            "link": {
+                "name": "image_0",
+                "file": "coconut_tree.glb"
+            }
+        },
+        "14": {
+            "link": {
+                "name": "Grass_Albedo.png",
+                "file": "models\\Grass_Albedo.png"
+            },
+            "maxSize": [
+                256,
+                256
+            ],
+            "compression": "none"
+        },
+        "15": {
+            "link": {
+                "name": "fogAlphaGradient",
+                "file": "models\\fog-cylinder.glb"
+            },
+            "compression": "none"
+        },
+        "16": {
+            "link": {
+                "name": "image-removebg-preview (64).png",
+                "file": "models\\image-removebg-preview (64).png"
+            },
+            "compression": "none"
+        },
+        "17": {
+            "link": {
+                "name": "mount.png",
+                "file": "models\\mount.png"
+            },
+            "compression": "none"
+        },
+        "18": {
+            "link": {
+                "name": "image-removebg-preview (65).png",
+                "file": "models\\image-removebg-preview (65).png"
+            }
+        },
+        "19": {
+            "link": {
+                "name": "grass (4).jpg",
+                "file": "grass (4).jpg"
+            }
+        },
+        "20": {
+            "link": {
+                "name": "bark03.png",
+                "file": "tree.fbx"
+            }
+        },
+        "21": {
+            "link": {
+                "name": "branch03_transmission.png",
+                "file": "tree.fbx"
+            }
+        },
+        "22": {
+            "link": {
+                "name": "branch03_transmission.png",
+                "file": "branch03_transmission.png"
+            }
+        },
+        "23": {
+            "link": {
+                "name": "bark10.png",
+                "file": "tree.fbx"
+            }
+        },
+        "24": {
+            "link": {
+                "name": "grass_albedo.png",
+                "file": "tree.fbx"
+            }
+        },
+        "25": {
+            "link": {
+                "name": "texture_pbr_20250901_normal",
+                "file": "models\\treeai.glb"
+            },
+            "maxSize": [
+                64,
+                64
+            ],
+            "compression": "none",
+            "stream": true
+        },
+        "26": {
+            "link": {
+                "name": "texture_pbr_20250901",
+                "file": "models\\treeai.glb"
+            },
+            "maxSize": [
+                512,
+                512
+            ],
+            "stream": false,
+            "compression": "none"
+        },
+        "27": {
+            "link": {
+                "name": "texture_pbr_20250901_metallic-texture_pbr_20250901_roughness",
+                "file": "models\\treeai.glb"
+            },
+            "maxSize": [
+                64,
+                64
+            ],
+            "stream": true
+        },
+        "28": {
+            "link": {
+                "name": "image_0",
+                "file": "billboard.glb"
+            },
+            "maxSize": [
+                64,
+                64
+            ]
+        },
+        "29": {
+            "link": {
+                "name": "image_0",
+                "file": "billboard (2).glb"
+            },
+            "maxSize": [
+                512,
+                512
+            ],
+            "stream": true
+        }
+    },
+    "fonts": {
+        "55": {
+            "link": {
+                "name": "DejaVuSans.ttf",
+                "file": "default"
+            },
+            "outline": true
+        }
+    },
+    "languages": {},
+    "files": {
+        "103": {
+            "fileName": "models/WonderlandShaderBall.glb",
+            "importerName": "",
+            "importPhysicalAsPhongMaterials": false,
+            "colorSpace": "srgb",
+            "importSecondaryUVLegacy": true
+        },
+        "134": {
+            "fileName": "models/WonderlandLogo.glb",
+            "importerName": "",
+            "importPhysicalAsPhongMaterials": false,
+            "colorSpace": "srgb",
+            "importSecondaryUVLegacy": true
+        },
+        "135": {
+            "fileName": "stylized_tree (1).glb",
+            "importerName": "",
+            "importSecondaryUVLegacy": true
+        },
+        "136": {
+            "fileName": "free_stylized_tree_asset.glb",
+            "importerName": "",
+            "importSecondaryUVLegacy": true
+        },
+        "137": {
+            "fileName": "stylized_palm_tree.glb",
+            "importerName": "",
+            "importSecondaryUVLegacy": true
+        },
+        "138": {
+            "fileName": "stylized_pine_tree_tree.glb",
+            "importerName": "",
+            "importSecondaryUVLegacy": true
+        },
+        "139": {
+            "fileName": "low_poly_stylized_tree.glb",
+            "importerName": "",
+            "importSecondaryUVLegacy": true
+        },
+        "140": {
+            "fileName": "coconut_tree.glb",
+            "importerName": "",
+            "importSecondaryUVLegacy": true
+        },
+        "141": {
+            "fileName": "models/Grass_Albedo.png",
+            "importerName": ""
+        },
+        "142": {
+            "fileName": "models/fog-cylinder.glb",
+            "importerName": ""
+        },
+        "143": {
+            "fileName": "models/image-removebg-preview (64).png",
+            "importerName": ""
+        },
+        "144": {
+            "fileName": "models/mount.png",
+            "importerName": ""
+        },
+        "145": {
+            "fileName": "models/image-removebg-preview (65).png",
+            "importerName": ""
+        },
+        "146": {
+            "fileName": "grass (4).jpg",
+            "importerName": ""
+        },
+        "147": {
+            "fileName": "tree.fbx",
+            "importerName": ""
+        },
+        "148": {
+            "fileName": "branch03_transmission.png",
+            "importerName": ""
+        },
+        "149": {
+            "fileName": "models/treeai.glb",
+            "importerName": ""
+        },
+        "150": {
+            "fileName": "billboard.glb",
+            "importerName": ""
+        },
+        "151": {
+            "fileName": "billboard (2).glb",
+            "importerName": ""
+        }
+    },
+    "morphTargets": {},
+    "audioClips": {},
+    "shaderChunks": {
+        "1": {
+            "link": {
+                "name": "lib\\Color.glsl",
+                "file": "default"
+            }
+        },
+        "2": {
+            "link": {
+                "name": "lib\\Compatibility.glsl",
+                "file": "default"
+            }
+        },
+        "3": {
+            "link": {
+                "name": "lib\\CoordinateSystems.glsl",
+                "file": "default"
+            }
+        },
+        "4": {
+            "link": {
+                "name": "lib\\GI.glsl",
+                "file": "default"
+            }
+        },
+        "5": {
+            "link": {
+                "name": "lib\\Inputs.glsl",
+                "file": "default"
+            }
+        },
+        "6": {
+            "link": {
+                "name": "lib\\Lights.glsl",
+                "file": "default"
+            }
+        },
+        "7": {
+            "link": {
+                "name": "lib\\Materials.glsl",
+                "file": "default"
+            }
+        },
+        "8": {
+            "link": {
+                "name": "lib\\Math.glsl",
+                "file": "default"
+            }
+        },
+        "9": {
+            "link": {
+                "name": "lib\\MorphTargets.glsl",
+                "file": "default"
+            }
+        },
+        "10": {
+            "link": {
+                "name": "lib\\Packing.glsl",
+                "file": "default"
+            }
+        },
+        "11": {
+            "link": {
+                "name": "lib\\PhysicalBSDF.glsl",
+                "file": "default"
+            }
+        },
+        "12": {
+            "link": {
+                "name": "lib\\Quaternion.glsl",
+                "file": "default"
+            }
+        },
+        "13": {
+            "link": {
+                "name": "lib\\SkyProcedural.glsl",
+                "file": "default"
+            }
+        },
+        "14": {
+            "link": {
+                "name": "lib\\Slug.frag.glsl",
+                "file": "default"
+            }
+        },
+        "15": {
+            "link": {
+                "name": "lib\\Slug.vert.glsl",
+                "file": "default"
+            }
+        },
+        "16": {
+            "link": {
+                "name": "lib\\Surface.glsl",
+                "file": "default"
+            }
+        },
+        "17": {
+            "link": {
+                "name": "lib\\Textures.glsl",
+                "file": "default"
+            }
+        },
+        "18": {
+            "link": {
+                "name": "lib\\Uniforms.glsl",
+                "file": "default"
+            }
+        },
+        "19": {
+            "link": {
+                "name": "lib\\VertexAttributes.glsl",
+                "file": "default"
+            }
+        }
+    },
+    "particleEffects": {},
+    "probeVolumeScenarios": {},
+    "plugins": {
+        "@wonderlandengine/mcp-plugin": {
+            "enable": true
+        }
+    }
+}

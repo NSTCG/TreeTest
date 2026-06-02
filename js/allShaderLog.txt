@@ -1,0 +1,3632 @@
+Shader Source: WebGLShader {} #version 300 es
+#line 1 1
+
+precision highp float;
+
+
+/* Normal and tangent are float16, but we transform them with highp quats
+ * anyway so do the conversion as early as possible */
+layout(location = 0) in highp vec3 inPosition;
+layout(location = 4) in mediump uint inObjectId;
+
+#line 1
+struct Quat2 {
+    vec4 rot;
+    vec4 loc;
+};
+
+vec4 conjugated(vec4 q) {
+    return vec4(-q.xyz, q.w);
+}
+
+Quat2 conjugated(Quat2 q) {
+    return Quat2(conjugated(q.rot), vec4(q.loc.xyz, -q.loc.w));
+}
+
+vec4 quat_mult(vec4 q1, vec4 q2) {
+    return vec4(q1.w*q2.xyz + q2.w*q1.xyz + cross(q1.xyz, q2.xyz),
+                /* dot(q1, conjugated(q2)) */
+                q1.w*q2.w - dot(q1.xyz, q2.xyz));
+}
+
+Quat2 quat_scale(float f, Quat2 q) {
+    return Quat2(f*q.rot, f*q.loc);
+}
+
+Quat2 quat2_mult(vec3 p, Quat2 q) {
+    return Quat2(q.rot, q.loc + quat_mult(vec4(p, 0.0f), q.rot));
+}
+
+Quat2 quat2_mult(Quat2 a, Quat2 b) {
+    return Quat2(quat_mult(a.rot, b.rot), quat_mult(a.rot, b.loc) + quat_mult(a.loc, b.rot));
+}
+
+vec3 quat_transformVector(vec4 q, vec3 v) {
+    vec3 a = cross(q.xyz, v);
+    vec3 b = q.w*a + cross(q.xyz, a);
+    return v + 2.0*b;
+}
+
+vec3 quat2_transformPoint(Quat2 q, vec3 p) {
+    vec3 qrv = q.rot.xyz;
+    float qrw = q.rot.w;
+
+    vec3 blv = qrw*p + cross(qrv, p) + 2.0*q.loc.xyz;
+    return (dot(p, qrv) - 2.0*q.loc.w)*qrv
+        + qrw*blv
+        + cross(qrv, blv);
+}
+
+vec3 quat_translation(Quat2 q) {
+    return quat_mult(q.loc, conjugated(q.rot)).xyz*2.0;
+}
+
+mat3 quat_toMatrix(vec4 q) {
+    /* Multiply by sqrt(2) to avoid factors of two in the matrix */
+    q *= 1.414214;
+
+    float xx = q.x*q.x;
+    float xy = q.x*q.y;
+    float xz = q.x*q.z;
+    float xw = q.x*q.w;
+
+    float yy = q.y*q.y;
+    float yz = q.y*q.z;
+    float yw = q.y*q.w;
+
+    float zz = q.z*q.z;
+    float zw = q.z*q.w;
+
+    return mat3(
+        1.0 - yy - zz,
+        xy + zw,
+        xz - yw,
+
+        xy - zw,
+        1.0 - xx - zz,
+        yz + xw,
+
+        xz + yw,
+        yz - xw,
+        1.0 - xx - yy);
+}
+#line 67
+
+
+flat out mediump uint fragMaterialId;
+out mediump vec3 fragBarycentric;
+
+
+/* Manufacture a "quiet NaN" constant */
+
+#line 1
+uniform FrameUniforms {
+    lowp uvec4 textureCounts;
+    lowp uvec4 lightCounts;
+};
+
+
+uniform ViewUniforms {
+    highp vec4 viewCameraParams[2]; /* fov (rad), exposure, near, far */
+    highp ivec4 viewViewport[2];
+    highp mat2x4 viewWorldToView[2];
+    highp mat2x4 viewViewToWorld[2];
+    highp vec3 viewWorldPosition[2];
+    highp mat4 viewProjectionMatrix[2];
+    highp mat4 viewInverseProjectionMatrix[2];
+};
+
+
+uniform highp sampler2D transformations;
+
+uniform uint viewIndex;
+
+#line 119
+
+
+void main() {
+    
+    /* Temporaries since we have no out variables */
+        highp vec3 fragPositionWorld;
+            highp vec3 fragPositionView;
+            mediump uint fragObjectId;
+    
+        fragObjectId = inObjectId;
+    
+    /* If the batch is instanced, there's only one mesh and fragObjectId is 0
+     * for all instances. Otherwise gl_InstanceID is 0 for all meshes. */
+        fragObjectId += uint(gl_InstanceID);
+    
+    ivec2 idx = 2*ivec2((int(fragObjectId)) & 1023, int(fragObjectId >> 10));
+    highp vec4 transform[2] = vec4[](
+        texelFetchOffset(transformations, idx, 0, ivec2(0, 0)),
+        texelFetchOffset(transformations, idx, 0, ivec2(1, 0)));
+    highp vec4 scaling =
+        texelFetchOffset(transformations, idx, 0, ivec2(0, 1));
+    
+        fragMaterialId = uint(scaling.w);
+    
+    /* Transformed vertex position */
+    fragPositionWorld = quat2_transformPoint(Quat2(transform[0], transform[1]), scaling.xyz*inPosition);
+    fragPositionView = quat2_transformPoint(Quat2(viewWorldToView[viewIndex][0], viewWorldToView[viewIndex][1]), fragPositionWorld);
+
+    /* Transformed normal vector */
+    
+    
+    
+        /* Transform the position */
+    gl_Position = viewProjectionMatrix[viewIndex]*vec4(fragPositionView, 1.0f);
+    
+    
+    
+    
+    
+    
+        /* Barycentric without dynamic indexed vector, which is emulated on WebGL */
+    fragBarycentric[0] = float(gl_VertexID % 3 == 0)*1.0;
+    fragBarycentric[1] = float(gl_VertexID % 3 == 1)*1.0;
+    fragBarycentric[2] = float(gl_VertexID % 3 == 2)*1.0;
+    }
+
+shaderInjector.ts:28 Shader Source: WebGLShader {} #version 300 es
+#line 1 1
+#line 1
+precision highp float;
+precision highp int;
+
+out mediump vec4 outColor;
+
+/* Backward compatibility with pre-0.9.0 */
+
+#line 1
+
+
+
+
+#line 1
+flat in mediump uint fragMaterialId;
+in mediump vec3 fragBarycentric;
+#line 8
+
+#line 1
+
+highp uvec2 packUnormVector(mediump vec4 v) {
+    return uvec2(
+        packUnorm2x16(v.xy),
+        packUnorm2x16(v.zw)
+    );
+}
+
+highp uvec2 packSnormVector(mediump vec4 v) {
+    return uvec2(
+        packSnorm2x16(v.xy),
+        packSnorm2x16(v.zw)
+    );
+}
+
+/**
+ * Compress a cartesian normal into octahedron form on 32 bits
+ *
+ * From: https://www.shadertoy.com/view/Mtfyzl
+ */
+uint packOctahedral(vec3 normal) {
+    normal /= (abs(normal.x) + abs(normal.y) + abs(normal.z));
+    normal.xy = normal.z >= 0.0 ? normal.xy : sign(normal.xy)*(vec2(1.0) - abs(normal.yx));
+    vec2 v = vec2(0.5) + 0.5*normal.xy;
+    uvec2 d = uvec2(floor(v*float((1u<<16u) - 1u) + vec2(0.5)));
+    return (d.y << 16u)|d.x;
+}
+
+/** Unpack normal encoded via @ref packOctahedral() */
+vec3 unpackOctahedral(uint enc) {
+    uint mu = (1u << 16u) - 1u;
+    uvec2 d = uvec2(enc & mu, (enc >> 16u) & mu);
+    vec2 p = vec2(d)/float(mu);
+    p = vec2(-1.0) + 2.0*p;
+
+    /* Faster version than original paper:
+     * https://twitter.com/Stubbesaurus/status/937994790553227264 */
+    vec3 n = vec3(p.x, p.y, 1.0 - abs(p.x) - abs(p.y));
+    float t = max(0.0, -n.z);
+    n.x += n.x > 0.0 ? -t : t;
+    n.y += n.y > 0.0 ? -t : t;
+
+    return normalize(n);
+}
+#line 9
+
+#line 1
+uniform highp usampler2D materials;
+
+lowp uvec4 uintToVec4u(highp uint val) {
+    return (uvec4(val) >> uvec4(0u, 8u, 16u, 24u)) & uvec4(0xFFu);
+}
+
+/** Decode a color encoded into 32 bit */
+lowp vec4 uintToColor4ub(highp uint val) {
+    return vec4(uintToVec4u(val))*(1.0/255.0);
+}
+
+mediump float bytesToF16(lowp uvec2 val) {
+    highp uint u = val.y;
+    u <<= 8u;
+    u |= val.x;
+    return unpackHalf2x16(u).x;
+}
+
+mediump uint uvec2ToUint(lowp uvec2 val) {
+    /* Promote higher to cast expression to mediump
+     * and avoid overflow with the bit-shift */
+    mediump uint higher = val.y;
+    return (higher << 8u) | val.x;
+}
+
+mediump ivec2 materialCoordinate(mediump uint matIndex) {
+    /* (i%256, i//256)*2 */
+    return ivec2(
+        int(matIndex) << 1,
+        int(matIndex) >> 7
+    ) & 0x1FE;
+}
+
+#line 10
+
+
+struct Material {
+    lowp vec4 color;
+    lowp vec4 wireframeColor;
+};
+
+Material decodeMaterial(uint matIndex) {
+    const float inv = 1.0/255.0;
+Material mat;
+mediump ivec2 matPos = materialCoordinate(matIndex);
+highp uvec4 v = texelFetch(materials, matPos, 0);
+lowp uvec4 val;
+
+mat.color = uintToColor4ub(v.x);
+mat.wireframeColor = uintToColor4ub(v.y);
+#line 18
+    return mat;
+}
+
+void main() {
+    Material mat = decodeMaterial(fragMaterialId);
+
+    lowp vec3 d = fwidth(fragBarycentric);
+    lowp vec3 factor = smoothstep(vec3(0.0), d*1.5, fragBarycentric);
+    lowp float nearest = min(min(factor.x, factor.y), factor.z);
+
+    outColor = mix(mat.wireframeColor, mat.color, nearest);
+}
+
+logger.ts:130 Compiling pipeline Physical Opaque Textured
+logger.ts:130 Compiling Physical Opaque Textured with parameters:
+logger.ts:130     materialSize: 1
+logger.ts:130     lightCount: 1
+logger.ts:130     shadowCount: 4
+logger.ts:130     environmentBands: 9
+logger.ts:130     meshCount: 1024
+logger.ts:130     textureCount: 1024
+logger.ts:130     meshletsCount: 16384
+logger.ts:130     meshletsVertices: 16380
+logger.ts:130     tonemapping: 2
+logger.ts:130     Flag(MultiDraw): false
+logger.ts:130     Flag(Meshlets): true
+logger.ts:130     Flag(PreZ): false
+logger.ts:130     Flag(ReverseZ): true
+shaderInjector.ts:28 Shader Source: WebGLShader {} #version 300 es
+#line 1 1
+
+precision highp float;
+
+#line 1
+
+/* Vertex size in floats */
+#line 10
+
+#line 1
+
+highp uvec2 packUnormVector(mediump vec4 v) {
+    return uvec2(
+        packUnorm2x16(v.xy),
+        packUnorm2x16(v.zw)
+    );
+}
+
+highp uvec2 packSnormVector(mediump vec4 v) {
+    return uvec2(
+        packSnorm2x16(v.xy),
+        packSnorm2x16(v.zw)
+    );
+}
+
+/**
+ * Compress a cartesian normal into octahedron form on 32 bits
+ *
+ * From: https://www.shadertoy.com/view/Mtfyzl
+ */
+uint packOctahedral(vec3 normal) {
+    normal /= (abs(normal.x) + abs(normal.y) + abs(normal.z));
+    normal.xy = normal.z >= 0.0 ? normal.xy : sign(normal.xy)*(vec2(1.0) - abs(normal.yx));
+    vec2 v = vec2(0.5) + 0.5*normal.xy;
+    uvec2 d = uvec2(floor(v*float((1u<<16u) - 1u) + vec2(0.5)));
+    return (d.y << 16u)|d.x;
+}
+
+/** Unpack normal encoded via @ref packOctahedral() */
+vec3 unpackOctahedral(uint enc) {
+    uint mu = (1u << 16u) - 1u;
+    uvec2 d = uvec2(enc & mu, (enc >> 16u) & mu);
+    vec2 p = vec2(d)/float(mu);
+    p = vec2(-1.0) + 2.0*p;
+
+    /* Faster version than original paper:
+     * https://twitter.com/Stubbesaurus/status/937994790553227264 */
+    vec3 n = vec3(p.x, p.y, 1.0 - abs(p.x) - abs(p.y));
+    float t = max(0.0, -n.z);
+    n.x += n.x > 0.0 ? -t : t;
+    n.y += n.y > 0.0 ? -t : t;
+
+    return normalize(n);
+}
+#line 11
+
+
+
+/* Number of indices in a meshlet. Always a fixed size.
+ * In theory: 85 triangles, 1 int wasted.
+ * In practice: meshopt enforces multiple of 4, so 84 triangles, 5 ints wasted. */
+/** @todo Can we use unused indices for something interesting? */
+/** @todo Does this have to be power-of-two? */
+
+/* Per meshlet (= instanced) data.
+ * x: number of indices
+ * y: index of the indices ("meshlet ID")
+ * z: index of the first vertex
+ * w: object id */
+layout(location = 11) in highp uvec4 inMeshletData;
+
+/* Fixed-size meshlets for the entire scene, contain index data pointing into
+ * vertices */
+uniform highp usampler2DArray indices;
+/* Tightly packed vertex data for the entire scene */
+uniform highp sampler2DArray vertices;
+
+#line 1
+struct Quat2 {
+    vec4 rot;
+    vec4 loc;
+};
+
+vec4 conjugated(vec4 q) {
+    return vec4(-q.xyz, q.w);
+}
+
+Quat2 conjugated(Quat2 q) {
+    return Quat2(conjugated(q.rot), vec4(q.loc.xyz, -q.loc.w));
+}
+
+vec4 quat_mult(vec4 q1, vec4 q2) {
+    return vec4(q1.w*q2.xyz + q2.w*q1.xyz + cross(q1.xyz, q2.xyz),
+                /* dot(q1, conjugated(q2)) */
+                q1.w*q2.w - dot(q1.xyz, q2.xyz));
+}
+
+Quat2 quat_scale(float f, Quat2 q) {
+    return Quat2(f*q.rot, f*q.loc);
+}
+
+Quat2 quat2_mult(vec3 p, Quat2 q) {
+    return Quat2(q.rot, q.loc + quat_mult(vec4(p, 0.0f), q.rot));
+}
+
+Quat2 quat2_mult(Quat2 a, Quat2 b) {
+    return Quat2(quat_mult(a.rot, b.rot), quat_mult(a.rot, b.loc) + quat_mult(a.loc, b.rot));
+}
+
+vec3 quat_transformVector(vec4 q, vec3 v) {
+    vec3 a = cross(q.xyz, v);
+    vec3 b = q.w*a + cross(q.xyz, a);
+    return v + 2.0*b;
+}
+
+vec3 quat2_transformPoint(Quat2 q, vec3 p) {
+    vec3 qrv = q.rot.xyz;
+    float qrw = q.rot.w;
+
+    vec3 blv = qrw*p + cross(qrv, p) + 2.0*q.loc.xyz;
+    return (dot(p, qrv) - 2.0*q.loc.w)*qrv
+        + qrw*blv
+        + cross(qrv, blv);
+}
+
+vec3 quat_translation(Quat2 q) {
+    return quat_mult(q.loc, conjugated(q.rot)).xyz*2.0;
+}
+
+mat3 quat_toMatrix(vec4 q) {
+    /* Multiply by sqrt(2) to avoid factors of two in the matrix */
+    q *= 1.414214;
+
+    float xx = q.x*q.x;
+    float xy = q.x*q.y;
+    float xz = q.x*q.z;
+    float xw = q.x*q.w;
+
+    float yy = q.y*q.y;
+    float yz = q.y*q.z;
+    float yw = q.y*q.w;
+
+    float zz = q.z*q.z;
+    float zw = q.z*q.w;
+
+    return mat3(
+        1.0 - yy - zz,
+        xy + zw,
+        xz - yw,
+
+        xy - zw,
+        1.0 - xx - zz,
+        yz + xw,
+
+        xz + yw,
+        yz - xw,
+        1.0 - xx - yy);
+}
+#line 67
+
+
+out highp vec3 fragPositionWorld;
+out highp vec3 fragPositionView;
+out highp vec2 fragTextureCoords;
+flat out mediump uint fragMaterialId;
+out mediump vec3 fragNormal;
+flat out highp uint fragMeshletId;
+
+
+/* Manufacture a "quiet NaN" constant */
+
+#line 1
+uniform FrameUniforms {
+    lowp uvec4 textureCounts;
+    lowp uvec4 lightCounts;
+};
+
+
+uniform ViewUniforms {
+    highp vec4 viewCameraParams[2]; /* fov (rad), exposure, near, far */
+    highp ivec4 viewViewport[2];
+    highp mat2x4 viewWorldToView[2];
+    highp mat2x4 viewViewToWorld[2];
+    highp vec3 viewWorldPosition[2];
+    highp mat4 viewProjectionMatrix[2];
+    highp mat4 viewInverseProjectionMatrix[2];
+};
+
+
+uniform highp sampler2D transformations;
+
+uniform uint viewIndex;
+
+#line 119
+
+
+void main() {
+        /* For unassigned indices we produce invalid positions. The GLES3 spec says
+     * implementations are allowed to ignore inf/NaN but all implementations
+     * out there do support it. This potentially allows us to skip the
+     * rasterizer, compared to producing 0-area triangles. */
+    if(gl_VertexID >= int(inMeshletData.x)) {
+        gl_Position = vec4(uintBitsToFloat(0x7fc00000u));
+        return;
+    }
+
+    highp int indexStart = int(inMeshletData.y);
+    highp ivec3 indexOffset = ivec3(
+        indexStart % 16384 + gl_VertexID,
+        (indexStart % (16384*16384)) / 16384,
+        indexStart / (16384*16384)
+    );
+    highp uint indexValue = texelFetch(indices, indexOffset, 0).x;
+
+    highp int vertexStart = int(inMeshletData.z + indexValue)*(3 + 2 + 0 + 0 + 0 + 2);
+    highp ivec3 vertexOffset = ivec3(
+        vertexStart % 16380,
+        (vertexStart % (16380*16380)) / 16380,
+        vertexStart / (16380*16380)
+    );
+
+    highp vec3 inPosition = vec3(
+        texelFetch(vertices, vertexOffset, 0).x,
+        texelFetch(vertices, vertexOffset + ivec3(1, 0, 0), 0).x,
+        texelFetch(vertices, vertexOffset + ivec3(2, 0, 0), 0).x);
+    vertexOffset.x += 3;
+
+        highp vec2 inTextureCoords = vec2(
+        texelFetch(vertices, vertexOffset, 0).x,
+        texelFetch(vertices, vertexOffset + ivec3(1, 0, 0), 0).x);
+        vertexOffset.x += 2;
+        vertexOffset.x += 0;
+        vertexOffset.x += 0;
+        vertexOffset.x += 0;
+        highp vec3 inNormal = vec3(
+        unpackSnorm2x16(floatBitsToUint(texelFetch(vertices, vertexOffset, 0).x)),
+        unpackSnorm2x16(floatBitsToUint(texelFetch(vertices, vertexOffset + ivec3(1, 0, 0), 0).x)).x);
+    
+    highp int meshletId = indexStart / 256;
+    fragMeshletId = uint(meshletId);
+    mediump uint inObjectId = inMeshletData.w;
+    
+    /* Temporaries since we have no out variables */
+                mediump uint fragObjectId;
+    
+        fragObjectId = inObjectId;
+    
+    /* If the batch is instanced, there's only one mesh and fragObjectId is 0
+     * for all instances. Otherwise gl_InstanceID is 0 for all meshes. */
+    
+    ivec2 idx = 2*ivec2((int(fragObjectId)) & 1023, int(fragObjectId >> 10));
+    highp vec4 transform[2] = vec4[](
+        texelFetchOffset(transformations, idx, 0, ivec2(0, 0)),
+        texelFetchOffset(transformations, idx, 0, ivec2(1, 0)));
+    highp vec4 scaling =
+        texelFetchOffset(transformations, idx, 0, ivec2(0, 1));
+    
+        fragMaterialId = uint(scaling.w);
+    
+    /* Transformed vertex position */
+    fragPositionWorld = quat2_transformPoint(Quat2(transform[0], transform[1]), scaling.xyz*inPosition);
+    fragPositionView = quat2_transformPoint(Quat2(viewWorldToView[viewIndex][0], viewWorldToView[viewIndex][1]), fragPositionWorld);
+
+    /* Transformed normal vector */
+        fragNormal = normalize(quat_transformVector(transform[0], scaling.xyz*inNormal));
+    
+    
+    
+        /* Transform the position */
+    gl_Position = viewProjectionMatrix[viewIndex]*vec4(fragPositionView, 1.0f);
+    
+        /* Texture coordinates, if needed */
+    fragTextureCoords = inTextureCoords;
+    
+    
+    
+    
+    
+    }
+
+shaderInjector.ts:28 Shader Source: WebGLShader {} #version 300 es
+#line 1 1
+#line 1
+precision highp float;
+precision highp int;
+
+out mediump vec4 outColor;
+
+/* Backward compatibility with pre-0.9.0 */
+
+#line 1
+
+
+
+
+
+
+
+#line 1
+uniform FrameUniforms {
+    lowp uvec4 textureCounts;
+    lowp uvec4 lightCounts;
+};
+
+
+uniform ViewUniforms {
+    highp vec4 viewCameraParams[2]; /* fov (rad), exposure, near, far */
+    highp ivec4 viewViewport[2];
+    highp mat2x4 viewWorldToView[2];
+    highp mat2x4 viewViewToWorld[2];
+    highp vec3 viewWorldPosition[2];
+    highp mat4 viewProjectionMatrix[2];
+    highp mat4 viewInverseProjectionMatrix[2];
+};
+
+
+uniform highp sampler2D transformations;
+
+uniform uint viewIndex;
+
+#line 58
+
+#line 1
+in highp vec3 fragPositionWorld;
+in highp vec3 fragPositionView;
+in highp vec2 fragTextureCoords;
+flat in mediump uint fragMaterialId;
+in mediump vec3 fragNormal; /* world space */
+flat in highp uint fragMeshletId;
+#line 59
+
+#line 1
+/* Smallest normal float16 is 2^-14 (~0.00006). Subnormals can flush to 0. */
+
+#line 60
+
+#line 1
+/*
+ * Set of functions you can reuse to work on colors.
+ */
+
+/**
+ * Create a gradient between four colors
+ *
+ * @param stop0 The color of the first stop point
+ * @param stop1 The color of the second stop point
+ * @param stop2 The color of the third stop point
+ * @param stop3 The color of the fourth stop point
+ *
+ * This method assumes the stops are linear and spaced uniformly.
+ */
+mediump vec4 gradient4(mediump vec4 stop0, mediump vec4 stop1, mediump vec4 stop2, mediump vec4 stop3, highp float value) {
+    highp float value2 = value * 2.0;
+    mediump vec4 a = mix(stop0, stop1, value2);
+    mediump vec4 b = mix(stop2, stop3, value2 - 1.0);
+    return mix(a, b, smoothstep(0.495, 0.505, value));
+}
+
+/**
+ * Apply the sRGB transfer function to a linear RGB color
+ *
+ * @param linear Linear RGB color
+ * @returns Non-linear sRGB color
+ *
+ * Uses a 2.2 gamma curve as a fast approximation for the sRGB EOTF. Alpha is
+ * unaffected.
+ */
+lowp vec4 linearToSrgb(mediump vec4 linear) {
+    return vec4(pow(linear.rgb, vec3(1.0/2.2)), linear.a);
+}
+
+/** @overload */
+lowp vec3 linearToSrgb(mediump vec3 linear) {
+    return pow(linear, vec3(1.0/2.2));
+}
+
+/**
+ * Apply the inverse sRGB transfer function to get a linear RGB color
+ *
+ * @param srgb Non-linear sRGB color
+ * @returns Linear RGB color
+ *
+ * Uses a 2.2 gamma curve as a fast approximation for the sRGB EOTF. Alpha is
+ * unaffected.
+ */
+mediump vec4 srgbToLinear(mediump vec4 srgb) {
+    /* Input is mediump to avoid precision issues in pow() */
+    return vec4(pow(srgb.rgb, vec3(2.2)), srgb.a);
+}
+
+/** @overload */
+mediump vec3 srgbToLinear(mediump vec3 srgb) {
+    return pow(srgb, vec3(2.2));
+}
+
+
+/**
+ * ACES Tonemapping, luminance-only approximation
+ * https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/
+ */
+lowp vec3 tonemapACESFittedApproximation(mediump vec3 color) {
+    const mediump float a = 2.51*(0.6*0.6);
+    const mediump float b = 0.03*0.6;
+    const mediump float c = 2.43*(0.6*0.6);
+    const mediump float d = 0.59*0.6;
+    const mediump float e = 0.14;
+    return clamp((color*(a*color + b))/(color*(c*color + d) + e), 0.0, 1.0);
+}
+
+
+
+
+lowp vec3 tonemap(mediump vec3 color) {
+        return tonemapACESFittedApproximation(color);
+    }
+#line 61
+
+
+#line 1
+struct Quat2 {
+    vec4 rot;
+    vec4 loc;
+};
+
+vec4 conjugated(vec4 q) {
+    return vec4(-q.xyz, q.w);
+}
+
+Quat2 conjugated(Quat2 q) {
+    return Quat2(conjugated(q.rot), vec4(q.loc.xyz, -q.loc.w));
+}
+
+vec4 quat_mult(vec4 q1, vec4 q2) {
+    return vec4(q1.w*q2.xyz + q2.w*q1.xyz + cross(q1.xyz, q2.xyz),
+                /* dot(q1, conjugated(q2)) */
+                q1.w*q2.w - dot(q1.xyz, q2.xyz));
+}
+
+Quat2 quat_scale(float f, Quat2 q) {
+    return Quat2(f*q.rot, f*q.loc);
+}
+
+Quat2 quat2_mult(vec3 p, Quat2 q) {
+    return Quat2(q.rot, q.loc + quat_mult(vec4(p, 0.0f), q.rot));
+}
+
+Quat2 quat2_mult(Quat2 a, Quat2 b) {
+    return Quat2(quat_mult(a.rot, b.rot), quat_mult(a.rot, b.loc) + quat_mult(a.loc, b.rot));
+}
+
+vec3 quat_transformVector(vec4 q, vec3 v) {
+    vec3 a = cross(q.xyz, v);
+    vec3 b = q.w*a + cross(q.xyz, a);
+    return v + 2.0*b;
+}
+
+vec3 quat2_transformPoint(Quat2 q, vec3 p) {
+    vec3 qrv = q.rot.xyz;
+    float qrw = q.rot.w;
+
+    vec3 blv = qrw*p + cross(qrv, p) + 2.0*q.loc.xyz;
+    return (dot(p, qrv) - 2.0*q.loc.w)*qrv
+        + qrw*blv
+        + cross(qrv, blv);
+}
+
+vec3 quat_translation(Quat2 q) {
+    return quat_mult(q.loc, conjugated(q.rot)).xyz*2.0;
+}
+
+mat3 quat_toMatrix(vec4 q) {
+    /* Multiply by sqrt(2) to avoid factors of two in the matrix */
+    q *= 1.414214;
+
+    float xx = q.x*q.x;
+    float xy = q.x*q.y;
+    float xz = q.x*q.z;
+    float xw = q.x*q.w;
+
+    float yy = q.y*q.y;
+    float yz = q.y*q.z;
+    float yw = q.y*q.w;
+
+    float zz = q.z*q.z;
+    float zw = q.z*q.w;
+
+    return mat3(
+        1.0 - yy - zz,
+        xy + zw,
+        xz - yw,
+
+        xy - zw,
+        1.0 - xx - zz,
+        yz + xw,
+
+        xz + yw,
+        yz - xw,
+        1.0 - xx - yy);
+}
+#line 64
+
+#line
+logger.ts:130 Compiling pipeline Text
+logger.ts:130 Compiling Text with parameters:
+logger.ts:130     materialSize: 1
+logger.ts:130     environmentBands: 9
+logger.ts:130     meshCount: 1024
+logger.ts:130     textureCount: 0
+logger.ts:130     meshletsCount: 16384
+logger.ts:130     meshletsVertices: 16380
+logger.ts:130     tonemapping: 2
+logger.ts:130     Flag(MultiDraw): false
+logger.ts:130     Flag(Meshlets): false
+logger.ts:130     Flag(PreZ): false
+logger.ts:130     Flag(ReverseZ): true
+shaderInjector.ts:28 Shader Source: WebGLShader {} #version 300 es
+#line 1 1
+
+precision highp float;
+precision highp int;
+
+
+#line 1
+struct Quat2 {
+    vec4 rot;
+    vec4 loc;
+};
+
+vec4 conjugated(vec4 q) {
+    return vec4(-q.xyz, q.w);
+}
+
+Quat2 conjugated(Quat2 q) {
+    return Quat2(conjugated(q.rot), vec4(q.loc.xyz, -q.loc.w));
+}
+
+vec4 quat_mult(vec4 q1, vec4 q2) {
+    return vec4(q1.w*q2.xyz + q2.w*q1.xyz + cross(q1.xyz, q2.xyz),
+                /* dot(q1, conjugated(q2)) */
+                q1.w*q2.w - dot(q1.xyz, q2.xyz));
+}
+
+Quat2 quat_scale(float f, Quat2 q) {
+    return Quat2(f*q.rot, f*q.loc);
+}
+
+Quat2 quat2_mult(vec3 p, Quat2 q) {
+    return Quat2(q.rot, q.loc + quat_mult(vec4(p, 0.0f), q.rot));
+}
+
+Quat2 quat2_mult(Quat2 a, Quat2 b) {
+    return Quat2(quat_mult(a.rot, b.rot), quat_mult(a.rot, b.loc) + quat_mult(a.loc, b.rot));
+}
+
+vec3 quat_transformVector(vec4 q, vec3 v) {
+    vec3 a = cross(q.xyz, v);
+    vec3 b = q.w*a + cross(q.xyz, a);
+    return v + 2.0*b;
+}
+
+vec3 quat2_transformPoint(Quat2 q, vec3 p) {
+    vec3 qrv = q.rot.xyz;
+    float qrw = q.rot.w;
+
+    vec3 blv = qrw*p + cross(qrv, p) + 2.0*q.loc.xyz;
+    return (dot(p, qrv) - 2.0*q.loc.w)*qrv
+        + qrw*blv
+        + cross(qrv, blv);
+}
+
+vec3 quat_translation(Quat2 q) {
+    return quat_mult(q.loc, conjugated(q.rot)).xyz*2.0;
+}
+
+mat3 quat_toMatrix(vec4 q) {
+    /* Multiply by sqrt(2) to avoid factors of two in the matrix */
+    q *= 1.414214;
+
+    float xx = q.x*q.x;
+    float xy = q.x*q.y;
+    float xz = q.x*q.z;
+    float xw = q.x*q.w;
+
+    float yy = q.y*q.y;
+    float yz = q.y*q.z;
+    float yw = q.y*q.w;
+
+    float zz = q.z*q.z;
+    float zw = q.z*q.w;
+
+    return mat3(
+        1.0 - yy - zz,
+        xy + zw,
+        xz - yw,
+
+        xy - zw,
+        1.0 - xx - zz,
+        yz + xw,
+
+        xz + yw,
+        yz - xw,
+        1.0 - xx - yy);
+}
+#line 12
+
+#line 1
+
+/* SLVertexShader.h */
+
+void SlugUnpack(vec4 tex, vec4 bnd, out vec4 vbnd, out ivec4 vgly)
+{
+    uvec2 g = floatBitsToUint(tex.zw);
+
+    vgly = ivec4(g.x & 0xFFFFU, g.x >> 16U, g.y & 0xFFFFU, g.y >> 16U);
+    vbnd = bnd;
+}
+
+vec2 SlugDilate(vec4 pos, vec4 tex, vec4 jac, vec4 m0, vec4 m1, vec4 m3, vec2 dim, out vec2 vpos)
+{
+    vec2 n = normalize(pos.zw);
+    float s = dot(m3.xy, pos.xy) + m3.w;
+    float t = dot(m3.xy, n);
+
+    float u = (s * dot(m0.xy, n) - t * (dot(m0.xy, pos.xy) + m0.w)) * dim.x;
+    float v = (s * dot(m1.xy, n) - t * (dot(m1.xy, pos.xy) + m1.w)) * dim.y;
+
+    float s2 = s * s;
+    float st = s * t;
+    float uv = u * u + v * v;
+    vec2 d = pos.zw * (s2 * (st + sqrt(uv)) / (uv - st * st));
+
+    vpos = pos.xy + d;
+    return (vec2(tex.x + dot(d, jac.xy), tex.y + dot(d, jac.zw)));
+}
+#line 13
+
+
+/* Position and normal are split in two for compatibility with Magnum shaders */
+layout(location = 0) in vec2 inPosition;
+layout(location = 2) in mediump vec4 inColor;
+layout(location = 4) in mediump uint inObjectId;
+layout(location = 11) in vec2 inNormal;
+layout(location = 12) in vec4 inSlugTextureCoordinates;
+layout(location = 13) in vec4 inSlugJacobian;
+layout(location = 14) in vec4 inSlugBanding;
+
+out mediump vec4 fragColor;
+out vec2 fragTextureCoords;
+flat out vec4 fragBanding;
+flat out ivec4 fragGlyph;
+flat out mediump uint fragMaterialId;
+
+#line 1
+uniform FrameUniforms {
+    lowp uvec4 textureCounts;
+    lowp uvec4 lightCounts;
+};
+
+
+uniform ViewUniforms {
+    highp vec4 viewCameraParams[2]; /* fov (rad), exposure, near, far */
+    highp ivec4 viewViewport[2];
+    highp mat2x4 viewWorldToView[2];
+    highp mat2x4 viewViewToWorld[2];
+    highp vec3 viewWorldPosition[2];
+    highp mat4 viewProjectionMatrix[2];
+    highp mat4 viewInverseProjectionMatrix[2];
+};
+
+
+uniform highp sampler2D transformations;
+
+uniform uint viewIndex;
+
+#line 32
+
+
+void main() {
+    fragColor = inColor;
+
+        uint objectId = inObjectId;
+    
+    ivec2 idx = 2*ivec2(int(objectId) & 1023, int(objectId >> 10));
+    highp vec4 transform[2] = vec4[](
+        texelFetchOffset(transformations, idx, 0, ivec2(0, 0)),
+        texelFetchOffset(transformations, idx, 0, ivec2(1, 0)));
+    highp vec4 scaling =
+        texelFetchOffset(transformations, idx, 0, ivec2(0, 1));
+    fragMaterialId = uint(scaling.w);
+
+    /* SlugDilate() expects a transposed model-view-projection matrix. We can't
+     * pre-transform position and normal to world-space because Slug expects
+     * them packed into a vec4. So convert the dual quats to matrices instead.
+     * @todo If this turns out to be a performance issue, consider:
+     * - sending matrices instead of dual quats
+     * - rewriting SlugDilate() to use dual quats (might be even slower) */
+    mat4 modelMatrix = mat4(quat_toMatrix(transform[0]));
+    modelMatrix[0] *= scaling[0];
+    modelMatrix[1] *= scaling[1];
+    modelMatrix[2] *= scaling[2];
+    modelMatrix[3].xyz = quat_translation(Quat2(transform[0], transform[1]));
+
+    mat4 viewMatrix = mat4(quat_toMatrix(viewWorldToView[viewIndex][0]));
+    viewMatrix[3].xyz = quat_translation(Quat2(viewWorldToView[viewIndex][0], viewWorldToView[viewIndex][1]));
+
+    /* Add constant NDC depth offset towards the camera for non-outline
+     * vertices. We use alpha to distinguish text (= 1) and outline (= 0). By
+     * going through the projection matrix we avoid using glPolygonOffset (and
+     * multiple draw calls) or modifying gl_FragDepth, both of which can
+     * negatively impact performance.
+     * Derivation: http://terathon.com/gdc07_lengyel.pdf
+     * 2.0 factor: https://aras-p.info/blog/2008/06/12/depth-bias-and-the-power-of-deceiving-yourself/ */
+    /**
+     * @todo We need more fine-grained offsetting for layered glyphs (emoji).
+     * Instead of 255 = epsilon, this should be one alpha per layer. We then
+     * have to patch the vertex data to a) detect layers and b) set alpha for
+     * layer X (out of ?). */
+    mat4 offsetProjectionMatrix = viewProjectionMatrix[viewIndex];
+    float depthOffset = inColor.a*2.0*4.8e-7;
+        /**
+     * @todo We can use a smaller offset with reverse-Z since we use a float32
+     * depth buffer in range 0-1
+     */
+    offsetProjectionMatrix[2][2] -= depthOffset;
+    
+    mat4 mvp = offsetProjectionMatrix*viewMatrix*modelMatrix;
+    mat4 mvpTransposed = transpose(mvp);
+
+    vec4 slugPositionNormal = vec4(inPosition, inNormal);
+
+    vec2 pos;
+    fragTextureCoords = SlugDilate(slugPositionNormal, inSlugTextureCoordinates, inSlugJacobian,
+        mvpTransposed[0], mvpTransposed[1], mvpTransposed[3],
+        vec2(viewViewport[viewIndex].zw), pos);
+
+    gl_Position = pos.x*mvp[0] + pos.y*mvp[1] + mvp[3];
+
+    SlugUnpack(inSlugTextureCoordinates, inSlugBanding, fragBanding, fragGlyph);
+}
+
+shaderInjector.ts:28 Shader Source: WebGLShader {} #version 300 es
+#line 1 1
+#line 1
+precision highp float;
+precision highp int;
+
+out mediump vec4 outColor;
+
+/* Backward compatibility with pre-0.9.0 */
+
+#line 1
+
+
+
+precision highp sampler2DArray;
+precision highp usampler2DArray;
+
+
+#line 1
+flat in mediump uint fragMaterialId;
+#line 11
+
+#line 1
+
+highp uvec2 packUnormVector(mediump vec4 v) {
+    return uvec2(
+        packUnorm2x16(v.xy),
+        packUnorm2x16(v.zw)
+    );
+}
+
+highp uvec2 packSnormVector(mediump vec4 v) {
+    return uvec2(
+        packSnorm2x16(v.xy),
+        packSnorm2x16(v.zw)
+    );
+}
+
+/**
+ * Compress a cartesian normal into octahedron form on 32 bits
+ *
+ * From: https://www.shadertoy.com/view/Mtfyzl
+ */
+uint packOctahedral(vec3 normal) {
+    normal /= (abs(normal.x) + abs(normal.y) + abs(normal.z));
+    normal.xy = normal.z >= 0.0 ? normal.xy : sign(normal.xy)*(vec2(1.0) - abs(normal.yx));
+    vec2 v = vec2(0.5) + 0.5*normal.xy;
+    uvec2 d = uvec2(floor(v*float((1u<<16u) - 1u) + vec2(0.5)));
+    return (d.y << 16u)|d.x;
+}
+
+/** Unpack normal encoded via @ref packOctahedral() */
+vec3 unpackOctahedral(uint enc) {
+    uint mu = (1u << 16u) - 1u;
+    uvec2 d = uvec2(enc & mu, (enc >> 16u) & mu);
+    vec2 p = vec2(d)/float(mu);
+    p = vec2(-1.0) + 2.0*p;
+
+    /* Faster version than original paper:
+     * https://twitter.com/Stubbesaurus/status/937994790553227264 */
+    vec3 n = vec3(p.x, p.y, 1.0 - abs(p.x) - abs(p.y));
+    float t = max(0.0, -n.z);
+    n.x += n.x > 0.0 ? -t : t;
+    n.y += n.y > 0.0 ? -t : t;
+
+    return normalize(n);
+}
+#line 12
+
+#line 1
+uniform highp usampler2D materials;
+
+lowp uvec4 uintToVec4u(highp uint val) {
+    return (uvec4(val) >> uvec4(0u, 8u, 16u, 24u)) & uvec4(0xFFu);
+}
+
+/** Decode a color encoded into 32 bit */
+lowp vec4 uintToColor4ub(highp uint val) {
+    return vec4(uintToVec4u(val))*(1.0/255.0);
+}
+
+mediump float bytesToF16(lowp uvec2 val) {
+    highp uint u = val.y;
+    u <<= 8u;
+    u |= val.x;
+    return unpackHalf2x16(u).x;
+}
+
+mediump uint uvec2ToUint(lowp uvec2 val) {
+    /* Promote higher to cast expression to mediump
+     * and avoid overflow with the bit-shift */
+    mediump uint higher = val.y;
+    return (higher << 8u) | val.x;
+}
+
+mediump ivec2 materialCoordinate(mediump uint matIndex) {
+    /* (i%256, i//256)*2 */
+    return ivec2(
+        int(matIndex) << 1,
+        int(matIndex) >> 7
+    ) & 0x1FE;
+}
+
+#line 13
+
+#line 1
+uniform FrameUniforms {
+    lowp uvec4 textureCounts;
+    lowp uvec4 lightCounts;
+};
+
+
+uniform ViewUniforms {
+    highp vec4 viewCameraParams[2]; /* fov (rad), exposure, near, far */
+    highp ivec4 viewViewport[2];
+    highp mat2x4 viewWorldToView[2];
+    highp mat2x4 viewViewToWorld[2];
+    highp vec3 viewWorldPosition[2];
+    highp mat4 viewProjectionMatrix[2];
+    highp mat4 viewInverseProjectionMatrix[2];
+};
+
+
+uniform highp sampler2D transformations;
+
+uniform uint viewIndex;
+
+#line 14
+
+#line 1
+/*
+ * Set of functions you can reuse to work on colors.
+ */
+
+/**
+ * Create a gradient between four colors
+ *
+ * @param stop0 The color of the first stop point
+ * @param stop1 The color of the second stop point
+ * @param stop2 The color of the third stop point
+ * @param stop3 The color of the fourth stop point
+ *
+ * This method assumes the stops are linear and spaced uniformly.
+ */
+mediump vec4 gradient4(mediump vec4 stop0, mediump vec4 stop1, mediump vec4 stop2, mediump vec4 stop3, highp float value) {
+    highp float value2 = value * 2.0;
+    mediump vec4 a = mix(stop0, stop1, value2);
+    mediump vec4 b = mix(stop2, stop3, value2 - 1.0);
+    return mix(a, b, smoothstep(0.495, 0.505, value));
+}
+
+/**
+ * Apply the sRGB transfer function to a linear RGB color
+ *
+ * @param linear Linear RGB color
+ * @returns Non-linear sRGB color
+ *
+ * Uses a 2.2 gamma curve as a fast approximation for the sRGB EOTF. Alpha is
+ * unaffected.
+ */
+lowp vec4 linearToSrgb(mediump vec4 linear) {
+    return vec4(pow(linear.rgb, vec3(1.0/2.2)), linear.a);
+}
+
+/** @overload */
+lowp vec3 linearToSrgb(mediump vec3 linear) {
+    return pow(linear, vec3(1.0/2.2));
+}
+
+/**
+ * Apply the inverse sRGB transfer function to get a linear RGB color
+ *
+ * @param srgb Non-linear sRGB color
+ * @returns Linear RGB color
+ *
+ * Uses a 2.2 gamma curve as a fast approximation for the sRGB EOTF. Alpha is
+ * unaffected.
+ */
+mediump vec4 srgbToLinear(mediump vec4 srgb) {
+    /* Input is mediump to avoid precision issues in pow() */
+    return vec4(pow(srgb.rgb, vec3(2.2)), srgb.a);
+}
+
+/** @overload */
+mediump vec3 srgbToLinear(mediump vec3 srgb) {
+    return pow(srgb, vec3(2.2));
+}
+
+
+/**
+ * ACES Tonemapping, luminance-only approximation
+ * https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/
+ */
+lowp vec3 tonemapACESFittedApproximation(mediump vec3 color) {
+    const mediump float a = 2.51*(0.6*0.6);
+    const mediump float b = 0.03*0.6;
+    const mediump float c = 2.43*(0.6*0.6);
+    const mediump float d = 0.59*0.6;
+    const mediump float e = 0.14;
+    return clamp((color*(a*color + b))/(color*(c*color + d) + e), 0.0, 
+logger.ts:130 Compiling pipeline AtmosphericSky
+logger.ts:130 Compiling AtmosphericSky with parameters:
+logger.ts:130     materialSize: 1
+logger.ts:130     environmentBands: 9
+logger.ts:130     meshCount: 1024
+logger.ts:130     textureCount: 0
+logger.ts:130     meshletsCount: 16384
+logger.ts:130     meshletsVertices: 16380
+logger.ts:130     tonemapping: 2
+logger.ts:130     Flag(MultiDraw): false
+logger.ts:130     Flag(Meshlets): false
+logger.ts:130     Flag(PreZ): false
+logger.ts:130     Flag(ReverseZ): true
+shaderInjector.ts:28 Shader Source: WebGLShader {} #version 300 es
+#line 1 1
+out highp vec2 ndcCoordinates;
+
+void main() {
+    gl_Position = vec4(
+        (gl_VertexID == 2) ? 3.0 : -1.0,
+        (gl_VertexID == 1) ? -3.0 : 1.0,
+                0.0,
+                1.0);
+        ndcCoordinates = gl_Position.xy;
+    }
+
+shaderInjector.ts:28 Shader Source: WebGLShader {} #version 300 es
+#line 1 1
+precision highp float;
+
+
+
+#line 1
+uniform FrameUniforms {
+    lowp uvec4 textureCounts;
+    lowp uvec4 lightCounts;
+};
+
+
+uniform ViewUniforms {
+    highp vec4 viewCameraParams[2]; /* fov (rad), exposure, near, far */
+    highp ivec4 viewViewport[2];
+    highp mat2x4 viewWorldToView[2];
+    highp mat2x4 viewViewToWorld[2];
+    highp vec3 viewWorldPosition[2];
+    highp mat4 viewProjectionMatrix[2];
+    highp mat4 viewInverseProjectionMatrix[2];
+};
+
+
+uniform highp sampler2D transformations;
+
+uniform uint viewIndex;
+
+uniform mediump uint material;
+#line 8
+
+
+in highp vec2 ndcCoordinates;
+
+out lowp vec4 outColor;
+
+struct Material {
+    lowp vec3 direction;
+    lowp float exposure;
+};
+
+#line 1
+
+highp uvec2 packUnormVector(mediump vec4 v) {
+    return uvec2(
+        packUnorm2x16(v.xy),
+        packUnorm2x16(v.zw)
+    );
+}
+
+highp uvec2 packSnormVector(mediump vec4 v) {
+    return uvec2(
+        packSnorm2x16(v.xy),
+        packSnorm2x16(v.zw)
+    );
+}
+
+/**
+ * Compress a cartesian normal into octahedron form on 32 bits
+ *
+ * From: https://www.shadertoy.com/view/Mtfyzl
+ */
+uint packOctahedral(vec3 normal) {
+    normal /= (abs(normal.x) + abs(normal.y) + abs(normal.z));
+    normal.xy = normal.z >= 0.0 ? normal.xy : sign(normal.xy)*(vec2(1.0) - abs(normal.yx));
+    vec2 v = vec2(0.5) + 0.5*normal.xy;
+    uvec2 d = uvec2(floor(v*float((1u<<16u) - 1u) + vec2(0.5)));
+    return (d.y << 16u)|d.x;
+}
+
+/** Unpack normal encoded via @ref packOctahedral() */
+vec3 unpackOctahedral(uint enc) {
+    uint mu = (1u << 16u) - 1u;
+    uvec2 d = uvec2(enc & mu, (enc >> 16u) & mu);
+    vec2 p = vec2(d)/float(mu);
+    p = vec2(-1.0) + 2.0*p;
+
+    /* Faster version than original paper:
+     * https://twitter.com/Stubbesaurus/status/937994790553227264 */
+    vec3 n = vec3(p.x, p.y, 1.0 - abs(p.x) - abs(p.y));
+    float t = max(0.0, -n.z);
+    n.x += n.x > 0.0 ? -t : t;
+    n.y += n.y > 0.0 ? -t : t;
+
+    return normalize(n);
+}
+#line 20
+
+#line 1
+uniform highp usampler2D materials;
+
+lowp uvec4 uintToVec4u(highp uint val) {
+    return (uvec4(val) >> uvec4(0u, 8u, 16u, 24u)) & uvec4(0xFFu);
+}
+
+/** Decode a color encoded into 32 bit */
+lowp vec4 uintToColor4ub(highp uint val) {
+    return vec4(uintToVec4u(val))*(1.0/255.0);
+}
+
+mediump float bytesToF16(lowp uvec2 val) {
+    highp uint u = val.y;
+    u <<= 8u;
+    u |= val.x;
+    return unpackHalf2x16(u).x;
+}
+
+mediump uint uvec2ToUint(lowp uvec2 val) {
+    /* Promote higher to cast expression to mediump
+     * and avoid overflow with the bit-shift */
+    mediump uint higher = val.y;
+    return (higher << 8u) | val.x;
+}
+
+mediump ivec2 materialCoordinate(mediump uint matIndex) {
+    /* (i%256, i//256)*2 */
+    return ivec2(
+        int(matIndex) << 1,
+        int(matIndex) >> 7
+    ) & 0x1FE;
+}
+
+#line 21
+
+
+Material decodeMaterial(uint matIndex) {
+    const float inv = 1.0/255.0;
+Material mat;
+mediump ivec2 matPos = materialCoordinate(matIndex);
+highp uvec4 v = texelFetch(materials, matPos, 0);
+lowp uvec4 val;
+
+val = uintToVec4u(v.x);
+mat.direction = vec3(val.xyz)*inv;
+mat.exposure = float(val.w)*inv;
+#line 24
+    return mat;
+}
+
+#line 1
+struct Quat2 {
+    vec4 rot;
+    vec4 loc;
+};
+
+vec4 conjugated(vec4 q) {
+    return vec4(-q.xyz, q.w);
+}
+
+Quat2 conjugated(Quat2 q) {
+    return Quat2(conjugated(q.rot), vec4(q.loc.xyz, -q.loc.w));
+}
+
+vec4 quat_mult(vec4 q1, vec4 q2) {
+    return vec4(q1.w*q2.xyz + q2.w*q1.xyz + cross(q1.xyz, q2.xyz),
+                /* dot(q1, conjugated(q2)) */
+                q1.w*q2.w - dot(q1.xyz, q2.xyz));
+}
+
+Quat2 quat_scale(float f, Quat2 q) {
+    return Quat2(f*q.rot, f*q.loc);
+}
+
+Quat2 quat2_mult(vec3 p, Quat2 q) {
+    return Quat2(q.rot, q.loc + quat_mult(vec4(p, 0.0f), q.rot));
+}
+
+Quat2 quat2_mult(Quat2 a, Quat2 b) {
+    return Quat2(quat_mult(a.rot, b.rot), quat_mult(a.rot, b.loc) + quat_mult(a.loc, b.rot));
+}
+
+vec3 quat_transformVector(vec4 q, vec3 v) {
+    vec3 a = cross(q.xyz, v);
+    vec3 b = q.w*a + cross(q.xyz, a);
+    return v + 2.0*b;
+}
+
+vec3 quat2_transformPoint(Quat2 q, vec3 p) {
+    vec3 qrv = q.rot.xyz;
+    float qrw = q.rot.w;
+
+    vec3 blv = qrw*p + cross(qrv, p) + 2.0*q.loc.xyz;
+    return (dot(p, qrv) - 2.0*q.loc.w)*qrv
+        + qrw*blv
+        + cross(qrv, blv);
+}
+
+vec3 quat_translation(Quat2 q) {
+    return quat_mult(q.loc, conjugated(q.rot)).xyz*2.0;
+}
+
+mat3 quat_toMatrix(vec4 q) {
+    /* Multiply by sqrt(2) to avoid factors of two in the matrix */
+    q *= 1.414214;
+
+    float xx = q.x*q.x;
+    float xy = q.x*q.y;
+    float xz = q.x*q.z;
+    float xw = q.x*q.w;
+
+    float yy = q.y*q.y;
+    float yz = q.y*q.z;
+    float yw = q.y*q.w;
+
+    float zz = q.z*q.z;
+    float zw = q.z*q.w;
+
+    return mat3(
+        1.0 - yy - zz,
+        xy + zw,
+        xz - yw,
+
+        xy - zw,
+        1.0 - xx - zz,
+        yz + xw,
+
+        xz + yw,
+        yz - xw,
+        1.0 - xx - yy);
+}
+#line 28
+
+#line 1
+/* Smallest normal float16 is 2^-14 (~0.00006). Subnormals can flush to 0. */
+
+#line 29
+
+#line 1
+/*
+ * Helpers to convert between coordina
+logger.ts:130 Compiling pipeline Color
+logger.ts:130 Compiling Color with parameters:
+logger.ts:130     environmentBands: 9
+logger.ts:130     meshCount: 1024
+logger.ts:130     textureCount: 0
+logger.ts:130     meshletsCount: 16384
+logger.ts:130     meshletsVertices: 16380
+logger.ts:130     tonemapping: 2
+logger.ts:130     Flag(MultiDraw): false
+logger.ts:130     Flag(Meshlets): false
+logger.ts:130     Flag(PreZ): false
+logger.ts:130     Flag(ReverseZ): true
+shaderInjector.ts:28 Shader Source: WebGLShader {} #version 300 es
+#line 1 1
+
+precision highp float;
+
+
+/* Normal and tangent are float16, but we transform them with highp quats
+ * anyway so do the conversion as early as possible */
+layout(location = 0) in highp vec3 inPosition;
+layout(location = 4) in mediump uint inObjectId;
+
+#line 1
+struct Quat2 {
+    vec4 rot;
+    vec4 loc;
+};
+
+vec4 conjugated(vec4 q) {
+    return vec4(-q.xyz, q.w);
+}
+
+Quat2 conjugated(Quat2 q) {
+    return Quat2(conjugated(q.rot), vec4(q.loc.xyz, -q.loc.w));
+}
+
+vec4 quat_mult(vec4 q1, vec4 q2) {
+    return vec4(q1.w*q2.xyz + q2.w*q1.xyz + cross(q1.xyz, q2.xyz),
+                /* dot(q1, conjugated(q2)) */
+                q1.w*q2.w - dot(q1.xyz, q2.xyz));
+}
+
+Quat2 quat_scale(float f, Quat2 q) {
+    return Quat2(f*q.rot, f*q.loc);
+}
+
+Quat2 quat2_mult(vec3 p, Quat2 q) {
+    return Quat2(q.rot, q.loc + quat_mult(vec4(p, 0.0f), q.rot));
+}
+
+Quat2 quat2_mult(Quat2 a, Quat2 b) {
+    return Quat2(quat_mult(a.rot, b.rot), quat_mult(a.rot, b.loc) + quat_mult(a.loc, b.rot));
+}
+
+vec3 quat_transformVector(vec4 q, vec3 v) {
+    vec3 a = cross(q.xyz, v);
+    vec3 b = q.w*a + cross(q.xyz, a);
+    return v + 2.0*b;
+}
+
+vec3 quat2_transformPoint(Quat2 q, vec3 p) {
+    vec3 qrv = q.rot.xyz;
+    float qrw = q.rot.w;
+
+    vec3 blv = qrw*p + cross(qrv, p) + 2.0*q.loc.xyz;
+    return (dot(p, qrv) - 2.0*q.loc.w)*qrv
+        + qrw*blv
+        + cross(qrv, blv);
+}
+
+vec3 quat_translation(Quat2 q) {
+    return quat_mult(q.loc, conjugated(q.rot)).xyz*2.0;
+}
+
+mat3 quat_toMatrix(vec4 q) {
+    /* Multiply by sqrt(2) to avoid factors of two in the matrix */
+    q *= 1.414214;
+
+    float xx = q.x*q.x;
+    float xy = q.x*q.y;
+    float xz = q.x*q.z;
+    float xw = q.x*q.w;
+
+    float yy = q.y*q.y;
+    float yz = q.y*q.z;
+    float yw = q.y*q.w;
+
+    float zz = q.z*q.z;
+    float zw = q.z*q.w;
+
+    return mat3(
+        1.0 - yy - zz,
+        xy + zw,
+        xz - yw,
+
+        xy - zw,
+        1.0 - xx - zz,
+        yz + xw,
+
+        xz + yw,
+        yz - xw,
+        1.0 - xx - yy);
+}
+#line 67
+
+
+
+
+/* Manufacture a "quiet NaN" constant */
+
+#line 1
+uniform FrameUniforms {
+    lowp uvec4 textureCounts;
+    lowp uvec4 lightCounts;
+};
+
+
+uniform ViewUniforms {
+    highp vec4 viewCameraParams[2]; /* fov (rad), exposure, near, far */
+    highp ivec4 viewViewport[2];
+    highp mat2x4 viewWorldToView[2];
+    highp mat2x4 viewViewToWorld[2];
+    highp vec3 viewWorldPosition[2];
+    highp mat4 viewProjectionMatrix[2];
+    highp mat4 viewInverseProjectionMatrix[2];
+};
+
+
+uniform highp sampler2D transformations;
+
+uniform uint viewIndex;
+
+#line 119
+
+
+void main() {
+    
+    /* Temporaries since we have no out variables */
+        highp vec3 fragPositionWorld;
+            highp vec3 fragPositionView;
+            mediump uint fragObjectId;
+    
+        fragObjectId = inObjectId;
+    
+    /* If the batch is instanced, there's only one mesh and fragObjectId is 0
+     * for all instances. Otherwise gl_InstanceID is 0 for all meshes. */
+        fragObjectId += uint(gl_InstanceID);
+    
+    ivec2 idx = 2*ivec2((int(fragObjectId)) & 1023, int(fragObjectId >> 10));
+    highp vec4 transform[2] = vec4[](
+        texelFetchOffset(transformations, idx, 0, ivec2(0, 0)),
+        texelFetchOffset(transformations, idx, 0, ivec2(1, 0)));
+    highp vec4 scaling =
+        texelFetchOffset(transformations, idx, 0, ivec2(0, 1));
+    
+    
+    /* Transformed vertex position */
+    fragPositionWorld = quat2_transformPoint(Quat2(transform[0], transform[1]), scaling.xyz*inPosition);
+    fragPositionView = quat2_transformPoint(Quat2(viewWorldToView[viewIndex][0], viewWorldToView[viewIndex][1]), fragPositionWorld);
+
+    /* Transformed normal vector */
+    
+    
+    
+        /* Transform the position */
+    gl_Position = viewProjectionMatrix[viewIndex]*vec4(fragPositionView, 1.0f);
+    
+    
+    
+    
+    
+    
+    }
+
+shaderInjector.ts:28 Shader Source: WebGLShader {} #version 300 es
+#line 1 1
+#line 1
+precision highp float;
+precision highp int;
+
+out mediump vec4 outColor;
+
+/* Backward compatibility with pre-0.9.0 */
+
+#line 1
+
+
+/** @todo We will be able to mark this as internal once we have a notion of builtin resources, until then this must be in the .wlp */
+/* #define SHADER_INTERNAL */
+
+
+
+#line 1
+#line 12
+
+
+void main() {
+    outColor =
+                vec4(1.0);
+        }
+
+logger.ts:130 Compiling TileFeedback with parameters:
+logger.ts:130     environmentBands: 0
+logger.ts:130     meshCount: 1024
+logger.ts:130     textureCount: 1024
+logger.ts:130     meshletsCount: 0
+logger.ts:130     meshletsVertices: 0
+logger.ts:130     tonemapping: 0
+logger.ts:130     Flag(MultiDraw): false
+logger.ts:130     Flag(Meshlets): false
+logger.ts:130     Flag(PreZ): false
+logger.ts:130     Flag(ReverseZ): true
+shaderInjector.ts:28 Shader Source: WebGLShader {} #version 300 es
+#line 1 1
+
+precision highp float;
+
+
+/* Normal and tangent are float16, but we transform them with highp quats
+ * anyway so do the conversion as early as possible */
+layout(location = 0) in highp vec3 inPosition;
+layout(location = 1) in highp vec2 inTextureCoords;
+layout(location = 4) in mediump uint inObjectId;
+
+#line 1
+struct Quat2 {
+    vec4 rot;
+    vec4 loc;
+};
+
+vec4 conjugated(vec4 q) {
+    return vec4(-q.xyz, q.w);
+}
+
+Quat2 conjugated(Quat2 q) {
+    return Quat2(conjugated(q.rot), vec4(q.loc.xyz, -q.loc.w));
+}
+
+vec4 quat_mult(vec4 q1, vec4 q2) {
+    return vec4(q1.w*q2.xyz + q2.w*q1.xyz + cross(q1.xyz, q2.xyz),
+                /* dot(q1, conjugated(q2)) */
+                q1.w*q2.w - dot(q1.xyz, q2.xyz));
+}
+
+Quat2 quat_scale(float f, Quat2 q) {
+    return Quat2(f*q.rot, f*q.loc);
+}
+
+Quat2 quat2_mult(vec3 p, Quat2 q) {
+    return Quat2(q.rot, q.loc + quat_mult(vec4(p, 0.0f), q.rot));
+}
+
+Quat2 quat2_mult(Quat2 a, Quat2 b) {
+    return Quat2(quat_mult(a.rot, b.rot), quat_mult(a.rot, b.loc) + quat_mult(a.loc, b.rot));
+}
+
+vec3 quat_transformVector(vec4 q, vec3 v) {
+    vec3 a = cross(q.xyz, v);
+    vec3 b = q.w*a + cross(q.xyz, a);
+    return v + 2.0*b;
+}
+
+vec3 quat2_transformPoint(Quat2 q, vec3 p) {
+    vec3 qrv = q.rot.xyz;
+    float qrw = q.rot.w;
+
+    vec3 blv = qrw*p + cross(qrv, p) + 2.0*q.loc.xyz;
+    return (dot(p, qrv) - 2.0*q.loc.w)*qrv
+        + qrw*blv
+        + cross(qrv, blv);
+}
+
+vec3 quat_translation(Quat2 q) {
+    return quat_mult(q.loc, conjugated(q.rot)).xyz*2.0;
+}
+
+mat3 quat_toMatrix(vec4 q) {
+    /* Multiply by sqrt(2) to avoid factors of two in the matrix */
+    q *= 1.414214;
+
+    float xx = q.x*q.x;
+    float xy = q.x*q.y;
+    float xz = q.x*q.z;
+    float xw = q.x*q.w;
+
+    float yy = q.y*q.y;
+    float yz = q.y*q.z;
+    float yw = q.y*q.w;
+
+    float zz = q.z*q.z;
+    float zw = q.z*q.w;
+
+    return mat3(
+        1.0 - yy - zz,
+        xy + zw,
+        xz - yw,
+
+        xy - zw,
+        1.0 - xx - zz,
+        yz + xw,
+
+        xz + yw,
+        yz - xw,
+        1.0 - xx - yy);
+}
+#line 67
+
+
+out highp vec2 fragTextureCoords;
+flat out mediump uint fragObjectId;
+
+
+/* Manufacture a "quiet NaN" constant */
+
+#line 1
+uniform FrameUniforms {
+    lowp uvec4 textureCounts;
+    lowp uvec4 lightCounts;
+};
+
+
+uniform ViewUniforms {
+    highp vec4 viewCameraParams[2]; /* fov (rad), exposure, near, far */
+    highp ivec4 viewViewport[2];
+    highp mat2x4 viewWorldToView[2];
+    highp mat2x4 viewViewToWorld[2];
+    highp vec3 viewWorldPosition[2];
+    highp mat4 viewProjectionMatrix[2];
+    highp mat4 viewInverseProjectionMatrix[2];
+};
+
+
+uniform highp sampler2D transformations;
+
+uniform uint viewIndex;
+
+#line 119
+
+
+void main() {
+    
+    /* Temporaries since we have no out variables */
+        highp vec3 fragPositionWorld;
+            highp vec3 fragPositionView;
+        
+        fragObjectId = inObjectId;
+    
+    /* If the batch is instanced, there's only one mesh and fragObjectId is 0
+     * for all instances. Otherwise gl_InstanceID is 0 for all meshes. */
+        fragObjectId += uint(gl_InstanceID);
+    
+    ivec2 idx = 2*ivec2((int(fragObjectId)) & 1023, int(fragObjectId >> 10));
+    highp vec4 transform[2] = vec4[](
+        texelFetchOffset(transformations, idx, 0, ivec2(0, 0)),
+        texelFetchOffset(transformations, idx, 0, ivec2(1, 0)));
+    highp vec4 scaling =
+        texelFetchOffset(transformations, idx, 0, ivec2(0, 1));
+    
+    
+    /* Transformed vertex position */
+    fragPositionWorld = quat2_transformPoint(Quat2(transform[0], transform[1]), scaling.xyz*inPosition);
+    fragPositionView = quat2_transformPoint(Quat2(viewWorldToView[viewIndex][0], viewWorldToView[viewIndex][1]), fragPositionWorld);
+
+    /* Transformed normal vector */
+    
+    
+    
+        /* Transform the position */
+    gl_Position = viewProjectionMatrix[viewIndex]*vec4(fragPositionView, 1.0f);
+    
+        /* Texture coordinates, if needed */
+    fragTextureCoords = inTextureCoords;
+    
+    
+    
+    
+    
+    }
+
+shaderInjector.ts:28 Shader Source: WebGLShader {} #version 300 es
+#line 1 1
+precision highp float;
+precision highp int;
+
+/** @todo We will be able to mark this as internal once we have a notion of builtin resources, until then this must be in the .wlp */
+/* #define SHADER_INTERNAL */
+
+/* SKY is defined in the renderer manually for fullscreen draws */
+
+#line 1
+in highp vec2 fragTextureCoords;
+flat in mediump uint fragObjectId;
+#line 15
+
+#line 1
+/* The compressed atlas is either tiled or non-tiled when texture streaming
+ * is disabled, so only one of those is bound at any given time as textureAtlasCompressed */
+uniform lowp sampler2DArray textureAtlasUncompressed;
+uniform lowp sampler2DArray textureAtlasCompressed;
+
+uniform mediump usampler2D indirectionTexture;
+
+
+/* Texture streaming tile visualization */
+//#define VISUALIZE_TEXTURE_STREAMING
+
+uniform highp usampler2D textureBounds;
+
+
+highp float fastInv2Exp(lowp int exp) {
+    highp uint exponent = uint(127 - exp) & 0xFFu;
+    return uintBitsToFloat(exponent << 23u);
+}
+
+lowp int fastIntLog2(highp float v) {
+    lowp uint bits = floatBitsToUint(v) >> 23u;
+    return int(bits & 255u) - 127;
+}
+
+/**
+ * Compute the maximum LOD of a texture based on its dimensions
+ *
+ * @param size The dimensions of the texture
+ * @returns The maximum lod
+ */
+lowp int maxLod(mediump uvec2 size) {
+    /* The constant `8` is for the minimum tile size: log2(256) = 8. */
+    return max(0, fastIntLog2(float(max(size.x, size.y))) - 8);
+}
+
+lowp int mipMapLevel(vec2 pixelCoords) {
+    highp vec2 dx = dFdx(pixelCoords);
+    highp vec2 dy = dFdy(pixelCoords);
+
+    highp float d = max(dot(dx, dx), dot(dy, dy));
+    return fastIntLog2(d) >> 1;
+}
+
+lowp int mipMapLevel(vec2 pixelCoords, lowp int maxMip) {
+    lowp int lod = mipMapLevel(pixelCoords);
+    /* Clamp to valid mip range */
+    return clamp(lod, 0, maxMip);
+}
+
+/**
+ * Compute the mip map level to fetch based on the UV derivative
+ *
+ * @param uv The equirectangular phi and theta values, in the range [-0.5, 0.5]
+ * @param size The size of the texture to fetch
+ * @param maxMip The maximum (inclusive) mip level
+ */
+lowp int mipMapLevelEquirectangular(vec2 uv, vec2 size, lowp int maxMip) {
+    /* If we compute the mip level using the `mipMapLevel` function, we will
+     * end up with a seam because equirectangular uvs will have a sudden
+     * jump between two texels (0.5 to -0.5), making the classic mip map
+     * selection choose the highest possible lod.
+     *
+     * Fix from Ben Golus:
+     * https://bgolus.medium.com/distinctive-derivative-differences-cce38d36797b#3fda */
+
+    /* Second channel to use when the derivate of the first one is too big. */
+    vec2 uvB = vec2(fract(uv.x), uv.y);
+    return min(mipMapLevel(uv*size, maxMip), mipMapLevel(uvB*size, maxMip));
+}
+
+ivec2 tileST(lowp int lod, mediump uvec2 offset, vec2 wrappedSt) {
+    float toIndirection = fastInv2Exp(lod + 8);
+    vec2 offs = ceil(vec2(offset)*toIndirection);
+    mediump ivec2 indirectionSt = ivec2(offs + wrappedSt*toIndirection);
+    return indirectionSt;
+}
+
+mediump uint sampleTile(lowp int lod, mediump uvec2 offset, vec2 wrappedSt) {
+    return texelFetch(indirectionTexture, tileST(lod, offset, wrappedSt), lod).r;
+}
+
+vec4 tileStackLod(lowp sampler2DArray stack, mediump uvec2 offset, mediump uvec2 size, vec2 uv, lowp int lod) {
+    /* Texture coordinates on virtual texture atlas. */
+    vec2 wrappedSt = min(fract(uv), 0.99999)*vec2(size);
+
+    mediump uint tile = sampleTile(lod, offset, wrappedSt);
+
+    lowp int tileLod = int(tile >> 11u);
+    /* Max tile cache is 2048 tiles */
+    tile = tile & 0x7FFu;
+
+    /* Compute UVs relative to the tile */
+    highp float ti = fastInv2Exp(8 + lod + tileLod);
+    highp vec2 tileUV = min(fract(wrappedSt*ti), 0.99999);
+
+    const float twoPixels = 2.0/260.0;
+    const float rescale = 256.0/260.0;
+    lowp vec4 c = textureLod(stack, vec3(tileUV*rescale + twoPixels, float(tile)), 0.0);
+
+    return c;
+}
+
+vec4 tileStack(lowp sampler2DArray stack, mediump uvec2 offset, mediump uvec2 size, vec2 uv) {
+    vec2 st = uv*vec2(size);
+    lowp int lod = mipMapLevel(st, maxLod(size));
+    return tileStackLod(stack, offset, size, uv, lod);
+}
+
+uint unpackBounds(mediump uint t, out mediump uvec4 bounds) {
+    highp uvec4 boundsPacked = texelFetch(textureBounds,
+        ivec2(int(t & 0x3FFu), int(t >> 10u)), 0);
+    lowp uint layer = boundsPacked.x >> 8u;
+        if(layer == 0xFFu) {
+        /* Compressed image bounds */
+        bounds = uvec4(
+            (boundsPacked.y & 0xFFu) << 8u,
+            boundsPacked.y & 0xFF00u,
+            boundsPacked.z,
+            boundsPacked.w
+        );
+    } else
+        {
+        /* Uncompressed image bounds */
+        bounds = uvec4(
+            boundsPacked.z,
+            boundsPacked.w,
+            (boundsPacked.y & 0xFFFu) + 1u,
+            (((boundsPacked.x & 0xFFu) << 4u) | (boundsPacked.y >> 12u)) + 1u
+        );
+    }
+    return layer;
+}
+
+/**
+ * Fetch the uncompressed texture atlas.
+ *
+ * This method automatically wrap uvs and performs the boun
+logger.ts:130 Compiling TileFeedbackSky with parameters:
+logger.ts:130     environmentBands: 0
+logger.ts:130     meshCount: 1024
+logger.ts:130     textureCount: 0
+logger.ts:130     meshletsCount: 0
+logger.ts:130     meshletsVertices: 0
+logger.ts:130     tonemapping: 0
+logger.ts:130     Flag(MultiDraw): false
+logger.ts:130     Flag(Meshlets): false
+logger.ts:130     Flag(PreZ): false
+logger.ts:130     Flag(ReverseZ): true
+shaderInjector.ts:28 Shader Source: WebGLShader {} #version 300 es
+#line 1 1
+out highp vec2 textureCoordinates;
+
+void main() {
+    gl_Position = vec4(
+        (gl_VertexID == 2) ? 3.0 : -1.0,
+        (gl_VertexID == 1) ? -3.0 : 1.0,
+                0.0,
+                1.0);
+        textureCoordinates = gl_Position.xy*0.5 + vec2(0.5);
+    }
+
+shaderInjector.ts:28 Shader Source: WebGLShader {} #version 300 es
+#line 1 1
+precision highp float;
+precision highp int;
+
+/** @todo We will be able to mark this as internal once we have a notion of builtin resources, until then this must be in the .wlp */
+/* #define SHADER_INTERNAL */
+
+/* SKY is defined in the renderer manually for fullscreen draws */
+
+#line 1
+#line 15
+
+#line 1
+/* The compressed atlas is either tiled or non-tiled when texture streaming
+ * is disabled, so only one of those is bound at any given time as textureAtlasCompressed */
+uniform lowp sampler2DArray textureAtlasUncompressed;
+uniform lowp sampler2DArray textureAtlasCompressed;
+
+uniform mediump usampler2D indirectionTexture;
+
+
+/* Texture streaming tile visualization */
+//#define VISUALIZE_TEXTURE_STREAMING
+
+uniform highp usampler2D textureBounds;
+
+
+highp float fastInv2Exp(lowp int exp) {
+    highp uint exponent = uint(127 - exp) & 0xFFu;
+    return uintBitsToFloat(exponent << 23u);
+}
+
+lowp int fastIntLog2(highp float v) {
+    lowp uint bits = floatBitsToUint(v) >> 23u;
+    return int(bits & 255u) - 127;
+}
+
+/**
+ * Compute the maximum LOD of a texture based on its dimensions
+ *
+ * @param size The dimensions of the texture
+ * @returns The maximum lod
+ */
+lowp int maxLod(mediump uvec2 size) {
+    /* The constant `8` is for the minimum tile size: log2(256) = 8. */
+    return max(0, fastIntLog2(float(max(size.x, size.y))) - 8);
+}
+
+lowp int mipMapLevel(vec2 pixelCoords) {
+    highp vec2 dx = dFdx(pixelCoords);
+    highp vec2 dy = dFdy(pixelCoords);
+
+    highp float d = max(dot(dx, dx), dot(dy, dy));
+    return fastIntLog2(d) >> 1;
+}
+
+lowp int mipMapLevel(vec2 pixelCoords, lowp int maxMip) {
+    lowp int lod = mipMapLevel(pixelCoords);
+    /* Clamp to valid mip range */
+    return clamp(lod, 0, maxMip);
+}
+
+/**
+ * Compute the mip map level to fetch based on the UV derivative
+ *
+ * @param uv The equirectangular phi and theta values, in the range [-0.5, 0.5]
+ * @param size The size of the texture to fetch
+ * @param maxMip The maximum (inclusive) mip level
+ */
+lowp int mipMapLevelEquirectangular(vec2 uv, vec2 size, lowp int maxMip) {
+    /* If we compute the mip level using the `mipMapLevel` function, we will
+     * end up with a seam because equirectangular uvs will have a sudden
+     * jump between two texels (0.5 to -0.5), making the classic mip map
+     * selection choose the highest possible lod.
+     *
+     * Fix from Ben Golus:
+     * https://bgolus.medium.com/distinctive-derivative-differences-cce38d36797b#3fda */
+
+    /* Second channel to use when the derivate of the first one is too big. */
+    vec2 uvB = vec2(fract(uv.x), uv.y);
+    return min(mipMapLevel(uv*size, maxMip), mipMapLevel(uvB*size, maxMip));
+}
+
+ivec2 tileST(lowp int lod, mediump uvec2 offset, vec2 wrappedSt) {
+    float toIndirection = fastInv2Exp(lod + 8);
+    vec2 offs = ceil(vec2(offset)*toIndirection);
+    mediump ivec2 indirectionSt = ivec2(offs + wrappedSt*toIndirection);
+    return indirectionSt;
+}
+
+mediump uint sampleTile(lowp int lod, mediump uvec2 offset, vec2 wrappedSt) {
+    return texelFetch(indirectionTexture, tileST(lod, offset, wrappedSt), lod).r;
+}
+
+vec4 tileStackLod(lowp sampler2DArray stack, mediump uvec2 offset, mediump uvec2 size, vec2 uv, lowp int lod) {
+    /* Texture coordinates on virtual texture atlas. */
+    vec2 wrappedSt = min(fract(uv), 0.99999)*vec2(size);
+
+    mediump uint tile = sampleTile(lod, offset, wrappedSt);
+
+    lowp int tileLod = int(tile >> 11u);
+    /* Max tile cache is 2048 tiles */
+    tile = tile & 0x7FFu;
+
+    /* Compute UVs relative to the tile */
+    highp float ti = fastInv2Exp(8 + lod + tileLod);
+    highp vec2 tileUV = min(fract(wrappedSt*ti), 0.99999);
+
+    const float twoPixels = 2.0/260.0;
+    const float rescale = 256.0/260.0;
+    lowp vec4 c = textureLod(stack, vec3(tileUV*rescale + twoPixels, float(tile)), 0.0);
+
+    return c;
+}
+
+vec4 tileStack(lowp sampler2DArray stack, mediump uvec2 offset, mediump uvec2 size, vec2 uv) {
+    vec2 st = uv*vec2(size);
+    lowp int lod = mipMapLevel(st, maxLod(size));
+    return tileStackLod(stack, offset, size, uv, lod);
+}
+
+uint unpackBounds(mediump uint t, out mediump uvec4 bounds) {
+    highp uvec4 boundsPacked = texelFetch(textureBounds,
+        ivec2(int(t & 0x3FFu), int(t >> 10u)), 0);
+    lowp uint layer = boundsPacked.x >> 8u;
+        if(layer == 0xFFu) {
+        /* Compressed image bounds */
+        bounds = uvec4(
+            (boundsPacked.y & 0xFFu) << 8u,
+            boundsPacked.y & 0xFF00u,
+            boundsPacked.z,
+            boundsPacked.w
+        );
+    } else
+        {
+        /* Uncompressed image bounds */
+        bounds = uvec4(
+            boundsPacked.z,
+            boundsPacked.w,
+            (boundsPacked.y & 0xFFFu) + 1u,
+            (((boundsPacked.x & 0xFFu) << 4u) | (boundsPacked.y >> 12u)) + 1u
+        );
+    }
+    return layer;
+}
+
+/**
+ * Fetch the uncompressed texture atlas.
+ *
+ * This method automatically wrap uvs and performs the bounds offset
+ * to retrieve the appropriate texel to fetch in the textu
+logger.ts:130 Compiling Depth with parameters:
+logger.ts:130     environmentBands: 0
+logger.ts:130     meshCount: 1024
+logger.ts:130     textureCount: 0
+logger.ts:130     meshletsCount: 16384
+logger.ts:130     meshletsVertices: 16380
+logger.ts:130     tonemapping: 2
+logger.ts:130     Flag(MultiDraw): false
+logger.ts:130     Flag(Meshlets): false
+logger.ts:130     Flag(PreZ): false
+logger.ts:130     Flag(ReverseZ): true
+shaderInjector.ts:28 Shader Source: WebGLShader {} #version 300 es
+#line 1 1
+
+precision highp float;
+
+
+/* Normal and tangent are float16, but we transform them with highp quats
+ * anyway so do the conversion as early as possible */
+layout(location = 0) in highp vec3 inPosition;
+layout(location = 4) in mediump uint inObjectId;
+
+#line 1
+struct Quat2 {
+    vec4 rot;
+    vec4 loc;
+};
+
+vec4 conjugated(vec4 q) {
+    return vec4(-q.xyz, q.w);
+}
+
+Quat2 conjugated(Quat2 q) {
+    return Quat2(conjugated(q.rot), vec4(q.loc.xyz, -q.loc.w));
+}
+
+vec4 quat_mult(vec4 q1, vec4 q2) {
+    return vec4(q1.w*q2.xyz + q2.w*q1.xyz + cross(q1.xyz, q2.xyz),
+                /* dot(q1, conjugated(q2)) */
+                q1.w*q2.w - dot(q1.xyz, q2.xyz));
+}
+
+Quat2 quat_scale(float f, Quat2 q) {
+    return Quat2(f*q.rot, f*q.loc);
+}
+
+Quat2 quat2_mult(vec3 p, Quat2 q) {
+    return Quat2(q.rot, q.loc + quat_mult(vec4(p, 0.0f), q.rot));
+}
+
+Quat2 quat2_mult(Quat2 a, Quat2 b) {
+    return Quat2(quat_mult(a.rot, b.rot), quat_mult(a.rot, b.loc) + quat_mult(a.loc, b.rot));
+}
+
+vec3 quat_transformVector(vec4 q, vec3 v) {
+    vec3 a = cross(q.xyz, v);
+    vec3 b = q.w*a + cross(q.xyz, a);
+    return v + 2.0*b;
+}
+
+vec3 quat2_transformPoint(Quat2 q, vec3 p) {
+    vec3 qrv = q.rot.xyz;
+    float qrw = q.rot.w;
+
+    vec3 blv = qrw*p + cross(qrv, p) + 2.0*q.loc.xyz;
+    return (dot(p, qrv) - 2.0*q.loc.w)*qrv
+        + qrw*blv
+        + cross(qrv, blv);
+}
+
+vec3 quat_translation(Quat2 q) {
+    return quat_mult(q.loc, conjugated(q.rot)).xyz*2.0;
+}
+
+mat3 quat_toMatrix(vec4 q) {
+    /* Multiply by sqrt(2) to avoid factors of two in the matrix */
+    q *= 1.414214;
+
+    float xx = q.x*q.x;
+    float xy = q.x*q.y;
+    float xz = q.x*q.z;
+    float xw = q.x*q.w;
+
+    float yy = q.y*q.y;
+    float yz = q.y*q.z;
+    float yw = q.y*q.w;
+
+    float zz = q.z*q.z;
+    float zw = q.z*q.w;
+
+    return mat3(
+        1.0 - yy - zz,
+        xy + zw,
+        xz - yw,
+
+        xy - zw,
+        1.0 - xx - zz,
+        yz + xw,
+
+        xz + yw,
+        yz - xw,
+        1.0 - xx - yy);
+}
+#line 67
+
+
+
+
+/* Manufacture a "quiet NaN" constant */
+
+#line 1
+uniform FrameUniforms {
+    lowp uvec4 textureCounts;
+    lowp uvec4 lightCounts;
+};
+
+
+uniform ViewUniforms {
+    highp vec4 viewCameraParams[2]; /* fov (rad), exposure, near, far */
+    highp ivec4 viewViewport[2];
+    highp mat2x4 viewWorldToView[2];
+    highp mat2x4 viewViewToWorld[2];
+    highp vec3 viewWorldPosition[2];
+    highp mat4 viewProjectionMatrix[2];
+    highp mat4 viewInverseProjectionMatrix[2];
+};
+
+
+uniform highp sampler2D transformations;
+
+uniform uint viewIndex;
+
+#line 119
+
+
+void main() {
+    
+    /* Temporaries since we have no out variables */
+        highp vec3 fragPositionWorld;
+            highp vec3 fragPositionView;
+            mediump uint fragObjectId;
+    
+        fragObjectId = inObjectId;
+    
+    /* If the batch is instanced, there's only one mesh and fragObjectId is 0
+     * for all instances. Otherwise gl_InstanceID is 0 for all meshes. */
+        fragObjectId += uint(gl_InstanceID);
+    
+    ivec2 idx = 2*ivec2((int(fragObjectId)) & 1023, int(fragObjectId >> 10));
+    highp vec4 transform[2] = vec4[](
+        texelFetchOffset(transformations, idx, 0, ivec2(0, 0)),
+        texelFetchOffset(transformations, idx, 0, ivec2(1, 0)));
+    highp vec4 scaling =
+        texelFetchOffset(transformations, idx, 0, ivec2(0, 1));
+    
+    
+    /* Transformed vertex position */
+    fragPositionWorld = quat2_transformPoint(Quat2(transform[0], transform[1]), scaling.xyz*inPosition);
+    fragPositionView = quat2_transformPoint(Quat2(viewWorldToView[viewIndex][0], viewWorldToView[viewIndex][1]), fragPositionWorld);
+
+    /* Transformed normal vector */
+    
+    
+    
+        /* Transform the position */
+    gl_Position = viewProjectionMatrix[viewIndex]*vec4(fragPositionView, 1.0f);
+    
+    
+    
+    
+    
+    
+    }
+
+shaderInjector.ts:28 Shader Source: WebGLShader {} #version 300 es
+#line 1 1
+/** @todo We will be able to mark this as internal once we have a notion of builtin resources, until then this must be in the .wlp */
+/* #define SHADER_INTERNAL */
+void main() {}
+
+logger.ts:130 Compiling Depth Meshlet with parameters:
+logger.ts:130     environmentBands: 0
+logger.ts:130     meshCount: 1024
+logger.ts:130     textureCount: 0
+logger.ts:130     meshletsCount: 16384
+logger.ts:130     meshletsVertices: 16380
+logger.ts:130     tonemapping: 2
+logger.ts:130     Flag(MultiDraw): false
+logger.ts:130     Flag(Meshlets): true
+logger.ts:130     Flag(PreZ): false
+logger.ts:130     Flag(ReverseZ): true
+shaderInjector.ts:28 Shader Source: WebGLShader {} #version 300 es
+#line 1 1
+
+precision highp float;
+
+#line 1
+
+/* Vertex size in floats */
+#line 10
+
+#line 1
+
+highp uvec2 packUnormVector(mediump vec4 v) {
+    return uvec2(
+        packUnorm2x16(v.xy),
+        packUnorm2x16(v.zw)
+    );
+}
+
+highp uvec2 packSnormVector(mediump vec4 v) {
+    return uvec2(
+        packSnorm2x16(v.xy),
+        packSnorm2x16(v.zw)
+    );
+}
+
+/**
+ * Compress a cartesian normal into octahedron form on 32 bits
+ *
+ * From: https://www.shadertoy.com/view/Mtfyzl
+ */
+uint packOctahedral(vec3 normal) {
+    normal /= (abs(normal.x) + abs(normal.y) + abs(normal.z));
+    normal.xy = normal.z >= 0.0 ? normal.xy : sign(normal.xy)*(vec2(1.0) - abs(normal.yx));
+    vec2 v = vec2(0.5) + 0.5*normal.xy;
+    uvec2 d = uvec2(floor(v*float((1u<<16u) - 1u) + vec2(0.5)));
+    return (d.y << 16u)|d.x;
+}
+
+/** Unpack normal encoded via @ref packOctahedral() */
+vec3 unpackOctahedral(uint enc) {
+    uint mu = (1u << 16u) - 1u;
+    uvec2 d = uvec2(enc & mu, (enc >> 16u) & mu);
+    vec2 p = vec2(d)/float(mu);
+    p = vec2(-1.0) + 2.0*p;
+
+    /* Faster version than original paper:
+     * https://twitter.com/Stubbesaurus/status/937994790553227264 */
+    vec3 n = vec3(p.x, p.y, 1.0 - abs(p.x) - abs(p.y));
+    float t = max(0.0, -n.z);
+    n.x += n.x > 0.0 ? -t : t;
+    n.y += n.y > 0.0 ? -t : t;
+
+    return normalize(n);
+}
+#line 11
+
+
+
+/* Number of indices in a meshlet. Always a fixed size.
+ * In theory: 85 triangles, 1 int wasted.
+ * In practice: meshopt enforces multiple of 4, so 84 triangles, 5 ints wasted. */
+/** @todo Can we use unused indices for something interesting? */
+/** @todo Does this have to be power-of-two? */
+
+/* Per meshlet (= instanced) data.
+ * x: number of indices
+ * y: index of the indices ("meshlet ID")
+ * z: index of the first vertex
+ * w: object id */
+layout(location = 11) in highp uvec4 inMeshletData;
+
+/* Fixed-size meshlets for the entire scene, contain index data pointing into
+ * vertices */
+uniform highp usampler2DArray indices;
+/* Tightly packed vertex data for the entire scene */
+uniform highp sampler2DArray vertices;
+
+#line 1
+struct Quat2 {
+    vec4 rot;
+    vec4 loc;
+};
+
+vec4 conjugated(vec4 q) {
+    return vec4(-q.xyz, q.w);
+}
+
+Quat2 conjugated(Quat2 q) {
+    return Quat2(conjugated(q.rot), vec4(q.loc.xyz, -q.loc.w));
+}
+
+vec4 quat_mult(vec4 q1, vec4 q2) {
+    return vec4(q1.w*q2.xyz + q2.w*q1.xyz + cross(q1.xyz, q2.xyz),
+                /* dot(q1, conjugated(q2)) */
+                q1.w*q2.w - dot(q1.xyz, q2.xyz));
+}
+
+Quat2 quat_scale(float f, Quat2 q) {
+    return Quat2(f*q.rot, f*q.loc);
+}
+
+Quat2 quat2_mult(vec3 p, Quat2 q) {
+    return Quat2(q.rot, q.loc + quat_mult(vec4(p, 0.0f), q.rot));
+}
+
+Quat2 quat2_mult(Quat2 a, Quat2 b) {
+    return Quat2(quat_mult(a.rot, b.rot), quat_mult(a.rot, b.loc) + quat_mult(a.loc, b.rot));
+}
+
+vec3 quat_transformVector(vec4 q, vec3 v) {
+    vec3 a = cross(q.xyz, v);
+    vec3 b = q.w*a + cross(q.xyz, a);
+    return v + 2.0*b;
+}
+
+vec3 quat2_transformPoint(Quat2 q, vec3 p) {
+    vec3 qrv = q.rot.xyz;
+    float qrw = q.rot.w;
+
+    vec3 blv = qrw*p + cross(qrv, p) + 2.0*q.loc.xyz;
+    return (dot(p, qrv) - 2.0*q.loc.w)*qrv
+        + qrw*blv
+        + cross(qrv, blv);
+}
+
+vec3 quat_translation(Quat2 q) {
+    return quat_mult(q.loc, conjugated(q.rot)).xyz*2.0;
+}
+
+mat3 quat_toMatrix(vec4 q) {
+    /* Multiply by sqrt(2) to avoid factors of two in the matrix */
+    q *= 1.414214;
+
+    float xx = q.x*q.x;
+    float xy = q.x*q.y;
+    float xz = q.x*q.z;
+    float xw = q.x*q.w;
+
+    float yy = q.y*q.y;
+    float yz = q.y*q.z;
+    float yw = q.y*q.w;
+
+    float zz = q.z*q.z;
+    float zw = q.z*q.w;
+
+    return mat3(
+        1.0 - yy - zz,
+        xy + zw,
+        xz - yw,
+
+        xy - zw,
+        1.0 - xx - zz,
+        yz + xw,
+
+        xz + yw,
+        yz - xw,
+        1.0 - xx - yy);
+}
+#line 67
+
+
+flat out highp uint fragMeshletId;
+
+
+/* Manufacture a "quiet NaN" constant */
+
+#line 1
+uniform FrameUniforms {
+    lowp uvec4 textureCounts;
+    lowp uvec4 lightCounts;
+};
+
+
+uniform ViewUniforms {
+    highp vec4 viewCameraParams[2]; /* fov (rad), exposure, near, far */
+    highp ivec4 viewViewport[2];
+    highp mat2x4 viewWorldToView[2];
+    highp mat2x4 viewViewToWorld[2];
+    highp vec3 viewWorldPosition[2];
+    highp mat4 viewProjectionMatrix[2];
+    highp mat4 viewInverseProjectionMatrix[2];
+};
+
+
+uniform highp sampler2D transformations;
+
+uniform uint viewIndex;
+
+#line 119
+
+
+void main() {
+        /* For unassigned indices we produce invalid positions. The GLES3 spec says
+     * implementations are allowed to ignore inf/NaN but all implementations
+     * out there do support it. This potentially allows us to skip the
+     * rasterizer, compared to producing 0-area triangles. */
+    if(gl_VertexID >= int(inMeshletData.x)) {
+        gl_Position = vec4(uintBitsToFloat(0x7fc00000u));
+        return;
+    }
+
+    highp int indexStart = int(inMeshletData.y);
+    highp ivec3 indexOffset = ivec3(
+        indexStart % 16384 + gl_VertexID,
+        (indexStart % (16384*16384)) / 16384,
+        indexStart / (16384*16384)
+    );
+    highp uint indexValue = texelFetch(indices, indexOffset, 0).x;
+
+    highp int vertexStart = int(inMeshletData.z + indexValue)*(3 + 2 + 0 + 0 + 0 + 2);
+    highp ivec3 vertexOffset = ivec3(
+        vertexStart % 16380,
+        (vertexStart % (16380*16380)) / 16380,
+        vertexStart / (16380*16380)
+    );
+
+    highp vec3 inPosition = vec3(
+        texelFetch(vertices, vertexOffset, 0).x,
+        texelFetch(vertices, vertexOffset + ivec3(1, 0, 0), 0).x,
+        texelFetch(vertices, vertexOffset + ivec3(2, 0, 0), 0).x);
+    vertexOffset.x += 3;
+
+        vertexOffset.x += 2;
+        vertexOffset.x += 0;
+        vertexOffset.x += 0;
+        vertexOffset.x += 0;
+    
+    highp int meshletId = indexStart / 256;
+    fragMeshletId = uint(meshletId);
+    mediump uint inObjectId = inMeshletData.w;
+    
+    /* Temporaries since we have no out variables */
+        highp vec3 fragPositionWorld;
+            highp vec3 fragPositionView;
+            mediump uint fragObjectId;
+    
+        fragObjectId = inObjectId;
+    
+    /* If the batch is instanced, there's only one mesh and fragObjectId is 0
+     * for all instances. Otherwise gl_InstanceID is 0 for all meshes. */
+    
+    ivec2 idx = 2*ivec2((int(fragObjectId)) & 1023, int(fragObjectId >> 10));
+    highp vec4 transform[2] = vec4[](
+        texelFetchOffset(transformations, idx, 0, ivec2(0, 0)),
+        texelFetchOffset(transformations, idx, 0, ivec2(1, 0)));
+    highp vec4 scaling =
+        texelFetchOffset(transformations, idx, 0, ivec2(0, 1));
+    
+    
+    /* Transformed vertex position */
+    fragPositionWorld = quat2_transformPoint(Quat2(transform[0], transform[1]), scaling.xyz*inPosition);
+    fragPositionView = quat2_transformPoint(Quat2(viewWorldToView[viewIndex][0], viewWorldToView[viewIndex][1]), fragPositionWorld);
+
+    /* Transformed normal vector */
+    
+    
+    
+        /* Transform the position */
+    gl_Position = viewProjectionMatrix[viewIndex]*vec4(fragPositionView, 1.0f);
+    
+    
+    
+    
+    
+    
+    }
+
+shaderInjector.ts:28 Shader Source: WebGLShader {} #version 300 es
+#line 1 1
+/** @todo We will be able to mark this as internal once we have a notion of builtin resources, until then this must be in the .wlp */
+/* #define SHADER_INTERNAL */
+void main() {}
+
+logger.ts:130 Compiling Shadow Depth with parameters:
+logger.ts:130     environmentBands: 0
+logger.ts:130     meshCount: 1024
+logger.ts:130     textureCount: 0
+logger.ts:130     meshletsCount: 16384
+logger.ts:130     meshletsVertices: 16380
+logger.ts:130     tonemapping: 2
+logger.ts:130     Flag(MultiDraw): false
+logger.ts:130     Flag(Meshlets): false
+logger.ts:130     Flag(PreZ): false
+logger.ts:130     Flag(ReverseZ): true
+shaderInjector.ts:28 Shader Source: WebGLShader {} #version 300 es
+#line 1 1
+
+precision highp float;
+
+
+/* Normal and tangent are float16, but we transform them with highp quats
+ * anyway so do the conversion as early as possible */
+layout(location = 0) in highp vec3 inPosition;
+layout(location = 4) in mediump uint inObjectId;
+
+#line 1
+struct Quat2 {
+    vec4 rot;
+    vec4 loc;
+};
+
+vec4 conjugated(vec4 q) {
+    return vec4(-q.xyz, q.w);
+}
+
+Quat2 conjugated(Quat2 q) {
+    return Quat2(conjugated(q.rot), vec4(q.loc.xyz, -q.loc.w));
+}
+
+vec4 quat_mult(vec4 q1, vec4 q2) {
+    return vec4(q1.w*q2.xyz + q2.w*q1.xyz + cross(q1.xyz, q2.xyz),
+                /* dot(q1, conjugated(q2)) */
+                q1.w*q2.w - dot(q1.xyz, q2.xyz));
+}
+
+Quat2 quat_scale(float f, Quat2 q) {
+    return Quat2(f*q.rot, f*q.loc);
+}
+
+Quat2 quat2_mult(vec3 p, Quat2 q) {
+    return Quat2(q.rot, q.loc + quat_mult(vec4(p, 0.0f), q.rot));
+}
+
+Quat2 quat2_mult(Quat2 a, Quat2 b) {
+    return Quat2(quat_mult(a.rot, b.rot), quat_mult(a.rot, b.loc) + quat_mult(a.loc, b.rot));
+}
+
+vec3 quat_transformVector(vec4 q, vec3 v) {
+    vec3 a = cross(q.xyz, v);
+    vec3 b = q.w*a + cross(q.xyz, a);
+    return v + 2.0*b;
+}
+
+vec3 quat2_transformPoint(Quat2 q, vec3 p) {
+    vec3 qrv = q.rot.xyz;
+    float qrw = q.rot.w;
+
+    vec3 blv = qrw*p + cross(qrv, p) + 2.0*q.loc.xyz;
+    return (dot(p, qrv) - 2.0*q.loc.w)*qrv
+        + qrw*blv
+        + cross(qrv, blv);
+}
+
+vec3 quat_translation(Quat2 q) {
+    return quat_mult(q.loc, conjugated(q.rot)).xyz*2.0;
+}
+
+mat3 quat_toMatrix(vec4 q) {
+    /* Multiply by sqrt(2) to avoid factors of two in the matrix */
+    q *= 1.414214;
+
+    float xx = q.x*q.x;
+    float xy = q.x*q.y;
+    float xz = q.x*q.z;
+    float xw = q.x*q.w;
+
+    float yy = q.y*q.y;
+    float yz = q.y*q.z;
+    float yw = q.y*q.w;
+
+    float zz = q.z*q.z;
+    float zw = q.z*q.w;
+
+    return mat3(
+        1.0 - yy - zz,
+        xy + zw,
+        xz - yw,
+
+        xy - zw,
+        1.0 - xx - zz,
+        yz + xw,
+
+        xz + yw,
+        yz - xw,
+        1.0 - xx - yy);
+}
+#line 67
+
+
+
+
+/* Manufacture a "quiet NaN" constant */
+
+#line 1
+uniform FrameUniforms {
+    lowp uvec4 textureCounts;
+    lowp uvec4 lightCounts;
+};
+
+
+uniform ViewUniforms {
+    highp vec4 viewCameraParams[4]; /* fov (rad), exposure, near, far */
+    highp ivec4 viewViewport[4];
+    highp mat2x4 viewWorldToView[4];
+    highp mat2x4 viewViewToWorld[4];
+    highp vec3 viewWorldPosition[4];
+    highp mat4 viewProjectionMatrix[4];
+    highp mat4 viewInverseProjectionMatrix[4];
+};
+
+
+uniform highp sampler2D transformations;
+
+uniform uint viewIndex;
+
+#line 119
+
+
+void main() {
+    
+    /* Temporaries since we have no out variables */
+        highp vec3 fragPositionWorld;
+            highp vec3 fragPositionView;
+            mediump uint fragObjectId;
+    
+        fragObjectId = inObjectId;
+    
+    /* If the batch is instanced, there's only one mesh and fragObjectId is 0
+     * for all instances. Otherwise gl_InstanceID is 0 for all meshes. */
+        fragObjectId += uint(gl_InstanceID);
+    
+    ivec2 idx = 2*ivec2((int(fragObjectId)) & 1023, int(fragObjectId >> 10));
+    highp vec4 transform[2] = vec4[](
+        texelFetchOffset(transformations, idx, 0, ivec2(0, 0)),
+        texelFetchOffset(transformations, idx, 0, ivec2(1, 0)));
+    highp vec4 scaling =
+        texelFetchOffset(transformations, idx, 0, ivec2(0, 1));
+    
+    
+    /* Transformed vertex position */
+    fragPositionWorld = quat2_transformPoint(Quat2(transform[0], transform[1]), scaling.xyz*inPosition);
+    fragPositionView = quat2_transformPoint(Quat2(viewWorldToView[viewIndex][0], viewWorldToView[viewIndex][1]), fragPositionWorld);
+
+    /* Transformed normal vector */
+    
+    
+    
+        /* Transform the position */
+    gl_Position = viewProjectionMatrix[viewIndex]*vec4(fragPositionView, 1.0f);
+    
+    
+    
+    
+    
+    
+    }
+
+shaderInjector.ts:28 Shader Source: WebGLShader {} #version 300 es
+#line 1 1
+/** @todo We will be able to mark this as internal once we have a notion of builtin resources, until then this must be in the .wlp */
+/* #define SHADER_INTERNAL */
+void main() {}
+
+logger.ts:130 Compiling Shadow Meshlet Depth with parameters:
+logger.ts:130     environmentBands: 0
+logger.ts:130     meshCount: 1024
+logger.ts:130     textureCount: 0
+logger.ts:130     meshletsCount: 16384
+logger.ts:130     meshletsVertices: 16380
+logger.ts:130     tonemapping: 2
+logger.ts:130     Flag(MultiDraw): false
+logger.ts:130     Flag(Meshlets): true
+logger.ts:130     Flag(PreZ): false
+logger.ts:130     Flag(ReverseZ): true
+shaderInjector.ts:28 Shader Source: WebGLShader {} #version 300 es
+#line 1 1
+
+precision highp float;
+
+#line 1
+
+/* Vertex size in floats */
+#line 10
+
+#line 1
+
+highp uvec2 packUnormVector(mediump vec4 v) {
+    return uvec2(
+        packUnorm2x16(v.xy),
+        packUnorm2x16(v.zw)
+    );
+}
+
+highp uvec2 packSnormVector(mediump vec4 v) {
+    return uvec2(
+        packSnorm2x16(v.xy),
+        packSnorm2x16(v.zw)
+    );
+}
+
+/**
+ * Compress a cartesian normal into octahedron form on 32 bits
+ *
+ * From: https://www.shadertoy.com/view/Mtfyzl
+ */
+uint packOctahedral(vec3 normal) {
+    normal /= (abs(normal.x) + abs(normal.y) + abs(normal.z));
+    normal.xy = normal.z >= 0.0 ? normal.xy : sign(normal.xy)*(vec2(1.0) - abs(normal.yx));
+    vec2 v = vec2(0.5) + 0.5*normal.xy;
+    uvec2 d = uvec2(floor(v*float((1u<<16u) - 1u) + vec2(0.5)));
+    return (d.y << 16u)|d.x;
+}
+
+/** Unpack normal encoded via @ref packOctahedral() */
+vec3 unpackOctahedral(uint enc) {
+    uint mu = (1u << 16u) - 1u;
+    uvec2 d = uvec2(enc & mu, (enc >> 16u) & mu);
+    vec2 p = vec2(d)/float(mu);
+    p = vec2(-1.0) + 2.0*p;
+
+    /* Faster version than original paper:
+     * https://twitter.com/Stubbesaurus/status/937994790553227264 */
+    vec3 n = vec3(p.x, p.y, 1.0 - abs(p.x) - abs(p.y));
+    float t = max(0.0, -n.z);
+    n.x += n.x > 0.0 ? -t : t;
+    n.y += n.y > 0.0 ? -t : t;
+
+    return normalize(n);
+}
+#line 11
+
+
+
+/* Number of indices in a meshlet. Always a fixed size.
+ * In theory: 85 triangles, 1 int wasted.
+ * In practice: meshopt enforces multiple of 4, so 84 triangles, 5 ints wasted. */
+/** @todo Can we use unused indices for something interesting? */
+/** @todo Does this have to be power-of-two? */
+
+/* Per meshlet (= instanced) data.
+ * x: number of indices
+ * y: index of the indices ("meshlet ID")
+ * z: index of the first vertex
+ * w: object id */
+layout(location = 11) in highp uvec4 inMeshletData;
+
+/* Fixed-size meshlets for the entire scene, contain index data pointing into
+ * vertices */
+uniform highp usampler2DArray indices;
+/* Tightly packed vertex data for the entire scene */
+uniform highp sampler2DArray vertices;
+
+#line 1
+struct Quat2 {
+    vec4 rot;
+    vec4 loc;
+};
+
+vec4 conjugated(vec4 q) {
+    return vec4(-q.xyz, q.w);
+}
+
+Quat2 conjugated(Quat2 q) {
+    return Quat2(conjugated(q.rot), vec4(q.loc.xyz, -q.loc.w));
+}
+
+vec4 quat_mult(vec4 q1, vec4 q2) {
+    return vec4(q1.w*q2.xyz + q2.w*q1.xyz + cross(q1.xyz, q2.xyz),
+                /* dot(q1, conjugated(q2)) */
+                q1.w*q2.w - dot(q1.xyz, q2.xyz));
+}
+
+Quat2 quat_scale(float f, Quat2 q) {
+    return Quat2(f*q.rot, f*q.loc);
+}
+
+Quat2 quat2_mult(vec3 p, Quat2 q) {
+    return Quat2(q.rot, q.loc + quat_mult(vec4(p, 0.0f), q.rot));
+}
+
+Quat2 quat2_mult(Quat2 a, Quat2 b) {
+    return Quat2(quat_mult(a.rot, b.rot), quat_mult(a.rot, b.loc) + quat_mult(a.loc, b.rot));
+}
+
+vec3 quat_transformVector(vec4 q, vec3 v) {
+    vec3 a = cross(q.xyz, v);
+    vec3 b = q.w*a + cross(q.xyz, a);
+    return v + 2.0*b;
+}
+
+vec3 quat2_transformPoint(Quat2 q, vec3 p) {
+    vec3 qrv = q.rot.xyz;
+    float qrw = q.rot.w;
+
+    vec3 blv = qrw*p + cross(qrv, p) + 2.0*q.loc.xyz;
+    return (dot(p, qrv) - 2.0*q.loc.w)*qrv
+        + qrw*blv
+        + cross(qrv, blv);
+}
+
+vec3 quat_translation(Quat2 q) {
+    return quat_mult(q.loc, conjugated(q.rot)).xyz*2.0;
+}
+
+mat3 quat_toMatrix(vec4 q) {
+    /* Multiply by sqrt(2) to avoid factors of two in the matrix */
+    q *= 1.414214;
+
+    float xx = q.x*q.x;
+    float xy = q.x*q.y;
+    float xz = q.x*q.z;
+    float xw = q.x*q.w;
+
+    float yy = q.y*q.y;
+    float yz = q.y*q.z;
+    float yw = q.y*q.w;
+
+    float zz = q.z*q.z;
+    float zw = q.z*q.w;
+
+    return mat3(
+        1.0 - yy - zz,
+        xy + zw,
+        xz - yw,
+
+        xy - zw,
+        1.0 - xx - zz,
+        yz + xw,
+
+        xz + yw,
+        yz - xw,
+        1.0 - xx - yy);
+}
+#line 67
+
+
+flat out highp uint fragMeshletId;
+
+
+/* Manufacture a "quiet NaN" constant */
+
+#line 1
+uniform FrameUniforms {
+    lowp uvec4 textureCounts;
+    lowp uvec4 lightCounts;
+};
+
+
+uniform ViewUniforms {
+    highp vec4 viewCameraParams[4]; /* fov (rad), exposure, near, far */
+    highp ivec4 viewViewport[4];
+    highp mat2x4 viewWorldToView[4];
+    highp mat2x4 viewViewToWorld[4];
+    highp vec3 viewWorldPosition[4];
+    highp mat4 viewProjectionMatrix[4];
+    highp mat4 viewInverseProjectionMatrix[4];
+};
+
+
+uniform highp sampler2D transformations;
+
+uniform uint viewIndex;
+
+#line 119
+
+
+void main() {
+        /* For unassigned indices we produce invalid positions. The GLES3 spec says
+     * implementations are allowed to ignore inf/NaN but all implementations
+     * out there do support it. This potentially allows us to skip the
+     * rasterizer, compared to producing 0-area triangles. */
+    if(gl_VertexID >= int(inMeshletData.x)) {
+        gl_Position = vec4(uintBitsToFloat(0x7fc00000u));
+        return;
+    }
+
+    highp int indexStart = int(inMeshletData.y);
+    highp ivec3 indexOffset = ivec3(
+        indexStart % 16384 + gl_VertexID,
+        (indexStart % (16384*16384)) / 16384,
+        indexStart / (16384*16384)
+    );
+    highp uint indexValue = texelFetch(indices, indexOffset, 0).x;
+
+    highp int vertexStart = int(inMeshletData.z + indexValue)*(3 + 2 + 0 + 0 + 0 + 2);
+    highp ivec3 vertexOffset = ivec3(
+        vertexStart % 16380,
+        (vertexStart % (16380*16380)) / 16380,
+        vertexStart / (16380*16380)
+    );
+
+    highp vec3 inPosition = vec3(
+        texelFetch(vertices, vertexOffset, 0).x,
+        texelFetch(vertices, vertexOffset + ivec3(1, 0, 0), 0).x,
+        texelFetch(vertices, vertexOffset + ivec3(2, 0, 0), 0).x);
+    vertexOffset.x += 3;
+
+        vertexOffset.x += 2;
+        vertexOffset.x += 0;
+        vertexOffset.x += 0;
+        vertexOffset.x += 0;
+    
+    highp int meshletId = indexStart / 256;
+    fragMeshletId = uint(meshletId);
+    mediump uint inObjectId = inMeshletData.w;
+    
+    /* Temporaries since we have no out variables */
+        highp vec3 fragPositionWorld;
+            highp vec3 fragPositionView;
+            mediump uint fragObjectId;
+    
+        fragObjectId = inObjectId;
+    
+    /* If the batch is instanced, there's only one mesh and fragObjectId is 0
+     * for all instances. Otherwise gl_InstanceID is 0 for all meshes. */
+    
+    ivec2 idx = 2*ivec2((int(fragObjectId)) & 1023, int(fragObjectId >> 10));
+    highp vec4 transform[2] = vec4[](
+        texelFetchOffset(transformations, idx, 0, ivec2(0, 0)),
+        texelFetchOffset(transformations, idx, 0, ivec2(1, 0)));
+    highp vec4 scaling =
+        texelFetchOffset(transformations, idx, 0, ivec2(0, 1));
+    
+    
+    /* Transformed vertex position */
+    fragPositionWorld = quat2_transformPoint(Quat2(transform[0], transform[1]), scaling.xyz*inPosition);
+    fragPositionView = quat2_transformPoint(Quat2(viewWorldToView[viewIndex][0], viewWorldToView[viewIndex][1]), fragPositionWorld);
+
+    /* Transformed normal vector */
+    
+    
+    
+        /* Transform the position */
+    gl_Position = viewProjectionMatrix[viewIndex]*vec4(fragPositionView, 1.0f);
+    
+    
+    
+    
+    
+    
+    }
+
+shaderInjector.ts:28 Shader Source: WebGLShader {} #version 300 es
+#line 1 1
+/** @todo We will be able to mark this as internal once we have a notion of builtin resources, until then this must be in the .wlp */
+/* #define SHADER_INTERNAL */
+void main() {}
+
+logger.ts:130 Compiling Shadow Depth Paraboloid with parameters:
+logger.ts:130     environmentBands: 0
+logger.ts:130     meshCount: 1024
+logger.ts:130     textureCount: 0
+logger.ts:130     meshletsCount: 16384
+logger.ts:130     meshletsVertices: 16380
+logger.ts:130     tonemapping: 2
+logger.ts:130     Flag(MultiDraw): false
+logger.ts:130     Flag(Meshlets): false
+logger.ts:130     Flag(PreZ): false
+logger.ts:130     Flag(ReverseZ): true
+shaderInjector.ts:28 Shader Source: WebGLShader {} #version 300 es
+#line 1 1
+
+precision highp float;
+
+
+/* Normal and tangent are float16, but we transform them with highp quats
+ * anyway so do the conversion as early as possible */
+layout(location = 0) in highp vec3 inPosition;
+layout(location = 4) in mediump uint inObjectId;
+
+#line 1
+struct Quat2 {
+    vec4 rot;
+    vec4 loc;
+};
+
+vec4 conjugated(vec4 q) {
+    return vec4(-q.xyz, q.w);
+}
+
+Quat2 conjugated(Quat2 q) {
+    return Quat2(conjugated(q.rot), vec4(q.loc.xyz, -q.loc.w));
+}
+
+vec4 quat_mult(vec4 q1, vec4 q2) {
+    return vec4(q1.w*q2.xyz + q2.w*q1.xyz + cross(q1.xyz, q2.xyz),
+                /* dot(q1, conjugated(q2)) */
+                q1.w*q2.w - dot(q1.xyz, q2.xyz));
+}
+
+Quat2 quat_scale(float f, Quat2 q) {
+    return Quat2(f*q.rot, f*q.loc);
+}
+
+Quat2 quat2_mult(vec3 p, Quat2 q) {
+    return Quat2(q.rot, q.loc + quat_mult(vec4(p, 0.0f), q.rot));
+}
+
+Quat2 quat2_mult(Quat2 a, Quat2 b) {
+    return Quat2(quat_mult(a.rot, b.rot), quat_mult(a.rot, b.loc) + quat_mult(a.loc, b.rot));
+}
+
+vec3 quat_transformVector(vec4 q, vec3 v) {
+    vec3 a = cross(q.xyz, v);
+    vec3 b = q.w*a + cross(q.xyz, a);
+    return v + 2.0*b;
+}
+
+vec3 quat2_transformPoint(Quat2 q, vec3 p) {
+    vec3 qrv = q.rot.xyz;
+    float qrw = q.rot.w;
+
+    vec3 blv = qrw*p + cross(qrv, p) + 2.0*q.loc.xyz;
+    return (dot(p, qrv) - 2.0*q.loc.w)*qrv
+        + qrw*blv
+        + cross(qrv, blv);
+}
+
+vec3 quat_translation(Quat2 q) {
+    return quat_mult(q.loc, conjugated(q.rot)).xyz*2.0;
+}
+
+mat3 quat_toMatrix(vec4 q) {
+    /* Multiply by sqrt(2) to avoid factors of two in the matrix */
+    q *= 1.414214;
+
+    float xx = q.x*q.x;
+    float xy = q.x*q.y;
+    float xz = q.x*q.z;
+    float xw = q.x*q.w;
+
+    float yy = q.y*q.y;
+    float yz = q.y*q.z;
+    float yw = q.y*q.w;
+
+    float zz = q.z*q.z;
+    float zw = q.z*q.w;
+
+    return mat3(
+        1.0 - yy - zz,
+        xy + zw,
+        xz - yw,
+
+        xy - zw,
+        1.0 - xx - zz,
+        yz + xw,
+
+        xz + yw,
+        yz - xw,
+        1.0 - xx - yy);
+}
+#line 67
+
+
+
+
+/* Manufacture a "quiet NaN" constant */
+
+#line 1
+uniform FrameUniforms {
+    lowp uvec4 textureCounts;
+    lowp uvec4 lightCounts;
+};
+
+
+uniform ViewUniforms {
+    highp vec4 viewCameraParams[4]; /* fov (rad), exposure, near, far */
+    highp ivec4 viewViewport[4];
+    highp mat2x4 viewWorldToView[4];
+    highp mat2x4 viewViewToWorld[4];
+    highp vec3 viewWorldPosition[4];
+    highp mat4 viewProjectionMatrix[4];
+    highp mat4 viewInverseProjectionMatrix[4];
+};
+
+
+uniform highp sampler2D transformations;
+
+uniform uint viewIndex;
+
+#line 119
+
+
+void main() {
+    
+    /* Temporaries since we have no out variables */
+        highp vec3 fragPositionWorld;
+            highp vec3 fragPositionView;
+            mediump uint fragObjectId;
+    
+        fragObjectId = inObjectId;
+    
+    /* If the batch is instanced, there's only one mesh and fragObjectId is 0
+     * for all instances. Otherwise gl_InstanceID is 0 for all meshes. */
+        fragObjectId += uint(gl_InstanceID);
+    
+    ivec2 idx = 2*ivec2((int(fragObjectId)) & 1023, int(fragObjectId >> 10));
+    highp vec4 transform[2] = vec4[](
+        texelFetchOffset(transformations, idx, 0, ivec2(0, 0)),
+        texelFetchOffset(transformations, idx, 0, ivec2(1, 0)));
+    highp vec4 scaling =
+        texelFetchOffset(transformations, idx, 0, ivec2(0, 1));
+    
+    
+    /* Transformed vertex position */
+    fragPositionWorld = quat2_transformPoint(Quat2(transform[0], transform[1]), scaling.xyz*inPosition);
+    fragPositionView = quat2_transformPoint(Quat2(viewWorldToView[viewIndex][0], viewWorldToView[viewIndex][1]), fragPositionWorld);
+
+    /* Transformed normal vector */
+    
+    
+    
+        highp float dist = length(fragPositionView);
+    // Calculate and set the X and Y coordinates
+    gl_Position.xyz = fragPositionView/dist;
+    gl_Position.xy /= 1.0 - gl_Position.z;
+    // Calculate and set the Z and W coordinates
+    gl_Position.z = (dist - viewCameraParams[viewIndex].z) / (viewCameraParams[viewIndex].w - viewCameraParams[viewIndex].z);
+        gl_Position.z = 1.0 - gl_Position.z;
+        gl_Position.w = 1.0;
+    
+    
+    
+    
+    
+    
+    }
+
+shaderInjector.ts:28 Shader Source: WebGLShader {} #version 300 es
+#line 1 1
+/** @todo We will be able to mark this as internal once we have a notion of builtin resources, until then this must be in the .wlp */
+/* #define SHADER_INTERNAL */
+void main() {}
+
+logger.ts:130 Compiling Shadow Meshlet Depth Paraboloid with parameters:
+logger.ts:130     environmentBands: 0
+logger.ts:130     meshCount: 1024
+logger.ts:130     textureCount: 0
+logger.ts:130     meshletsCount: 16384
+logger.ts:130     meshletsVertices: 16380
+logger.ts:130     tonemapping: 2
+logger.ts:130     Flag(MultiDraw): false
+logger.ts:130     Flag(Meshlets): true
+logger.ts:130     Flag(PreZ): false
+logger.ts:130     Flag(ReverseZ): true
+shaderInjector.ts:28 Shader Source: WebGLShader {} #version 300 es
+#line 1 1
+
+precision highp float;
+
+#line 1
+
+/* Vertex size in floats */
+#line 10
+
+#line 1
+
+highp uvec2 packUnormVector(mediump vec4 v) {
+    return uvec2(
+        packUnorm2x16(v.xy),
+        packUnorm2x16(v.zw)
+    );
+}
+
+highp uvec2 packSnormVector(mediump vec4 v) {
+    return uvec2(
+        packSnorm2x16(v.xy),
+        packSnorm2x16(v.zw)
+    );
+}
+
+/**
+ * Compress a cartesian normal into octahedron form on 32 bits
+ *
+ * From: https://www.shadertoy.com/view/Mtfyzl
+ */
+uint packOctahedral(vec3 normal) {
+    normal /= (abs(normal.x) + abs(normal.y) + abs(normal.z));
+    normal.xy = normal.z >= 0.0 ? normal.xy : sign(normal.xy)*(vec2(1.0) - abs(normal.yx));
+    vec2 v = vec2(0.5) + 0.5*normal.xy;
+    uvec2 d = uvec2(floor(v*float((1u<<16u) - 1u) + vec2(0.5)));
+    return (d.y << 16u)|d.x;
+}
+
+/** Unpack normal encoded via @ref packOctahedral() */
+vec3 unpackOctahedral(uint enc) {
+    uint mu = (1u << 16u) - 1u;
+    uvec2 d = uvec2(enc & mu, (enc >> 16u) & mu);
+    vec2 p = vec2(d)/float(mu);
+    p = vec2(-1.0) + 2.0*p;
+
+    /* Faster version than original paper:
+     * https://twitter.com/Stubbesaurus/status/937994790553227264 */
+    vec3 n = vec3(p.x, p.y, 1.0 - abs(p.x) - abs(p.y));
+    float t = max(0.0, -n.z);
+    n.x += n.x > 0.0 ? -t : t;
+    n.y += n.y > 0.0 ? -t : t;
+
+    return normalize(n);
+}
+#line 11
+
+
+
+/* Number of indices in a meshlet. Always a fixed size.
+ * In theory: 85 triangles, 1 int wasted.
+ * In practice: meshopt enforces multiple of 4, so 84 triangles, 5 ints wasted. */
+/** @todo Can we use unused indices for something interesting? */
+/** @todo Does this have to be power-of-two? */
+
+/* Per meshlet (= instanced) data.
+ * x: number of indices
+ * y: index of the indices ("meshlet ID")
+ * z: index of the first vertex
+ * w: object id */
+layout(location = 11) in highp uvec4 inMeshletData;
+
+/* Fixed-size meshlets for the entire scene, contain index data pointing into
+ * vertices */
+uniform highp usampler2DArray indices;
+/* Tightly packed vertex data for the entire scene */
+uniform highp sampler2DArray vertices;
+
+#line 1
+struct Quat2 {
+    vec4 rot;
+    vec4 loc;
+};
+
+vec4 conjugated(vec4 q) {
+    return vec4(-q.xyz, q.w);
+}
+
+Quat2 conjugated(Quat2 q) {
+    return Quat2(conjugated(q.rot), vec4(q.loc.xyz, -q.loc.w));
+}
+
+vec4 quat_mult(vec4 q1, vec4 q2) {
+    return vec4(q1.w*q2.xyz + q2.w*q1.xyz + cross(q1.xyz, q2.xyz),
+                /* dot(q1, conjugated(q2)) */
+                q1.w*q2.w - dot(q1.xyz, q2.xyz));
+}
+
+Quat2 quat_scale(float f, Quat2 q) {
+    return Quat2(f*q.rot, f*q.loc);
+}
+
+Quat2 quat2_mult(vec3 p, Quat2 q) {
+    return Quat2(q.rot, q.loc + quat_mult(vec4(p, 0.0f), q.rot));
+}
+
+Quat2 quat2_mult(Quat2 a, Quat2 b) {
+    return Quat2(quat_mult(a.rot, b.rot), quat_mult(a.rot, b.loc) + quat_mult(a.loc, b.rot));
+}
+
+vec3 quat_transformVector(vec4 q, vec3 v) {
+    vec3 a = cross(q.xyz, v);
+    vec3 b = q.w*a + cross(q.xyz, a);
+    return v + 2.0*b;
+}
+
+vec3 quat2_transformPoint(Quat2 q, vec3 p) {
+    vec3 qrv = q.rot.xyz;
+    float qrw = q.rot.w;
+
+    vec3 blv = qrw*p + cross(qrv, p) + 2.0*q.loc.xyz;
+    return (dot(p, qrv) - 2.0*q.loc.w)*qrv
+        + qrw*blv
+        + cross(qrv, blv);
+}
+
+vec3 quat_translation(Quat2 q) {
+    return quat_mult(q.loc, conjugated(q.rot)).xyz*2.0;
+}
+
+mat3 quat_toMatrix(vec4 q) {
+    /* Multiply by sqrt(2) to avoid factors of two in the matrix */
+    q *= 1.414214;
+
+    float xx = q.x*q.x;
+    float xy = q.x*q.y;
+    float xz = q.x*q.z;
+    float xw = q.x*q.w;
+
+    float yy = q.y*q.y;
+    float yz = q.y*q.z;
+    float yw = q.y*q.w;
+
+    float zz = q.z*q.z;
+    float zw = q.z*q.w;
+
+    return mat3(
+        1.0 - yy - zz,
+        xy + zw,
+        xz - yw,
+
+        xy - zw,
+        1.0 - xx - zz,
+        yz + xw,
+
+        xz + yw,
+        yz - xw,
+        1.0 - xx - yy);
+}
+#line 67
+
+
+flat out highp uint fragMeshletId;
+
+
+/* Manufacture a "quiet NaN" constant */
+
+#line 1
+uniform FrameUniforms {
+    lowp uvec4 textureCounts;
+    lowp uvec4 lightCounts;
+};
+
+
+uniform ViewUniforms {
+    highp vec4 viewCameraParams[4]; /* fov (rad), exposure, near, far */
+    highp ivec4 viewViewport[4];
+    highp mat2x4 viewWorldToView[4];
+    highp mat2x4 viewViewToWorld[4];
+    highp vec3 viewWorldPosition[4];
+    highp mat4 viewProjectionMatrix[4];
+    highp mat4 viewInverseProjectionMatrix[4];
+};
+
+
+uniform highp sampler2D transformations;
+
+uniform uint viewIndex;
+
+#line 119
+
+
+void main() {
+        /* For unassigned indices we produce invalid positions. The GLES3 spec says
+     * implementations are allowed to ignore inf/NaN but all implementations
+     * out there do support it. This potentially allows us to skip the
+     * rasterizer, compared to producing 0-area triangles. */
+    if(gl_VertexID >= int(inMeshletData.x)) {
+        gl_Position = vec4(uintBitsToFloat(0x7fc00000u));
+        return;
+    }
+
+    highp int indexStart = int(inMeshletData.y);
+    highp ivec3 indexOffset = ivec3(
+        indexStart % 16384 + gl_VertexID,
+        (indexStart % (16384*16384)) / 16384,
+        indexStart / (16384*16384)
+    );
+    highp uint indexValue = texelFetch(indices, indexOffset, 0).x;
+
+    highp int vertexStart = int(inMeshletData.z + indexValue)*(3 + 2 + 0 + 0 + 0 + 2);
+    highp ivec3 vertexOffset = ivec3(
+        vertexStart % 16380,
+        (vertexStart % (16380*16380)) / 16380,
+        vertexStart / (16380*16380)
+    );
+
+    highp vec3 inPosition = vec3(
+        texelFetch(vertices, vertexOffset, 0).x,
+        texelFetch(vertices, vertexOffset + ivec3(1, 0, 0), 0).x,
+        texelFetch(vertices, vertexOffset + ivec3(2, 0, 0), 0).x);
+    vertexOffset.x += 3;
+
+        vertexOffset.x += 2;
+        vertexOffset.x += 0;
+        vertexOffset.x += 0;
+        vertexOffset.x += 0;
+    
+    highp int meshletId = indexStart / 256;
+    fragMeshletId = uint(meshletId);
+    mediump uint inObjectId = inMeshletData.w;
+    
+    /* Temporaries since we have no out variables */
+        highp vec3 fragPositionWorld;
+            highp vec3 fragPositionView;
+            mediump uint fragObjectId;
+    
+        fragObjectId = inObjectId;
+    
+    /* If the batch is instanced, there's only one mesh and fragObjectId is 0
+     * for all instances. Otherwise gl_InstanceID is 0 for all meshes. */
+    
+    ivec2 idx = 2*ivec2((int(fragObjectId)) & 1023, int(fragObjectId >> 10));
+    highp vec4 transform[2] = vec4[](
+        texelFetchOffset(transformations, idx, 0, ivec2(0, 0)),
+        texelFetchOffset(transformations, idx, 0, ivec2(1, 0)));
+    highp vec4 scaling =
+        texelFetchOffset(transformations, idx, 0, ivec2(0, 1));
+    
+    
+    /* Transformed vertex position */
+    fragPositionWorld = quat2_transformPoint(Quat2(transform[0], transform[1]), scaling.xyz*inPosition);
+    fragPositionView = quat2_transformPoint(Quat2(viewWorldToView[viewIndex][0], viewWorldToView[viewIndex][1]), fragPositionWorld);
+
+    /* Transformed normal vector */
+    
+    
+    
+        highp float dist = length(fragPositionView);
+    // Calculate and set the X and Y coordinates
+    gl_Position.xyz = fragPositionView/dist;
+    gl_Position.xy /= 1.0 - gl_Position.z;
+    // Calculate and set the Z and W coordinates
+    gl_Position.z = (dist - viewCameraParams[viewIndex].z) / (viewCameraParams[viewIndex].w - viewCameraParams[viewIndex].z);
+        gl_Position.z = 1.0 - gl_Position.z;
+        gl_Position.w = 1.0;
+    
+    
+    
+    
+    
+    
+    }
+
+shaderInjector.ts:28 Shader Source: WebGLShader {} #version 300 es
+#line 1 1
+/** @todo We will be able to mark this as internal once we have a notion of builtin resources, until then this must be in the .wlp */
+/* #define SHADER_INTERNAL */
+void main() {}
+
+logger.ts:130 Initialized text rendering
+logger.ts:130 [editor] sent scene loaded message tree.wlp.bin
