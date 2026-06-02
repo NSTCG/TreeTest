@@ -525,9 +525,2023 @@ var require_earcut = __commonJS({
   }
 });
 
+// node_modules/@wonderlandengine/api/dist/index.js
+var __defProp2 = Object.defineProperty;
+var __getOwnPropDesc2 = Object.getOwnPropertyDescriptor;
+var __decorateClass2 = (decorators, target, key, kind) => {
+  for (var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc2(target, key) : target, i = decorators.length - 1, decorator; i >= 0; i--)
+    (decorator = decorators[i]) && (result = (kind ? decorator(target, key, result) : decorator(result)) || result);
+  return kind && result && __defProp2(target, key, result), result;
+};
+var Type = ((Type2) => (Type2[Type2.Native = 0] = "Native", Type2[Type2.Bool = 1] = "Bool", Type2[Type2.Int = 2] = "Int", Type2[Type2.Float = 3] = "Float", Type2[Type2.String = 4] = "String", Type2[Type2.Enum = 5] = "Enum", Type2[Type2.Object = 6] = "Object", Type2[Type2.Mesh = 7] = "Mesh", Type2[Type2.Texture = 8] = "Texture", Type2[Type2.Material = 9] = "Material", Type2[Type2.Animation = 10] = "Animation", Type2[Type2.Skin = 11] = "Skin", Type2[Type2.Color = 12] = "Color", Type2[Type2.Vector2 = 13] = "Vector2", Type2[Type2.Vector3 = 14] = "Vector3", Type2[Type2.Vector4 = 15] = "Vector4", Type2[Type2.Array = 16] = "Array", Type2[Type2.Record = 17] = "Record", Type2[Type2.ParticleEffect = 18] = "ParticleEffect", Type2[Type2.AudioClip = 19] = "AudioClip", Type2[Type2.Count = 20] = "Count", Type2))(Type || {});
+var DefaultPropertyCloner = class {
+  clone(type, value) {
+    switch (type) {
+      case 12:
+      case 13:
+      case 14:
+      case 15:
+      case 16:
+        return value.slice();
+      case 17: {
+        if (!value || !value.constructor)
+          return value;
+        let RecordClass = value.constructor, result = new RecordClass();
+        for (let key in RecordClass.Properties) {
+          let prop = RecordClass.Properties[key];
+          result[key] = this.clone(prop.type, value[key]);
+        }
+        return result;
+      }
+      default:
+        return value;
+    }
+  }
+};
+var defaultPropertyCloner = new DefaultPropertyCloner();
+var Property = { bool(defaultValue = false) {
+  return { type: 1, default: defaultValue };
+}, int(defaultValue = 0) {
+  return { type: 2, default: defaultValue };
+}, float(defaultValue = 0) {
+  return { type: 3, default: defaultValue };
+}, string(defaultValue = "") {
+  return { type: 4, default: defaultValue };
+}, enum(values, defaultValue) {
+  return { type: 5, values, default: defaultValue };
+}, object(opts) {
+  return { type: 6, default: null, required: opts?.required ?? false };
+}, mesh(opts) {
+  return { type: 7, default: null, required: opts?.required ?? false };
+}, texture(opts) {
+  return { type: 8, default: null, required: opts?.required ?? false };
+}, material(opts) {
+  return { type: 9, default: null, required: opts?.required ?? false };
+}, animation(opts) {
+  return { type: 10, default: null, required: opts?.required ?? false };
+}, skin(opts) {
+  return { type: 11, default: null, required: opts?.required ?? false };
+}, particleEffect(opts) {
+  return { type: 18, default: null, required: opts?.required ?? false };
+}, audioClip(opts) {
+  return { type: 19, default: null, required: opts?.required ?? false };
+}, color(r = 0, g = 0, b = 0, a = 1) {
+  return { type: 12, default: new Float32Array([r, g, b, a]) };
+}, vector2(x = 0, y = 0) {
+  return { type: 13, default: new Float32Array([x, y]) };
+}, vector3(x = 0, y = 0, z = 0) {
+  return { type: 14, default: new Float32Array([x, y, z]) };
+}, vector4(x = 0, y = 0, z = 0, w = 0) {
+  return { type: 15, default: new Float32Array([x, y, z, w]) };
+}, record(definition) {
+  return { type: 17, record: definition, default: definition ? new definition() : void 0 };
+}, array(element) {
+  return { type: 16, element, default: [] };
+} };
+function propertyDecorator(data) {
+  return function(target, propertyKey) {
+    let ctor = target.constructor;
+    ctor.Properties = ctor.hasOwnProperty("Properties") ? ctor.Properties : {}, ctor.Properties[propertyKey] = data;
+  };
+}
+function enumerable() {
+  return function(_, __, descriptor) {
+    descriptor.enumerable = true;
+  };
+}
+function nativeProperty() {
+  return function(target, propertyKey, descriptor) {
+    enumerable()(target, propertyKey, descriptor), propertyDecorator({ type: 0 })(target, propertyKey);
+  };
+}
+var property = {};
+for (let name in Property)
+  property[name] = (...args) => {
+    let functor = Property[name];
+    return propertyDecorator(functor(...args));
+  };
+function isNumber(value) {
+  return value == null ? false : typeof value == "number" || value.constructor === Number;
+}
+function isImageLike(value) {
+  return value instanceof HTMLImageElement || value instanceof HTMLVideoElement || value instanceof HTMLCanvasElement;
+}
+var Emitter = class {
+  _listeners = [];
+  _notifying = false;
+  _transactions = [];
+  add(listener, opts = {}) {
+    let { once = false, id = void 0 } = opts, data = { id, once, callback: listener };
+    return this._notifying ? (this._transactions.push({ type: 1, data }), this) : (this._listeners.push(data), this);
+  }
+  push(...listeners) {
+    for (let cb of listeners)
+      this.add(cb);
+    return this;
+  }
+  once(listener) {
+    return this.add(listener, { once: true });
+  }
+  remove(listener) {
+    if (this._notifying)
+      return this._transactions.push({ type: 2, data: listener }), this;
+    let listeners = this._listeners;
+    for (let i = 0; i < listeners.length; ++i) {
+      let target = listeners[i];
+      (target.callback === listener || target.id === listener) && listeners.splice(i--, 1);
+    }
+    return this;
+  }
+  has(listener) {
+    let listeners = this._listeners;
+    for (let i = 0; i < listeners.length; ++i) {
+      let target = listeners[i];
+      if (target.callback === listener || target.id === listener)
+        return true;
+    }
+    return false;
+  }
+  notify(...data) {
+    let listeners = this._listeners;
+    this._notifying = true;
+    for (let i = 0; i < listeners.length; ++i) {
+      let listener = listeners[i];
+      listener.once && listeners.splice(i--, 1);
+      try {
+        listener.callback(...data);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    this._notifying = false, this._flushTransactions();
+  }
+  notifyUnsafe(...data) {
+    let listeners = this._listeners;
+    for (let i = 0; i < listeners.length; ++i) {
+      let listener = listeners[i];
+      listener.once && listeners.splice(i--, 1), listener.callback(...data);
+    }
+    this._flushTransactions();
+  }
+  promise() {
+    return new Promise((res, _) => {
+      this.once((...args) => {
+        args.length > 1 ? res(args) : res(args[0]);
+      });
+    });
+  }
+  get listenerCount() {
+    return this._listeners.length;
+  }
+  get isEmpty() {
+    return this.listenerCount === 0;
+  }
+  _flushTransactions() {
+    let listeners = this._listeners;
+    for (let transaction of this._transactions)
+      transaction.type === 1 ? listeners.push(transaction.data) : this.remove(transaction.data);
+    this._transactions.length = 0;
+  }
+};
+var ResourceType = ((ResourceType2) => (ResourceType2[ResourceType2.None = 0] = "None", ResourceType2[ResourceType2.Material = 1] = "Material", ResourceType2[ResourceType2.Mesh = 2] = "Mesh", ResourceType2[ResourceType2.Image = 3] = "Image", ResourceType2[ResourceType2.MorphTarget = 4] = "MorphTarget", ResourceType2[ResourceType2.Font = 5] = "Font", ResourceType2[ResourceType2.ParticleEffect = 6] = "ParticleEffect", ResourceType2[ResourceType2.ProbeVolumeScenario = 7] = "ProbeVolumeScenario", ResourceType2[ResourceType2.AudioClip = 8] = "AudioClip", ResourceType2[ResourceType2.Pipeline = 9] = "Pipeline", ResourceType2[ResourceType2.Count = 10] = "Count", ResourceType2))(ResourceType || {});
+var Resource = class {
+  static getResourceType() {
+    return null;
+  }
+  _index = -1;
+  _id = -1;
+  _engine;
+  constructor(engine, index) {
+    this._engine = engine, this._index = index, this._id = index;
+  }
+  get engine() {
+    return this._engine;
+  }
+  get index() {
+    return this._index;
+  }
+  get origin() {
+    let type = this.constructor.getResourceType();
+    if (type === null)
+      return null;
+    let index = this.engine.wasm._wl_resource_originScene(type, this._index);
+    return index >= 0 ? this.engine._scenes[index] : null;
+  }
+  equals(other) {
+    return other ? this._index === other._index : false;
+  }
+  get isDestroyed() {
+    return this._index <= 0;
+  }
+};
+var SceneResource = class _SceneResource {
+  static _pack(scene, index) {
+    return scene << 22 | index;
+  }
+  static _unpackSceneIndex(packed) {
+    return packed >> 22;
+  }
+  static _unpackId(packed) {
+    return packed & 4194303;
+  }
+  _index = -1;
+  _id = -1;
+  _scene;
+  constructor(scene, index) {
+    this._scene = scene, this._index = index, this._id = _SceneResource._pack(scene._index, index);
+  }
+  equals(other) {
+    return other ? this._id === other._id : false;
+  }
+  get scene() {
+    return this._scene;
+  }
+  get engine() {
+    return this._scene.engine;
+  }
+  get index() {
+    return this._index;
+  }
+  get isDestroyed() {
+    return this._id <= 0;
+  }
+};
+var CBORType = ((CBORType2) => (CBORType2[CBORType2.Array = 0] = "Array", CBORType2[CBORType2.Record = 1] = "Record", CBORType2[CBORType2.Constant = 2] = "Constant", CBORType2[CBORType2.Native = 3] = "Native", CBORType2))(CBORType || {});
+function getType(typeInfo) {
+  let majorType = typeInfo >> 5, additionalInformation = typeInfo & 31;
+  switch (majorType) {
+    case 4:
+      return 0;
+    case 5:
+      return 1;
+    case 7:
+      return 2;
+  }
+  return 3;
+}
+function isUndefined(type, length5) {
+  return type === 2 && length5 === 23;
+}
+var CBORReader = class {
+  dataView;
+  data;
+  offset;
+  tagger = (_, value) => value;
+  dictionary = "object";
+  constructor(data) {
+    this.dataView = new DataView(data.buffer, data.byteOffset, data.byteLength), this.data = data, this.offset = 0;
+  }
+  readTypeInfo() {
+    return this.readUint8();
+  }
+  readArrayLength(typeInfo) {
+    let majorType = typeInfo >> 5, additionalInformation = typeInfo & 31, length5 = this.readLength(additionalInformation);
+    if (length5 < 0 && (majorType < 2 || 6 < majorType))
+      throw new Error("CBORError: Invalid length");
+    return length5;
+  }
+  readItem(typeInfo, inputLen = null) {
+    let majorType = typeInfo >> 5, additionalInformation = typeInfo & 31, i;
+    if (majorType === 7)
+      switch (additionalInformation) {
+        case 25:
+          return this.readFloat16();
+        case 26:
+          return this.readFloat32();
+        case 27:
+          return this.readFloat64();
+      }
+    let length5 = inputLen === null ? this.readLength(additionalInformation) : inputLen;
+    if (length5 < 0 && (majorType < 2 || 6 < majorType))
+      throw new Error("CBORError: Invalid length");
+    switch (majorType) {
+      case 0:
+        return length5;
+      case 1:
+        return typeof length5 == "number" ? -1 - length5 : -1n - length5;
+      case 2: {
+        if (length5 < 0) {
+          let elements = [], fullArrayLength = 0;
+          for (; (length5 = this.readIndefiniteStringLength(majorType)) >= 0; )
+            fullArrayLength += length5, elements.push(this.readArrayBuffer(length5));
+          let fullArray = new Uint8Array(fullArrayLength), fullArrayOffset = 0;
+          for (i = 0; i < elements.length; ++i)
+            fullArray.set(elements[i], fullArrayOffset), fullArrayOffset += elements[i].length;
+          return fullArray;
+        }
+        return this.readArrayBuffer(length5).slice();
+      }
+      case 3: {
+        let utf16data = [];
+        if (length5 < 0)
+          for (; (length5 = this.readIndefiniteStringLength(majorType)) >= 0; )
+            this.appendUtf16Data(utf16data, length5);
+        else
+          this.appendUtf16Data(utf16data, length5);
+        let string = "", DECODE_CHUNK_SIZE = 8192;
+        for (i = 0; i < utf16data.length; i += DECODE_CHUNK_SIZE)
+          string += String.fromCharCode.apply(null, utf16data.slice(i, i + DECODE_CHUNK_SIZE));
+        return string;
+      }
+      case 4: {
+        let retArray;
+        if (length5 < 0)
+          for (retArray = []; !this.readBreak(); )
+            retArray.push(this.decodeItem());
+        else
+          for (retArray = new Array(length5), i = 0; i < length5; ++i)
+            retArray[i] = this.decodeItem();
+        return retArray;
+      }
+      case 5: {
+        if (this.dictionary === "map") {
+          let retMap = /* @__PURE__ */ new Map();
+          for (i = 0; i < length5 || length5 < 0 && !this.readBreak(); ++i) {
+            let key = this.decodeItem();
+            if (retMap.has(key))
+              throw new Error("CBORError: Duplicate key encountered");
+            retMap.set(key, this.decodeItem());
+          }
+          return retMap;
+        }
+        let retObject = {};
+        for (i = 0; i < length5 || length5 < 0 && !this.readBreak(); ++i) {
+          let key = this.decodeItem();
+          if (Object.prototype.hasOwnProperty.call(retObject, key))
+            throw new Error("CBORError: Duplicate key encountered");
+          retObject[key] = this.decodeItem();
+        }
+        return retObject;
+      }
+      case 6: {
+        let value = this.decodeItem(), tag = length5;
+        if (value instanceof Uint8Array)
+          switch (tag) {
+            case 2:
+            case 3:
+              let num = value.reduce((acc, n) => (acc << 8n) + BigInt(n), 0n);
+              return tag == 3 && (num = -1n - num), num;
+            case 64:
+              return value;
+            case 72:
+              return new Int8Array(value.buffer);
+            case 69:
+              return new Uint16Array(value.buffer);
+            case 77:
+              return new Int16Array(value.buffer);
+            case 70:
+              return new Uint32Array(value.buffer);
+            case 78:
+              return new Int32Array(value.buffer);
+            case 71:
+              return new BigUint64Array(value.buffer);
+            case 79:
+              return new BigInt64Array(value.buffer);
+            case 85:
+              return new Float32Array(value.buffer);
+            case 86:
+              return new Float64Array(value.buffer);
+          }
+        return this.tagger(tag, value);
+      }
+      case 7:
+        switch (length5) {
+          case 20:
+            return false;
+          case 21:
+            return true;
+          case 22:
+            return null;
+          case 23:
+            return;
+          default:
+            return length5;
+        }
+    }
+  }
+  decodeItem() {
+    let initialByte = this.readUint8();
+    return this.readItem(initialByte);
+  }
+  readArrayBuffer(length5) {
+    return this.commitRead(length5, this.data.subarray(this.offset, this.offset + length5));
+  }
+  readFloat16() {
+    let POW_2_24 = 5960464477539063e-23, tempArrayBuffer = new ArrayBuffer(4), tempDataView = new DataView(tempArrayBuffer), value = this.readUint16(), sign = value & 32768, exponent = value & 31744, fraction = value & 1023;
+    if (exponent === 31744)
+      exponent = 261120;
+    else if (exponent !== 0)
+      exponent += 114688;
+    else if (fraction !== 0)
+      return (sign ? -1 : 1) * fraction * POW_2_24;
+    return tempDataView.setUint32(0, sign << 16 | exponent << 13 | fraction << 13), tempDataView.getFloat32(0);
+  }
+  readFloat32() {
+    return this.commitRead(4, this.dataView.getFloat32(this.offset));
+  }
+  readFloat64() {
+    return this.commitRead(8, this.dataView.getFloat64(this.offset));
+  }
+  readUint8() {
+    return this.commitRead(1, this.data[this.offset]);
+  }
+  readUint16() {
+    return this.commitRead(2, this.dataView.getUint16(this.offset));
+  }
+  readUint32() {
+    return this.commitRead(4, this.dataView.getUint32(this.offset));
+  }
+  readUint64() {
+    return this.commitRead(8, this.dataView.getBigUint64(this.offset));
+  }
+  readBreak() {
+    return this.data[this.offset] !== 255 ? false : (this.offset += 1, true);
+  }
+  readLength(additionalInformation) {
+    if (additionalInformation < 24)
+      return additionalInformation;
+    if (additionalInformation === 24)
+      return this.readUint8();
+    if (additionalInformation === 25)
+      return this.readUint16();
+    if (additionalInformation === 26)
+      return this.readUint32();
+    if (additionalInformation === 27) {
+      let integer = this.readUint64();
+      return integer <= Number.MAX_SAFE_INTEGER ? Number(integer) : integer;
+    }
+    if (additionalInformation === 31)
+      return -1;
+    throw new Error("CBORError: Invalid length encoding");
+  }
+  readIndefiniteStringLength(majorType) {
+    let initialByte = this.readUint8();
+    if (initialByte === 255)
+      return -1;
+    let length5 = this.readLength(initialByte & 31);
+    if (length5 < 0 || initialByte >> 5 !== majorType)
+      throw new Error("CBORError: Invalid indefinite length element");
+    return Number(length5);
+  }
+  appendUtf16Data(utf16data, length5) {
+    for (let i = 0; i < length5; ++i) {
+      let value = this.readUint8();
+      value & 128 && (value < 224 ? (value = (value & 31) << 6 | this.readUint8() & 63, length5 -= 1) : value < 240 ? (value = (value & 15) << 12 | (this.readUint8() & 63) << 6 | this.readUint8() & 63, length5 -= 2) : (value = (value & 7) << 18 | (this.readUint8() & 63) << 12 | (this.readUint8() & 63) << 6 | this.readUint8() & 63, length5 -= 3)), value < 65536 ? utf16data.push(value) : (value -= 65536, utf16data.push(55296 | value >> 10), utf16data.push(56320 | value & 1023));
+    }
+  }
+  commitRead(length5, value) {
+    return this.offset += length5, value;
+  }
+};
+function createDestroyedProxy2(type) {
+  return new Proxy({}, { get(_, param) {
+    if (param === "isDestroyed")
+      return true;
+    throw new Error(`Cannot read '${param}' of destroyed ${type}`);
+  }, set(_, param) {
+    throw new Error(`Cannot write '${param}' of destroyed ${type}`);
+  } });
+}
+var DestroyedComponentInstance = createDestroyedProxy2("component");
+function resetComponentProperties(record) {
+  let properties = record.constructor.Properties;
+  if (properties)
+    for (let name in properties) {
+      let property2 = properties[name], cloner = property2.cloner ?? defaultPropertyCloner;
+      record[name] = cloner.clone(property2.type, property2.default);
+    }
+}
+function setupComponentClass(ctor) {
+  inheritProperties(ctor);
+  for (let name in ctor.Properties) {
+    let prop = ctor.Properties[name], record = null;
+    switch (prop.type) {
+      case 17:
+        record = prop.record;
+        break;
+      case 16:
+        record = prop.element?.record;
+        break;
+      default:
+        break;
+    }
+    record && !record._propertyOrder && setupComponentClass(record);
+  }
+  _setupDefaults(ctor), _setPropertyOrder(ctor);
+}
+var ComponentPropertyDecoder = class {
+  scene;
+  offsets;
+  constructor(scene, offsets) {
+    this.scene = scene, this.offsets = offsets;
+  }
+  decode(cbor, component) {
+    let ctor = component.constructor;
+    ctor._propertyOrder || setupComponentClass(ctor);
+    let typeInfo = cbor.readTypeInfo();
+    if (ctor === BrokenComponent)
+      return cbor.readItem(typeInfo);
+    if (getType(typeInfo) !== 0)
+      return this._error(`${component} parameters not encoded as an array.`), cbor.readItem(typeInfo);
+    let paramNames = ctor._propertyOrder, count = cbor.readArrayLength(typeInfo);
+    if (count !== paramNames.length)
+      return this._error(`${component} has ${count} parameters encoded, but expected ${paramNames.length}`), cbor.readItem(typeInfo, count);
+    for (let j = 0; j < count; ++j) {
+      let name = paramNames[j], property2 = ctor.Properties[name];
+      component[name] = this.decodeProperty(cbor, name, property2);
+    }
+  }
+  decodeProperty(cbor, name, property2) {
+    let typeInfo = cbor.readTypeInfo();
+    if (property2.type === 17)
+      return this.decodeRecordProperty(cbor, name, property2, typeInfo);
+    if (property2.type === 16)
+      return this.decodeArrayProperty(cbor, name, property2, typeInfo);
+    let value = cbor.readItem(typeInfo);
+    if (value === void 0)
+      return value = (property2.cloner ?? defaultPropertyCloner).clone(property2.type, property2.default), value;
+    typeof value == "number" && (value += this.offsets[property2.type]);
+    let engine = this.scene.engine;
+    switch (property2.type) {
+      case 1:
+      case 2:
+      case 3:
+      case 4:
+      case 5:
+      case 13:
+      case 14:
+      case 15:
+        return value;
+      case 6: {
+        let wasm = engine.wasm;
+        return value ? this.scene.wrap(wasm._wl_object_id(this.scene._index, value)) : null;
+      }
+      case 7:
+        return engine.meshes.wrap(value);
+      case 8:
+        return engine.textures.wrap(value);
+      case 9:
+        return engine.materials.wrap(value);
+      case 18:
+        return engine.particleEffects.wrap(value);
+      case 10:
+        return this.scene.animations.wrap(value);
+      case 11:
+        return this.scene.skins.wrap(value);
+      case 12: {
+        let max2 = (1 << value.BYTES_PER_ELEMENT * 8) - 1;
+        return Float32Array.from(value, (f, _) => f / max2);
+      }
+      case 19:
+        return engine.audioClips.wrap(value);
+    }
+  }
+  decodeRecordProperty(cbor, name, property2, typeInfo) {
+    let cborType = getType(typeInfo);
+    if (cborType !== 0 && cborType !== 2)
+      return this._error(`Record parameter '${name}' not serialized as an array`), cbor.readItem(typeInfo), null;
+    let record = property2.record;
+    if (!record)
+      return this._error(`Record parameter '${name}' .record is undefined`), cbor.readItem(typeInfo), null;
+    record._propertyOrder || setupComponentClass(record);
+    let propertyOrder = record._propertyOrder, count = cbor.readArrayLength(typeInfo);
+    if (isUndefined(cborType, count))
+      return (property2.cloner ?? defaultPropertyCloner).clone(property2.type, property2.default);
+    let result = new record();
+    if (count !== propertyOrder.length) {
+      let propsCount = propertyOrder.length;
+      return this._error(`Record parameter ${name} has ${count} sub-parameters encoded, but expected ${propsCount}`), cbor.readItem(typeInfo, count), result;
+    }
+    let order = record._propertyOrder;
+    for (let i = 0; i < order.length; ++i) {
+      let key = order[i], prop = record.Properties[key];
+      result[key] = this.decodeProperty(cbor, key, prop);
+    }
+    return result;
+  }
+  decodeArrayProperty(cbor, name, property2, typeInfo) {
+    let log = this.scene.engine.log, cborType = getType(typeInfo);
+    if (cborType !== 0 && cborType !== 2)
+      return this._error(`Array parameter '${name}' not serialized as an array`), cbor.readItem(typeInfo), [];
+    if (!property2.element)
+      return this._error(`Array parameter '${name}' .element property is undefined`), cbor.readItem(typeInfo), [];
+    let count = cbor.readArrayLength(typeInfo);
+    if (isUndefined(cborType, count))
+      return [];
+    let result = new Array(count);
+    for (let i = 0; i < count; ++i)
+      result[i] = this.decodeProperty(cbor, name, property2.element);
+    return result;
+  }
+  _error(msg) {
+    this.scene.engine.log.error(0, msg);
+  }
+};
+var ComponentDefaults = /* @__PURE__ */ new Map();
+for (let generator of Object.values(Property)) {
+  let prop = generator(void 0);
+  ComponentDefaults.set(prop.type, prop.default);
+}
+function _setupDefaults(ctor) {
+  for (let name in ctor.Properties) {
+    let p = ctor.Properties[name];
+    if (p.type === 5)
+      p.values?.length ? (typeof p.default != "number" && (p.default = p.values.indexOf(p.default)), (p.default < 0 || p.default >= p.values.length) && (p.default = 0)) : p.default = void 0;
+    else if ((p.type === 12 || p.type === 13 || p.type === 14 || p.type === 15) && Array.isArray(p.default))
+      p.default = Float32Array.from(p.default);
+    else if (p.type === 17 && p.record)
+      p.default = new p.record(), resetComponentProperties(p.default);
+    else if (p.default === void 0) {
+      let cloner = p.cloner ?? defaultPropertyCloner;
+      p.default = cloner.clone(p.type, ComponentDefaults.get(p.type));
+    }
+    ctor.prototype[name] = p.default;
+  }
+}
+function _setPropertyOrder(ctor) {
+  ctor._propertyOrder = ctor.hasOwnProperty("Properties") ? Object.keys(ctor.Properties).sort() : [];
+}
+var DestroyedObjectInstance = createDestroyedProxy2("object");
+var LogTag = ((LogTag2) => (LogTag2[LogTag2.Engine = 0] = "Engine", LogTag2[LogTag2.Scene = 1] = "Scene", LogTag2[LogTag2.Component = 2] = "Component", LogTag2))(LogTag || {});
+var Collider = ((Collider2) => (Collider2[Collider2.Sphere = 0] = "Sphere", Collider2[Collider2.AxisAlignedBox = 1] = "AxisAlignedBox", Collider2[Collider2.Box = 2] = "Box", Collider2))(Collider || {});
+var Alignment = ((Alignment2) => (Alignment2[Alignment2.Left = 0] = "Left", Alignment2[Alignment2.Center = 1] = "Center", Alignment2[Alignment2.Right = 2] = "Right", Alignment2))(Alignment || {});
+var VerticalAlignment = ((VerticalAlignment2) => (VerticalAlignment2[VerticalAlignment2.Line = 0] = "Line", VerticalAlignment2[VerticalAlignment2.Middle = 1] = "Middle", VerticalAlignment2[VerticalAlignment2.Top = 2] = "Top", VerticalAlignment2[VerticalAlignment2.Bottom = 3] = "Bottom", VerticalAlignment2))(VerticalAlignment || {});
+var TextEffect = ((TextEffect2) => (TextEffect2[TextEffect2.None = 0] = "None", TextEffect2[TextEffect2.Outline = 1] = "Outline", TextEffect2[TextEffect2.Shadow = 2] = "Shadow", TextEffect2))(TextEffect || {});
+var TextWrapMode = ((TextWrapMode2) => (TextWrapMode2[TextWrapMode2.None = 0] = "None", TextWrapMode2[TextWrapMode2.Soft = 1] = "Soft", TextWrapMode2[TextWrapMode2.Hard = 2] = "Hard", TextWrapMode2[TextWrapMode2.Clip = 3] = "Clip", TextWrapMode2))(TextWrapMode || {});
+var InputType = ((InputType3) => (InputType3[InputType3.Head = 0] = "Head", InputType3[InputType3.EyeLeft = 1] = "EyeLeft", InputType3[InputType3.EyeRight = 2] = "EyeRight", InputType3[InputType3.ControllerLeft = 3] = "ControllerLeft", InputType3[InputType3.ControllerRight = 4] = "ControllerRight", InputType3[InputType3.RayLeft = 5] = "RayLeft", InputType3[InputType3.RayRight = 6] = "RayRight", InputType3))(InputType || {});
+var ProjectionType = ((ProjectionType2) => (ProjectionType2[ProjectionType2.Perspective = 0] = "Perspective", ProjectionType2[ProjectionType2.Orthographic = 1] = "Orthographic", ProjectionType2))(ProjectionType || {});
+var LightType = ((LightType2) => (LightType2[LightType2.Point = 0] = "Point", LightType2[LightType2.Spot = 1] = "Spot", LightType2[LightType2.Sun = 2] = "Sun", LightType2))(LightType || {});
+var AnimationState = ((AnimationState2) => (AnimationState2[AnimationState2.Playing = 0] = "Playing", AnimationState2[AnimationState2.Paused = 1] = "Paused", AnimationState2[AnimationState2.Stopped = 2] = "Stopped", AnimationState2))(AnimationState || {});
+var RootMotionMode = ((RootMotionMode2) => (RootMotionMode2[RootMotionMode2.None = 0] = "None", RootMotionMode2[RootMotionMode2.ApplyToOwner = 1] = "ApplyToOwner", RootMotionMode2[RootMotionMode2.Script = 2] = "Script", RootMotionMode2))(RootMotionMode || {});
+var ForceMode = ((ForceMode2) => (ForceMode2[ForceMode2.Force = 0] = "Force", ForceMode2[ForceMode2.Impulse = 1] = "Impulse", ForceMode2[ForceMode2.VelocityChange = 2] = "VelocityChange", ForceMode2[ForceMode2.Acceleration = 3] = "Acceleration", ForceMode2))(ForceMode || {});
+var CollisionEventType = ((CollisionEventType2) => (CollisionEventType2[CollisionEventType2.Touch = 0] = "Touch", CollisionEventType2[CollisionEventType2.TouchLost = 1] = "TouchLost", CollisionEventType2[CollisionEventType2.TriggerTouch = 2] = "TriggerTouch", CollisionEventType2[CollisionEventType2.TriggerTouchLost = 3] = "TriggerTouchLost", CollisionEventType2))(CollisionEventType || {});
+var Shape = ((Shape2) => (Shape2[Shape2.None = 0] = "None", Shape2[Shape2.Sphere = 1] = "Sphere", Shape2[Shape2.Capsule = 2] = "Capsule", Shape2[Shape2.Box = 3] = "Box", Shape2[Shape2.Plane = 4] = "Plane", Shape2[Shape2.ConvexMesh = 5] = "ConvexMesh", Shape2[Shape2.TriangleMesh = 6] = "TriangleMesh", Shape2))(Shape || {});
+var MeshAttribute = ((MeshAttribute2) => (MeshAttribute2[MeshAttribute2.Position = 0] = "Position", MeshAttribute2[MeshAttribute2.Tangent = 1] = "Tangent", MeshAttribute2[MeshAttribute2.Normal = 2] = "Normal", MeshAttribute2[MeshAttribute2.TextureCoordinate = 3] = "TextureCoordinate", MeshAttribute2[MeshAttribute2.Color = 4] = "Color", MeshAttribute2[MeshAttribute2.JointId = 5] = "JointId", MeshAttribute2[MeshAttribute2.JointWeight = 6] = "JointWeight", MeshAttribute2[MeshAttribute2.SecondaryTextureCoordinate = 7] = "SecondaryTextureCoordinate", MeshAttribute2))(MeshAttribute || {});
+var GraphicsApi = ((GraphicsApi2) => (GraphicsApi2[GraphicsApi2.WebGL2 = 0] = "WebGL2", GraphicsApi2[GraphicsApi2.WebGPU = 1] = "WebGPU", GraphicsApi2))(GraphicsApi || {});
+function isMeshShape(shape) {
+  return shape === 5 || shape === 6;
+}
+function isBaseComponentClass(value) {
+  return !!value && value.hasOwnProperty("_isBaseComponent") && value._isBaseComponent;
+}
+var SQRT_3 = Math.sqrt(3);
+var _a;
+var Component3 = (_a = class {
+  static _pack(scene, id) {
+    return scene << 22 | id;
+  }
+  static _inheritProperties() {
+    inheritProperties(this);
+  }
+  _manager;
+  _id;
+  _localId;
+  _object;
+  _indexInSystem = null;
+  _scene;
+  constructor(scene, manager = -1, id = -1) {
+    this._scene = scene, this._manager = manager, this._localId = id, this._id = _a._pack(scene._index, id), this._object = null;
+  }
+  get scene() {
+    return this._scene;
+  }
+  get engine() {
+    return this._scene.engine;
+  }
+  get type() {
+    return this.constructor.TypeName;
+  }
+  get object() {
+    if (!this._object) {
+      let objectId = this.engine.wasm._wl_component_get_object(this._manager, this._id);
+      this._object = this._scene.wrap(objectId);
+    }
+    return this._object;
+  }
+  set active(active) {
+    this.engine.wasm._wl_component_setActive(this._manager, this._id, active);
+  }
+  get active() {
+    return this.markedActive && this._scene.isActive;
+  }
+  get markedActive() {
+    return this.engine.wasm._wl_component_isActive(this._manager, this._id) != 0;
+  }
+  copy(src) {
+    let properties = this.constructor.Properties;
+    if (!properties)
+      return this;
+    for (let name in properties) {
+      let property2 = properties[name], value = src[name];
+      if (value === void 0)
+        continue;
+      let cloner = property2.cloner ?? defaultPropertyCloner;
+      this[name] = cloner.clone(property2.type, value);
+    }
+    return this;
+  }
+  destroy() {
+    let manager = this._manager;
+    manager < 0 || this._id < 0 || this.engine.wasm._wl_component_remove(manager, this._id);
+  }
+  equals(otherComponent) {
+    return otherComponent ? this._manager === otherComponent._manager && this._id === otherComponent._id : false;
+  }
+  resetProperties() {
+    return resetComponentProperties(this), this;
+  }
+  reset() {
+    return this.resetProperties();
+  }
+  validateProperties() {
+    let ctor = this.constructor;
+    if (ctor.Properties) {
+      for (let name in ctor.Properties)
+        if (ctor.Properties[name].required && !this[name])
+          throw new Error(`Property '${name}' is required but was not initialized`);
+    }
+  }
+  toString() {
+    return this.isDestroyed ? "Component(destroyed)" : `Component('${this.type}', ${this._localId})`;
+  }
+  get isDestroyed() {
+    return this._id < 0;
+  }
+  _copy(src, offsetsPtr, copyInfoPtr) {
+    let wasm = this.engine.wasm, offsets = wasm.HEAPU32, offsetsStart = offsetsPtr >>> 2, copyInfoStart = copyInfoPtr >>> 1, srcRootIndex = wasm.HEAPU16[copyInfoStart], srcRootSize = wasm.HEAPU16[copyInfoStart + 1], dstRootIndex = wasm.HEAPU16[copyInfoStart + 2], destScene = this._scene, ctor = this.constructor;
+    for (let name in ctor.Properties) {
+      let value = src[name];
+      if (value === null) {
+        this[name] = null;
+        continue;
+      }
+      let prop = ctor.Properties[name], offset2 = offsets[offsetsStart + prop.type], retargeted = null;
+      switch (prop.type) {
+        case 6: {
+          let index = wasm._wl_object_index(value._id) + offset2, dist2 = index - srcRootIndex;
+          dist2 >= 0 && dist2 <= srcRootSize && (index = dstRootIndex + dist2);
+          let id = wasm._wl_object_id(destScene._index, index);
+          retargeted = destScene.wrap(id);
+          break;
+        }
+        case 10:
+          retargeted = destScene.animations.wrap(offset2 + value._index);
+          break;
+        case 11:
+          retargeted = destScene.skins.wrap(offset2 + value._index);
+          break;
+        default:
+          retargeted = (prop.cloner ?? defaultPropertyCloner).clone(prop.type, value);
+          break;
+      }
+      this[name] = retargeted;
+    }
+    return this;
+  }
+  _triggerInit() {
+    if (this.init)
+      try {
+        this.init();
+      } catch (e) {
+        this.engine.log.error(2, `Exception during ${this.type} init() on object ${this.object.name}`), this.engine.log.error(2, e);
+      }
+    let oldActivate = this.onActivate;
+    this.onActivate = function() {
+      this.onActivate = oldActivate;
+      let failed = false;
+      try {
+        this.validateProperties();
+      } catch (e) {
+        this.engine.log.error(2, `Exception during ${this.type} validateProperties() on object ${this.object.name}`), this.engine.log.error(2, e), failed = true;
+      }
+      try {
+        this.start?.();
+      } catch (e) {
+        this.engine.log.error(2, `Exception during ${this.type} start() on object ${this.object.name}`), this.engine.log.error(2, e), failed = true;
+      }
+      if (failed || !this.markedActive) {
+        failed && (this.active = false);
+        return;
+      }
+      if (this.onActivate)
+        try {
+          this.onActivate();
+        } catch (e) {
+          this.engine.log.error(2, `Exception during ${this.type} onActivate() on object ${this.object.name}`), this.engine.log.error(2, e);
+        }
+    };
+  }
+  _triggerUpdate(dt) {
+    if (this.update)
+      try {
+        this.update(dt);
+      } catch (e) {
+        this.engine.log.error(2, `Exception during ${this.type} update() on object ${this.object.name}`), this.engine.log.error(2, e), this.engine.wasm._deactivate_component_on_error && (this.active = false);
+      }
+  }
+  _triggerOnActivate() {
+    if (this.onActivate)
+      try {
+        this.onActivate();
+      } catch (e) {
+        this.engine.log.error(2, `Exception during ${this.type} onActivate() on object ${this.object.name}`), this.engine.log.error(2, e);
+      }
+  }
+  _triggerOnDeactivate() {
+    if (this.onDeactivate)
+      try {
+        this.onDeactivate();
+      } catch (e) {
+        this.engine.log.error(2, `Exception during ${this.type} onDeactivate() on object ${this.object.name}`), this.engine.log.error(2, e);
+      }
+  }
+  _triggerOnDestroy() {
+    try {
+      this.onDestroy && this.onDestroy();
+    } catch (e) {
+      this.engine.log.error(2, `Exception during ${this.type} onDestroy() on object ${this.object.name}`), this.engine.log.error(2, e);
+    }
+    this._scene._components.destroy(this);
+  }
+}, __publicField(_a, "_isBaseComponent", true), __publicField(_a, "_propertyOrder", []), __publicField(_a, "TypeName"), __publicField(_a, "Properties"), __publicField(_a, "InheritProperties"), __publicField(_a, "onRegister"), __publicField(_a, "UpdateAfter"), __publicField(_a, "UpdateBefore"), _a);
+var _a2;
+var BrokenComponent = (_a2 = class extends Component3 {
+}, __publicField(_a2, "TypeName", "__broken-component__"), _a2);
+function inheritProperties(target) {
+  let chain = [], curr = target;
+  for (; curr && !isBaseComponentClass(curr); ) {
+    let comp = curr;
+    if (!(comp.hasOwnProperty("InheritProperties") ? comp.InheritProperties : true))
+      break;
+    comp.hasOwnProperty("Properties") && chain.push(comp), curr = Object.getPrototypeOf(curr);
+  }
+  if (!chain.length || chain.length === 1 && chain[0] === target)
+    return;
+  let merged = {};
+  for (let i = chain.length - 1; i >= 0; --i)
+    Object.assign(merged, chain[i].Properties);
+  target.Properties = merged;
+}
+var _a3;
+var CollisionComponent = (_a3 = class extends Component3 {
+  getExtents(out = new Float32Array(3)) {
+    let wasm = this.engine.wasm, ptr = wasm._wl_collision_component_get_extents(this._id) / 4;
+    return out[0] = wasm.HEAPF32[ptr], out[1] = wasm.HEAPF32[ptr + 1], out[2] = wasm.HEAPF32[ptr + 2], out;
+  }
+  get collider() {
+    return this.engine.wasm._wl_collision_component_get_collider(this._id);
+  }
+  set collider(collider) {
+    this.engine.wasm._wl_collision_component_set_collider(this._id, collider);
+  }
+  get extents() {
+    let wasm = this.engine.wasm;
+    return new Float32Array(wasm.HEAPF32.buffer, wasm._wl_collision_component_get_extents(this._id), 3);
+  }
+  set extents(extents) {
+    let wasm = this.engine.wasm, ptr = wasm._wl_collision_component_get_extents(this._id) / 4;
+    wasm.HEAPF32[ptr] = extents[0], wasm.HEAPF32[ptr + 1] = extents[1], wasm.HEAPF32[ptr + 2] = extents[2];
+  }
+  get radius() {
+    let wasm = this.engine.wasm;
+    if (this.collider === 0)
+      return wasm.HEAPF32[wasm._wl_collision_component_get_extents(this._id) >> 2];
+    let extents = new Float32Array(wasm.HEAPF32.buffer, wasm._wl_collision_component_get_extents(this._id), 3), x2 = extents[0] * extents[0], y2 = extents[1] * extents[1], z2 = extents[2] * extents[2];
+    return Math.sqrt(x2 + y2 + z2) / 2;
+  }
+  set radius(radius) {
+    let length5 = this.collider === 0 ? radius : 2 * radius / SQRT_3;
+    this.extents.set([length5, length5, length5]);
+  }
+  get group() {
+    return this.engine.wasm._wl_collision_component_get_group(this._id);
+  }
+  set group(group) {
+    this.engine.wasm._wl_collision_component_set_group(this._id, group);
+  }
+  set visualize(b) {
+    this.engine.wasm._wl_collision_component_set_visualize(this._id, b);
+  }
+  get visualize() {
+    return !!this.engine.wasm._wl_collision_component_get_visualize(this._id);
+  }
+  queryOverlaps() {
+    let count = this.engine.wasm._wl_collision_component_query_overlaps(this._id, this.engine.wasm._tempMem, this.engine.wasm._tempMemSize >> 1), overlaps = new Array(count);
+    for (let i = 0; i < count; ++i) {
+      let id = this.engine.wasm._tempMemUint16[i];
+      overlaps[i] = this._scene._components.wrapCollision(id);
+    }
+    return overlaps;
+  }
+}, __publicField(_a3, "TypeName", "collision"), _a3);
+__decorateClass2([nativeProperty()], CollisionComponent.prototype, "collider", 1), __decorateClass2([nativeProperty()], CollisionComponent.prototype, "extents", 1), __decorateClass2([nativeProperty()], CollisionComponent.prototype, "group", 1), __decorateClass2([nativeProperty()], CollisionComponent.prototype, "visualize", 1);
+var _a4;
+var TextComponent = (_a4 = class extends Component3 {
+  get alignment() {
+    return this.engine.wasm._wl_text_component_get_horizontal_alignment(this._id);
+  }
+  set alignment(alignment) {
+    this.engine.wasm._wl_text_component_set_horizontal_alignment(this._id, alignment);
+  }
+  get verticalAlignment() {
+    return this.engine.wasm._wl_text_component_get_vertical_alignment(this._id);
+  }
+  set verticalAlignment(verticalAlignment) {
+    this.engine.wasm._wl_text_component_set_vertical_alignment(this._id, verticalAlignment);
+  }
+  get justification() {
+    return this.verticalAlignment;
+  }
+  set justification(justification) {
+    this.verticalAlignment = justification;
+  }
+  get justified() {
+    return !!this.engine.wasm._wl_text_component_get_justified(this._id);
+  }
+  set justified(justified) {
+    this.engine.wasm._wl_text_component_set_justified(this._id, justified);
+  }
+  get characterSpacing() {
+    return this.engine.wasm._wl_text_component_get_character_spacing(this._id);
+  }
+  set characterSpacing(spacing) {
+    this.engine.wasm._wl_text_component_set_character_spacing(this._id, spacing);
+  }
+  get lineSpacing() {
+    return this.engine.wasm._wl_text_component_get_line_spacing(this._id);
+  }
+  set lineSpacing(spacing) {
+    this.engine.wasm._wl_text_component_set_line_spacing(this._id, spacing);
+  }
+  get effect() {
+    return this.engine.wasm._wl_text_component_get_effect(this._id);
+  }
+  set effect(effect) {
+    this.engine.wasm._wl_text_component_set_effect(this._id, effect);
+  }
+  get effectOffset() {
+    return this.getEffectOffset();
+  }
+  set effectOffset(offset2) {
+    this.setEffectOffset(offset2);
+  }
+  getEffectOffset(out = new Float32Array(2)) {
+    let wasm = this.engine.wasm;
+    return wasm._wl_text_component_get_effectOffset(this._id, wasm._tempMem), out[0] = wasm._tempMemFloat[0], out[1] = wasm._tempMemFloat[1], out;
+  }
+  setEffectOffset(offset2) {
+    let wasm = this.engine.wasm;
+    wasm._tempMemFloat.set(offset2), wasm._wl_text_component_set_effectOffset(this._id, wasm._tempMem);
+  }
+  get wrapMode() {
+    return this.engine.wasm._wl_text_component_get_wrapMode(this._id);
+  }
+  set wrapMode(wrapMode) {
+    this.engine.wasm._wl_text_component_set_wrapMode(this._id, wrapMode);
+  }
+  get wrapWidth() {
+    return this.engine.wasm._wl_text_component_get_wrapWidth(this._id);
+  }
+  set wrapWidth(width) {
+    this.engine.wasm._wl_text_component_set_wrapWidth(this._id, width);
+  }
+  get text() {
+    let wasm = this.engine.wasm, ptr = wasm._wl_text_component_get_text(this._id);
+    return wasm.UTF8ToString(ptr);
+  }
+  set text(text) {
+    let wasm = this.engine.wasm;
+    wasm._wl_text_component_set_text(this._id, wasm.tempUTF8(text.toString()));
+  }
+  set material(material) {
+    let matIndex = material ? material._id : 0;
+    this.engine.wasm._wl_text_component_set_material(this._id, matIndex);
+  }
+  get material() {
+    let index = this.engine.wasm._wl_text_component_get_material(this._id);
+    return this.engine.materials.wrap(index);
+  }
+  getBoundingBoxForText(text, out = new Float32Array(4)) {
+    let wasm = this.engine.wasm, textPtr = wasm.tempUTF8(text, 4 * 4);
+    return this.engine.wasm._wl_text_component_get_boundingBox(this._id, textPtr, wasm._tempMem), out[0] = wasm._tempMemFloat[0], out[1] = wasm._tempMemFloat[1], out[2] = wasm._tempMemFloat[2], out[3] = wasm._tempMemFloat[3], out;
+  }
+  getBoundingBox(out = new Float32Array(4)) {
+    let wasm = this.engine.wasm;
+    return this.engine.wasm._wl_text_component_get_boundingBox(this._id, 0, wasm._tempMem), out[0] = wasm._tempMemFloat[0], out[1] = wasm._tempMemFloat[1], out[2] = wasm._tempMemFloat[2], out[3] = wasm._tempMemFloat[3], out;
+  }
+}, __publicField(_a4, "TypeName", "text"), _a4);
+__decorateClass2([nativeProperty()], TextComponent.prototype, "alignment", 1), __decorateClass2([nativeProperty()], TextComponent.prototype, "verticalAlignment", 1), __decorateClass2([nativeProperty()], TextComponent.prototype, "justification", 1), __decorateClass2([nativeProperty()], TextComponent.prototype, "justified", 1), __decorateClass2([nativeProperty()], TextComponent.prototype, "characterSpacing", 1), __decorateClass2([nativeProperty()], TextComponent.prototype, "lineSpacing", 1), __decorateClass2([nativeProperty()], TextComponent.prototype, "effect", 1), __decorateClass2([nativeProperty()], TextComponent.prototype, "effectOffset", 1), __decorateClass2([nativeProperty()], TextComponent.prototype, "wrapMode", 1), __decorateClass2([nativeProperty()], TextComponent.prototype, "wrapWidth", 1), __decorateClass2([nativeProperty()], TextComponent.prototype, "text", 1), __decorateClass2([nativeProperty()], TextComponent.prototype, "material", 1);
+var _a5;
+var ViewComponent = (_a5 = class extends Component3 {
+  get projectionType() {
+    return this.engine.wasm._wl_view_component_get_projectionType(this._id);
+  }
+  set projectionType(type) {
+    this.engine.wasm._wl_view_component_set_projectionType(this._id, type);
+  }
+  getProjectionMatrix(out = new Float32Array(16)) {
+    let wasm = this.engine.wasm;
+    wasm.requireTempMem(16 * 4), wasm._wl_view_component_get_projectionMatrix(this._id, wasm._tempMem);
+    for (let i = 0; i < 16; ++i)
+      out[i] = wasm._tempMemFloat[i];
+    return out;
+  }
+  get projectionMatrix() {
+    return this.getProjectionMatrix();
+  }
+  _setProjectionMatrix(v) {
+    let wasm = this._scene.engine.wasm;
+    wasm.requireTempMem(16 * 4), wasm._tempMemFloat.set(v), wasm._wl_view_component_set_projectionMatrix(this._id, wasm._tempMem);
+  }
+  _generateProjectionMatrix() {
+    this._scene.engine.wasm._wl_view_component_generate_projectionMatrix(this._id);
+  }
+  get near() {
+    return this.engine.wasm._wl_view_component_get_near(this._id);
+  }
+  set near(near) {
+    this.engine.wasm._wl_view_component_set_near(this._id, near), this.engine.xr && this.scene.isActive && this.active && this.engine.webxr.updateProjectionParams(near, this.far);
+  }
+  get far() {
+    return this.engine.wasm._wl_view_component_get_far(this._id);
+  }
+  set far(far) {
+    this.engine.wasm._wl_view_component_set_far(this._id, far), this.engine.xr && this.scene.isActive && this.active && this.engine.webxr.updateProjectionParams(this.near, far);
+  }
+  get fov() {
+    return this.engine.wasm._wl_view_component_get_fov(this._id);
+  }
+  set fov(fov) {
+    this.engine.wasm._wl_view_component_set_fov(this._id, fov);
+  }
+  getViewport(out = new Int32Array(4)) {
+    let wasm = this.engine.wasm, ptr = wasm._wl_view_component_get_viewport(this._id) / 4;
+    for (let i = 0; i < 4; ++i)
+      out[i] = wasm.HEAP32[ptr + i];
+    return out;
+  }
+  get viewport() {
+    return this.getViewport();
+  }
+  _setViewport(x, y, width, height) {
+    this._scene.engine.wasm._wl_view_component_set_viewport(this._id, x, y, width, height);
+  }
+  get extent() {
+    return this.engine.wasm._wl_view_component_get_extent(this._id);
+  }
+  set extent(extent) {
+    this.engine.wasm._wl_view_component_set_extent(this._id, extent);
+  }
+  get exposure() {
+    return this.engine.wasm._wl_view_component_get_exposure(this._id);
+  }
+  set exposure(exposure) {
+    this.engine.wasm._wl_view_component_set_exposure(this._id, exposure);
+  }
+  getDirectionForScreenPosition(x, y, out = new Float32Array(3)) {
+    let wasm = this.engine.wasm;
+    return this.getViewport(wasm._tempMemInt), x = (x + 0.5) / Math.max(wasm._tempMemInt[2], 1), y = (y + 0.5) / Math.max(wasm._tempMemInt[3], 1), x = x * 2 - 1, y = -y * 2 + 1, wasm._wl_view_component_get_directionForScreenPosition(this._id, x, y, wasm._tempMem), out[0] = wasm._tempMemFloat[0], out[1] = wasm._tempMemFloat[1], out[2] = wasm._tempMemFloat[2], out;
+  }
+}, __publicField(_a5, "TypeName", "view"), _a5);
+__decorateClass2([nativeProperty()], ViewComponent.prototype, "projectionType", 1), __decorateClass2([enumerable()], ViewComponent.prototype, "projectionMatrix", 1), __decorateClass2([nativeProperty()], ViewComponent.prototype, "near", 1), __decorateClass2([nativeProperty()], ViewComponent.prototype, "far", 1), __decorateClass2([nativeProperty()], ViewComponent.prototype, "fov", 1), __decorateClass2([enumerable()], ViewComponent.prototype, "viewport", 1), __decorateClass2([nativeProperty()], ViewComponent.prototype, "extent", 1), __decorateClass2([nativeProperty()], ViewComponent.prototype, "exposure", 1);
+var _a6;
+var InputComponent = (_a6 = class extends Component3 {
+  get inputType() {
+    return this.engine.wasm._wl_input_component_get_type(this._id);
+  }
+  set inputType(type) {
+    this.engine.wasm._wl_input_component_set_type(this._id, type);
+  }
+  get xrInputSource() {
+    let xr = this.engine.xr;
+    if (!xr)
+      return null;
+    for (let inputSource of xr.session.inputSources)
+      if (inputSource.handedness == this.handedness)
+        return inputSource;
+    return null;
+  }
+  get handedness() {
+    let inputType = this.inputType;
+    return inputType == 4 || inputType == 6 || inputType == 2 ? "right" : inputType == 3 || inputType == 5 || inputType == 1 ? "left" : null;
+  }
+}, __publicField(_a6, "TypeName", "input"), _a6);
+__decorateClass2([nativeProperty()], InputComponent.prototype, "inputType", 1), __decorateClass2([enumerable()], InputComponent.prototype, "xrInputSource", 1), __decorateClass2([enumerable()], InputComponent.prototype, "handedness", 1);
+var _a7;
+var LightComponent = (_a7 = class extends Component3 {
+  getColor(out = new Float32Array(3)) {
+    let wasm = this.engine.wasm, ptr = wasm._wl_light_component_get_color(this._id) / 4;
+    return out[0] = wasm.HEAPF32[ptr], out[1] = wasm.HEAPF32[ptr + 1], out[2] = wasm.HEAPF32[ptr + 2], out;
+  }
+  setColor(c) {
+    let wasm = this.engine.wasm, ptr = wasm._wl_light_component_get_color(this._id) / 4;
+    wasm.HEAPF32[ptr] = c[0], wasm.HEAPF32[ptr + 1] = c[1], wasm.HEAPF32[ptr + 2] = c[2];
+  }
+  get color() {
+    let wasm = this.engine.wasm;
+    return new Float32Array(wasm.HEAPF32.buffer, wasm._wl_light_component_get_color(this._id), 3);
+  }
+  set color(c) {
+    this.color.set(c);
+  }
+  get lightType() {
+    return this.engine.wasm._wl_light_component_get_type(this._id);
+  }
+  set lightType(t) {
+    this.engine.wasm._wl_light_component_set_type(this._id, t);
+  }
+  get intensity() {
+    return this.engine.wasm._wl_light_component_get_intensity(this._id);
+  }
+  set intensity(intensity) {
+    this.engine.wasm._wl_light_component_set_intensity(this._id, intensity);
+  }
+  get outerAngle() {
+    return this.engine.wasm._wl_light_component_get_outerAngle(this._id);
+  }
+  set outerAngle(angle2) {
+    this.engine.wasm._wl_light_component_set_outerAngle(this._id, angle2);
+  }
+  get innerAngle() {
+    return this.engine.wasm._wl_light_component_get_innerAngle(this._id);
+  }
+  set innerAngle(angle2) {
+    this.engine.wasm._wl_light_component_set_innerAngle(this._id, angle2);
+  }
+  get shadows() {
+    return !!this.engine.wasm._wl_light_component_get_shadows(this._id);
+  }
+  set shadows(b) {
+    this.engine.wasm._wl_light_component_set_shadows(this._id, b);
+  }
+  get shadowRange() {
+    return this.engine.wasm._wl_light_component_get_shadowRange(this._id);
+  }
+  set shadowRange(range) {
+    this.engine.wasm._wl_light_component_set_shadowRange(this._id, range);
+  }
+  get shadowBias() {
+    return this.engine.wasm._wl_light_component_get_shadowBias(this._id);
+  }
+  set shadowBias(bias) {
+    this.engine.wasm._wl_light_component_set_shadowBias(this._id, bias);
+  }
+  get shadowNormalBias() {
+    return this.engine.wasm._wl_light_component_get_shadowNormalBias(this._id);
+  }
+  set shadowNormalBias(bias) {
+    this.engine.wasm._wl_light_component_set_shadowNormalBias(this._id, bias);
+  }
+  get shadowTexelSize() {
+    return this.engine.wasm._wl_light_component_get_shadowTexelSize(this._id);
+  }
+  set shadowTexelSize(size) {
+    this.engine.wasm._wl_light_component_set_shadowTexelSize(this._id, size);
+  }
+  get cascadeCount() {
+    return this.engine.wasm._wl_light_component_get_cascadeCount(this._id);
+  }
+  set cascadeCount(count) {
+    this.engine.wasm._wl_light_component_set_cascadeCount(this._id, count);
+  }
+}, __publicField(_a7, "TypeName", "light"), _a7);
+__decorateClass2([nativeProperty()], LightComponent.prototype, "color", 1), __decorateClass2([nativeProperty()], LightComponent.prototype, "lightType", 1), __decorateClass2([nativeProperty()], LightComponent.prototype, "intensity", 1), __decorateClass2([nativeProperty()], LightComponent.prototype, "outerAngle", 1), __decorateClass2([nativeProperty()], LightComponent.prototype, "innerAngle", 1), __decorateClass2([nativeProperty()], LightComponent.prototype, "shadows", 1), __decorateClass2([nativeProperty()], LightComponent.prototype, "shadowRange", 1), __decorateClass2([nativeProperty()], LightComponent.prototype, "shadowBias", 1), __decorateClass2([nativeProperty()], LightComponent.prototype, "shadowNormalBias", 1), __decorateClass2([nativeProperty()], LightComponent.prototype, "shadowTexelSize", 1), __decorateClass2([nativeProperty()], LightComponent.prototype, "cascadeCount", 1);
+var _a8;
+var AnimationComponent = (_a8 = class extends Component3 {
+  onEvent = new Emitter();
+  set animation(anim) {
+    if (this.scene.assertOrigin(anim), anim instanceof AnimationGraph) {
+      this.animationGraph = anim;
+      return;
+    }
+    this.engine.wasm._wl_animation_component_set_animation(this._id, anim ? anim._id : 0);
+  }
+  get animation() {
+    let index = this.engine.wasm._wl_animation_component_get_animation(this._id);
+    return this._scene.animations.wrap(index);
+  }
+  get animationGraph() {
+    let index = this.engine.wasm._wl_animation_component_get_animationGraph(this._id);
+    return this.scene.animationsGraphs.wrap(index);
+  }
+  set animationGraph(graph) {
+    this.engine.wasm._wl_animation_component_set_animationGraph(this._id, graph ? graph._id : 0);
+  }
+  set playCount(playCount) {
+    this.engine.wasm._wl_animation_component_set_playCount(this._id, playCount);
+  }
+  get playCount() {
+    return this.engine.wasm._wl_animation_component_get_playCount(this._id);
+  }
+  set speed(speed) {
+    this.engine.wasm._wl_animation_component_set_speed(this._id, speed);
+  }
+  get speed() {
+    return this.engine.wasm._wl_animation_component_get_speed(this._id);
+  }
+  get state() {
+    return this.engine.wasm._wl_animation_component_state(this._id);
+  }
+  get rootMotionMode() {
+    return this.engine.wasm._wl_animation_component_get_rootMotionMode(this._id);
+  }
+  set rootMotionMode(mode) {
+    this.engine.wasm._wl_animation_component_set_rootMotionMode(this._id, mode);
+  }
+  get iteration() {
+    return this.engine.wasm._wl_animation_component_get_iteration(this._id);
+  }
+  get position() {
+    return this.engine.wasm._wl_animation_component_get_position(this._id);
+  }
+  get duration() {
+    return this.engine.wasm._wl_animation_component_get_duration(this._id);
+  }
+  play() {
+    this.engine.wasm._wl_animation_component_play(this._id);
+  }
+  stop() {
+    this.engine.wasm._wl_animation_component_stop(this._id);
+  }
+  pause() {
+    this.engine.wasm._wl_animation_component_pause(this._id);
+  }
+  getFloatParameter(name) {
+    let wasm = this.engine.wasm, index = wasm._wl_animation_component_getGraphParamIndex(this._id, wasm.tempUTF8(name));
+    if (index === -1)
+      throw Error(`Missing parameter '${name}'`);
+    return wasm._wl_animation_component_getGraphParamValue(this._id, index, wasm._tempMem), wasm._tempMemFloat[0];
+  }
+  setFloatParameter(name, value) {
+    let wasm = this.engine.wasm, index = wasm._wl_animation_component_getGraphParamIndex(this._id, wasm.tempUTF8(name));
+    if (index === -1)
+      throw Error(`Missing parameter '${name}'`);
+    wasm._tempMemFloat[0] = value, wasm._wl_animation_component_setGraphParamValue(this._id, index, wasm._tempMem);
+  }
+  getRootMotionTranslation(out = new Float32Array(3)) {
+    let wasm = this.engine.wasm;
+    return wasm._wl_animation_component_get_rootMotion_translation(this._id, wasm._tempMem), out[0] = wasm._tempMemFloat[0], out[1] = wasm._tempMemFloat[1], out[2] = wasm._tempMemFloat[2], out;
+  }
+  getRootMotionRotation(out = new Float32Array(3)) {
+    let wasm = this.engine.wasm;
+    return wasm._wl_animation_component_get_rootMotion_rotation(this._id, wasm._tempMem), out[0] = wasm._tempMemFloat[0], out[1] = wasm._tempMemFloat[1], out[2] = wasm._tempMemFloat[2], out;
+  }
+}, __publicField(_a8, "TypeName", "animation"), _a8);
+__decorateClass2([nativeProperty()], AnimationComponent.prototype, "animation", 1), __decorateClass2([nativeProperty()], AnimationComponent.prototype, "animationGraph", 1), __decorateClass2([nativeProperty()], AnimationComponent.prototype, "playCount", 1), __decorateClass2([nativeProperty()], AnimationComponent.prototype, "speed", 1), __decorateClass2([enumerable()], AnimationComponent.prototype, "state", 1), __decorateClass2([nativeProperty()], AnimationComponent.prototype, "rootMotionMode", 1);
+var _a9;
+var MeshComponent = (_a9 = class extends Component3 {
+  set material(material) {
+    this.engine.wasm._wl_mesh_component_set_material(this._id, material ? material._id : 0);
+  }
+  get material() {
+    let index = this.engine.wasm._wl_mesh_component_get_material(this._id);
+    return this.engine.materials.wrap(index);
+  }
+  get mesh() {
+    let index = this.engine.wasm._wl_mesh_component_get_mesh(this._id);
+    return this.engine.meshes.wrap(index);
+  }
+  set mesh(mesh) {
+    this.engine.wasm._wl_mesh_component_set_mesh(this._id, mesh?._id ?? 0);
+  }
+  get skin() {
+    let index = this.engine.wasm._wl_mesh_component_get_skin(this._id);
+    return this._scene.skins.wrap(index);
+  }
+  set skin(skin) {
+    this.scene.assertOrigin(skin), this.engine.wasm._wl_mesh_component_set_skin(this._id, skin ? skin._id : 0);
+  }
+  get morphTargets() {
+    let index = this.engine.wasm._wl_mesh_component_get_morph_targets(this._id);
+    return this.engine.morphTargets.wrap(index);
+  }
+  set morphTargets(morphTargets) {
+    this.engine.wasm._wl_mesh_component_set_morph_targets(this._id, morphTargets?._id ?? 0);
+  }
+  get morphTargetWeights() {
+    return this.getMorphTargetWeights();
+  }
+  set morphTargetWeights(weights) {
+    this.setMorphTargetWeights(weights);
+  }
+  getMorphTargetWeights(out) {
+    let wasm = this.engine.wasm, count = wasm._wl_mesh_component_get_morph_target_weights(this._id, wasm._tempMem);
+    out || (out = new Float32Array(count));
+    for (let i = 0; i < count; ++i)
+      out[i] = wasm._tempMemFloat[i];
+    return out;
+  }
+  getMorphTargetWeight(target) {
+    let count = this.morphTargets?.count ?? 0;
+    if (target >= count)
+      throw new Error(`Index ${target} is out of bounds for ${count} targets`);
+    return this.engine.wasm._wl_mesh_component_get_morph_target_weight(this._id, target);
+  }
+  setMorphTargetWeights(weights) {
+    let count = this.morphTargets?.count ?? 0;
+    if (weights.length !== count)
+      throw new Error(`Expected ${count} weights but got ${weights.length}`);
+    let wasm = this.engine.wasm;
+    wasm._tempMemFloat.set(weights), wasm._wl_mesh_component_set_morph_target_weights(this._id, wasm._tempMem, weights.length);
+  }
+  setMorphTargetWeight(target, weight) {
+    let count = this.morphTargets?.count ?? 0;
+    if (target >= count)
+      throw new Error(`Index ${target} is out of bounds for ${count} targets`);
+    this.engine.wasm._wl_mesh_component_set_morph_target_weight(this._id, target, weight);
+  }
+}, __publicField(_a9, "TypeName", "mesh"), _a9);
+__decorateClass2([nativeProperty()], MeshComponent.prototype, "material", 1), __decorateClass2([nativeProperty()], MeshComponent.prototype, "mesh", 1), __decorateClass2([nativeProperty()], MeshComponent.prototype, "skin", 1), __decorateClass2([nativeProperty()], MeshComponent.prototype, "morphTargets", 1), __decorateClass2([nativeProperty()], MeshComponent.prototype, "morphTargetWeights", 1);
+var ParticleReplacementPolicy = ((ParticleReplacementPolicy2) => (ParticleReplacementPolicy2[ParticleReplacementPolicy2.DontReplace = 0] = "DontReplace", ParticleReplacementPolicy2[ParticleReplacementPolicy2.ReplaceOldest = 1] = "ReplaceOldest", ParticleReplacementPolicy2))(ParticleReplacementPolicy || {});
+var _a10;
+var ParticleEffectComponent = (_a10 = class extends Component3 {
+  get particleEffect() {
+    let index = this.engine.wasm._wl_particleEffect_component_get_particleEffect(this._id);
+    return this.engine.particleEffects.wrap(index);
+  }
+  set particleEffect(particleEffect) {
+    this.engine.wasm._wl_particleEffect_component_set_particleEffect(this._id, particleEffect?._id ?? 0);
+  }
+  spawn(count = 1, lifetime = 0, replacementPolicy = 0) {
+    if (lifetime ??= 0, count < 0)
+      throw new Error("Particle count must be non-negative");
+    if (lifetime < 0)
+      throw new Error("Particle lifetime must be non-negative");
+    return this.engine.wasm._wl_particleEffect_component_spawnParticles(this._id, count, lifetime, replacementPolicy);
+  }
+  get aliveCount() {
+    return this.engine.wasm._wl_particleEffect_component_aliveCount(this._id);
+  }
+  get ids() {
+    let offset2 = this.engine.wasm._wl_particleEffect_component_get_ids(this._id);
+    return offset2 ? new Uint16Array(this.engine.wasm.HEAPU16.buffer, offset2, this.particleEffect.maxCount) : null;
+  }
+  get transforms() {
+    let offset2 = this.engine.wasm._wl_particleEffect_component_get_transforms(this._id);
+    return offset2 ? new AttributeAccessor(this.engine, { attribute: 0, offset: offset2, stride: 4 * 8, formatSize: 4 * 8, componentCount: 8, arraySize: 1, length: this.particleEffect.maxCount, bufferType: Float32Array }) : null;
+  }
+  get scalings() {
+    let offset2 = this.engine.wasm._wl_particleEffect_component_get_scalings(this._id);
+    return offset2 ? new AttributeAccessor(this.engine, { attribute: 0, offset: offset2, stride: 4 * 3, formatSize: 4 * 3, componentCount: 3, arraySize: 1, length: this.particleEffect.maxCount, bufferType: Float32Array }) : null;
+  }
+  get lifetimes() {
+    let offset2 = this.engine.wasm._wl_particleEffect_component_get_lifetimes(this._id);
+    return offset2 ? new AttributeAccessor(this.engine, { attribute: 0, offset: offset2, stride: 4 * 2, formatSize: 4 * 2, componentCount: 2, arraySize: 1, length: this.particleEffect.maxCount, bufferType: Float32Array }) : null;
+  }
+  get colors() {
+    let offset2 = this.engine.wasm._wl_particleEffect_component_get_colors(this._id);
+    return offset2 ? new AttributeAccessor(this.engine, { attribute: 0, offset: offset2, stride: 4 * 4, formatSize: 4 * 4, componentCount: 4, arraySize: 1, length: this.particleEffect.maxCount, bufferType: Float32Array }) : null;
+  }
+  get instanceData() {
+    let offset2 = this.engine.wasm._wl_particleEffect_component_get_instanceData(this._id);
+    return offset2 ? new AttributeAccessor(this.engine, { attribute: 0, offset: offset2, stride: 4 * 4, formatSize: 4 * 4, componentCount: 4, arraySize: 1, length: this.particleEffect.maxCount, bufferType: Float32Array }) : null;
+  }
+  update(count) {
+    this.engine.wasm._wl_particleEffect_component_update(this._id, count);
+  }
+}, __publicField(_a10, "TypeName", "particle-effect"), _a10);
+__decorateClass2([nativeProperty()], ParticleEffectComponent.prototype, "particleEffect", 1);
+var LockAxis = ((LockAxis2) => (LockAxis2[LockAxis2.None = 0] = "None", LockAxis2[LockAxis2.X = 1] = "X", LockAxis2[LockAxis2.Y = 2] = "Y", LockAxis2[LockAxis2.Z = 4] = "Z", LockAxis2))(LockAxis || {});
+var _a11;
+var PhysXComponent = (_a11 = class extends Component3 {
+  getTranslationOffset(out = new Float32Array(3)) {
+    let wasm = this.engine.wasm;
+    return wasm._wl_physx_component_get_offsetTranslation(this._id, wasm._tempMem), out[0] = wasm._tempMemFloat[0], out[1] = wasm._tempMemFloat[1], out[2] = wasm._tempMemFloat[2], out;
+  }
+  getRotationOffset(out = new Float32Array(4)) {
+    let wasm = this.engine.wasm, ptr = wasm._wl_physx_component_get_offsetTransform(this._id) >> 2;
+    return out[0] = wasm.HEAPF32[ptr], out[1] = wasm.HEAPF32[ptr + 1], out[2] = wasm.HEAPF32[ptr + 2], out[3] = wasm.HEAPF32[ptr + 3], out;
+  }
+  getExtents(out = new Float32Array(3)) {
+    let wasm = this.engine.wasm, ptr = wasm._wl_physx_component_get_extents(this._id) / 4;
+    return out[0] = wasm.HEAPF32[ptr], out[1] = wasm.HEAPF32[ptr + 1], out[2] = wasm.HEAPF32[ptr + 2], out;
+  }
+  getLinearVelocity(out = new Float32Array(3)) {
+    let wasm = this.engine.wasm, tempMemFloat = wasm._tempMemFloat;
+    return wasm._wl_physx_component_get_linearVelocity(this._id, wasm._tempMem), out[0] = tempMemFloat[0], out[1] = tempMemFloat[1], out[2] = tempMemFloat[2], out;
+  }
+  getAngularVelocity(out = new Float32Array(3)) {
+    let wasm = this.engine.wasm, tempMemFloat = wasm._tempMemFloat;
+    return wasm._wl_physx_component_get_angularVelocity(this._id, wasm._tempMem), out[0] = tempMemFloat[0], out[1] = tempMemFloat[1], out[2] = tempMemFloat[2], out;
+  }
+  set static(b) {
+    this.engine.wasm._wl_physx_component_set_static(this._id, b);
+  }
+  get static() {
+    return !!this.engine.wasm._wl_physx_component_get_static(this._id);
+  }
+  get translationOffset() {
+    return this.getTranslationOffset();
+  }
+  set translationOffset(offset2) {
+    this.engine.wasm._wl_physx_component_set_offsetTranslation(this._id, offset2[0], offset2[1], offset2[2]);
+  }
+  get rotationOffset() {
+    return this.getRotationOffset();
+  }
+  set rotationOffset(offset2) {
+    this.engine.wasm._wl_physx_component_set_offsetRotation(this._id, offset2[0], offset2[1], offset2[2], offset2[3]);
+  }
+  set kinematic(b) {
+    this.engine.wasm._wl_physx_component_set_kinematic(this._id, b);
+  }
+  get kinematic() {
+    return !!this.engine.wasm._wl_physx_component_get_kinematic(this._id);
+  }
+  set gravity(b) {
+    this.engine.wasm._wl_physx_component_set_gravity(this._id, b);
+  }
+  get gravity() {
+    return !!this.engine.wasm._wl_physx_component_get_gravity(this._id);
+  }
+  set simulate(b) {
+    this.engine.wasm._wl_physx_component_set_simulate(this._id, b);
+  }
+  get simulate() {
+    return !!this.engine.wasm._wl_physx_component_get_simulate(this._id);
+  }
+  set allowSimulation(b) {
+    this.engine.wasm._wl_physx_component_set_allowSimulation(this._id, b);
+  }
+  get allowSimulation() {
+    return !!this.engine.wasm._wl_physx_component_get_allowSimulation(this._id);
+  }
+  set allowQuery(b) {
+    this.engine.wasm._wl_physx_component_set_allowQuery(this._id, b);
+  }
+  get allowQuery() {
+    return !!this.engine.wasm._wl_physx_component_get_allowQuery(this._id);
+  }
+  set trigger(b) {
+    this.engine.wasm._wl_physx_component_set_trigger(this._id, b);
+  }
+  get trigger() {
+    return !!this.engine.wasm._wl_physx_component_get_trigger(this._id);
+  }
+  set visualize(b) {
+    this.engine.wasm._wl_physx_component_set_visualize(this._id, b);
+  }
+  get visualize() {
+    return !!this.engine.wasm._wl_physx_component_get_visualize(this._id);
+  }
+  set shape(s) {
+    this.engine.wasm._wl_physx_component_set_shape(this._id, s);
+  }
+  get shape() {
+    return this.engine.wasm._wl_physx_component_get_shape(this._id);
+  }
+  set shapeData(d) {
+    d == null || !isMeshShape(this.shape) || this.engine.wasm._wl_physx_component_set_shape_data(this._id, d.index);
+  }
+  get shapeData() {
+    return isMeshShape(this.shape) ? { index: this.engine.wasm._wl_physx_component_get_shape_data(this._id) } : null;
+  }
+  set extents(e) {
+    this.extents.set(e);
+  }
+  get extents() {
+    let wasm = this.engine.wasm, ptr = wasm._wl_physx_component_get_extents(this._id);
+    return new Float32Array(wasm.HEAPF32.buffer, ptr, 3);
+  }
+  get staticFriction() {
+    return this.engine.wasm._wl_physx_component_get_staticFriction(this._id);
+  }
+  set staticFriction(v) {
+    this.engine.wasm._wl_physx_component_set_staticFriction(this._id, v);
+  }
+  get dynamicFriction() {
+    return this.engine.wasm._wl_physx_component_get_dynamicFriction(this._id);
+  }
+  set dynamicFriction(v) {
+    this.engine.wasm._wl_physx_component_set_dynamicFriction(this._id, v);
+  }
+  get bounciness() {
+    return this.engine.wasm._wl_physx_component_get_bounciness(this._id);
+  }
+  set bounciness(v) {
+    this.engine.wasm._wl_physx_component_set_bounciness(this._id, v);
+  }
+  get linearDamping() {
+    return this.engine.wasm._wl_physx_component_get_linearDamping(this._id);
+  }
+  set linearDamping(v) {
+    this.engine.wasm._wl_physx_component_set_linearDamping(this._id, v);
+  }
+  get angularDamping() {
+    return this.engine.wasm._wl_physx_component_get_angularDamping(this._id);
+  }
+  set angularDamping(v) {
+    this.engine.wasm._wl_physx_component_set_angularDamping(this._id, v);
+  }
+  set linearVelocity(v) {
+    this.engine.wasm._wl_physx_component_set_linearVelocity(this._id, v[0], v[1], v[2]);
+  }
+  get linearVelocity() {
+    let wasm = this.engine.wasm;
+    return wasm._wl_physx_component_get_linearVelocity(this._id, wasm._tempMem), new Float32Array(wasm.HEAPF32.buffer, wasm._tempMem, 3);
+  }
+  set angularVelocity(v) {
+    this.engine.wasm._wl_physx_component_set_angularVelocity(this._id, v[0], v[1], v[2]);
+  }
+  get angularVelocity() {
+    let wasm = this.engine.wasm;
+    return wasm._wl_physx_component_get_angularVelocity(this._id, wasm._tempMem), new Float32Array(wasm.HEAPF32.buffer, wasm._tempMem, 3);
+  }
+  set groupsMask(flags) {
+    this.engine.wasm._wl_physx_component_set_groupsMask(this._id, flags);
+  }
+  get groupsMask() {
+    return this.engine.wasm._wl_physx_component_get_groupsMask(this._id);
+  }
+  set blocksMask(flags) {
+    this.engine.wasm._wl_physx_component_set_blocksMask(this._id, flags);
+  }
+  get blocksMask() {
+    return this.engine.wasm._wl_physx_component_get_blocksMask(this._id);
+  }
+  set linearLockAxis(lock) {
+    this.engine.wasm._wl_physx_component_set_linearLockAxis(this._id, lock);
+  }
+  get linearLockAxis() {
+    return this.engine.wasm._wl_physx_component_get_linearLockAxis(this._id);
+  }
+  set angularLockAxis(lock) {
+    this.engine.wasm._wl_physx_component_set_angularLockAxis(this._id, lock);
+  }
+  get angularLockAxis() {
+    return this.engine.wasm._wl_physx_component_get_angularLockAxis(this._id);
+  }
+  set mass(m) {
+    this.engine.wasm._wl_physx_component_set_mass(this._id, m);
+  }
+  get mass() {
+    return this.engine.wasm._wl_physx_component_get_mass(this._id);
+  }
+  set massSpaceInertiaTensor(v) {
+    this.engine.wasm._wl_physx_component_set_massSpaceInertiaTensor(this._id, v[0], v[1], v[2]);
+  }
+  set massSpaceInteriaTensor(v) {
+    this.massSpaceInertiaTensor = v;
+  }
+  set sleepOnActivate(flag) {
+    this.engine.wasm._wl_physx_component_set_sleepOnActivate(this._id, flag);
+  }
+  get sleepOnActivate() {
+    return !!this.engine.wasm._wl_physx_component_get_sleepOnActivate(this._id);
+  }
+  addForce(f, m = 0, localForce = false, p, local = false) {
+    let wasm = this.engine.wasm;
+    if (!p) {
+      wasm._wl_physx_component_addForce(this._id, f[0], f[1], f[2], m, localForce);
+      return;
+    }
+    wasm._wl_physx_component_addForceAt(this._id, f[0], f[1], f[2], m, localForce, p[0], p[1], p[2], local);
+  }
+  addTorque(f, m = 0) {
+    this.engine.wasm._wl_physx_component_addTorque(this._id, f[0], f[1], f[2], m);
+  }
+  onCollision(callback) {
+    return this.onCollisionWith(this, callback);
+  }
+  onCollisionWith(otherComp, callback) {
+    let callbacks = this.scene._pxCallbacks;
+    return callbacks.has(this._id) || callbacks.set(this._id, []), callbacks.get(this._id).push(callback), this.engine.wasm._wl_physx_component_addCallback(this._id, otherComp._id);
+  }
+  removeCollisionCallback(callbackId) {
+    let r = this.engine.wasm._wl_physx_component_removeCallback(this._id, callbackId), callbacks = this.scene._pxCallbacks;
+    r && callbacks.get(this._id).splice(-r);
+  }
+}, __publicField(_a11, "TypeName", "physx"), _a11);
+__decorateClass2([nativeProperty()], PhysXComponent.prototype, "static", 1), __decorateClass2([nativeProperty()], PhysXComponent.prototype, "translationOffset", 1), __decorateClass2([nativeProperty()], PhysXComponent.prototype, "rotationOffset", 1), __decorateClass2([nativeProperty()], PhysXComponent.prototype, "kinematic", 1), __decorateClass2([nativeProperty()], PhysXComponent.prototype, "gravity", 1), __decorateClass2([nativeProperty()], PhysXComponent.prototype, "simulate", 1), __decorateClass2([nativeProperty()], PhysXComponent.prototype, "allowSimulation", 1), __decorateClass2([nativeProperty()], PhysXComponent.prototype, "allowQuery", 1), __decorateClass2([nativeProperty()], PhysXComponent.prototype, "trigger", 1), __decorateClass2([nativeProperty()], PhysXComponent.prototype, "visualize", 1), __decorateClass2([nativeProperty()], PhysXComponent.prototype, "shape", 1), __decorateClass2([nativeProperty()], PhysXComponent.prototype, "shapeData", 1), __decorateClass2([nativeProperty()], PhysXComponent.prototype, "extents", 1), __decorateClass2([nativeProperty()], PhysXComponent.prototype, "staticFriction", 1), __decorateClass2([nativeProperty()], PhysXComponent.prototype, "dynamicFriction", 1), __decorateClass2([nativeProperty()], PhysXComponent.prototype, "bounciness", 1), __decorateClass2([nativeProperty()], PhysXComponent.prototype, "linearDamping", 1), __decorateClass2([nativeProperty()], PhysXComponent.prototype, "angularDamping", 1), __decorateClass2([nativeProperty()], PhysXComponent.prototype, "linearVelocity", 1), __decorateClass2([nativeProperty()], PhysXComponent.prototype, "angularVelocity", 1), __decorateClass2([nativeProperty()], PhysXComponent.prototype, "groupsMask", 1), __decorateClass2([nativeProperty()], PhysXComponent.prototype, "blocksMask", 1), __decorateClass2([nativeProperty()], PhysXComponent.prototype, "linearLockAxis", 1), __decorateClass2([nativeProperty()], PhysXComponent.prototype, "angularLockAxis", 1), __decorateClass2([nativeProperty()], PhysXComponent.prototype, "mass", 1), __decorateClass2([nativeProperty()], PhysXComponent.prototype, "sleepOnActivate", 1);
+var MeshIndexType = ((MeshIndexType2) => (MeshIndexType2[MeshIndexType2.UnsignedByte = 1] = "UnsignedByte", MeshIndexType2[MeshIndexType2.UnsignedShort = 2] = "UnsignedShort", MeshIndexType2[MeshIndexType2.UnsignedInt = 4] = "UnsignedInt", MeshIndexType2))(MeshIndexType || {});
+var MeshSkinningType = ((MeshSkinningType2) => (MeshSkinningType2[MeshSkinningType2.None = 0] = "None", MeshSkinningType2[MeshSkinningType2.FourJoints = 1] = "FourJoints", MeshSkinningType2[MeshSkinningType2.EightJoints = 2] = "EightJoints", MeshSkinningType2))(MeshSkinningType || {});
+var Mesh = class extends Resource {
+  static getResourceType() {
+    return 2;
+  }
+  constructor(engine, params) {
+    if (!isNumber(params)) {
+      let mesh = engine.meshes.create(params);
+      return super(engine, mesh._index), mesh;
+    }
+    super(engine, params);
+  }
+  get vertexCount() {
+    return this.engine.wasm._wl_mesh_get_vertexCount(this._id);
+  }
+  get indexData() {
+    let wasm = this.engine.wasm, tempMem = wasm._tempMem, ptr = wasm._wl_mesh_get_indexData(this._id, tempMem, tempMem + 4);
+    if (ptr === null)
+      return null;
+    let indexCount = wasm.HEAPU32[tempMem / 4];
+    switch (wasm.HEAPU32[tempMem / 4 + 1]) {
+      case 1:
+        return new Uint8Array(wasm.HEAPU8.buffer, ptr, indexCount);
+      case 2:
+        return new Uint16Array(wasm.HEAPU16.buffer, ptr, indexCount);
+      case 4:
+        return new Uint32Array(wasm.HEAPU32.buffer, ptr, indexCount);
+    }
+    return null;
+  }
+  update() {
+    this.engine.wasm._wl_mesh_update(this._id);
+  }
+  getBoundingSphere(out = new Float32Array(4)) {
+    let wasm = this.engine.wasm;
+    return this.engine.wasm._wl_mesh_get_boundingSphere(this._id, wasm._tempMem), out[0] = wasm._tempMemFloat[0], out[1] = wasm._tempMemFloat[1], out[2] = wasm._tempMemFloat[2], out[3] = wasm._tempMemFloat[3], out;
+  }
+  attribute(attr) {
+    if (typeof attr != "number")
+      throw new TypeError("Expected number, but got " + typeof attr);
+    let wasm = this.engine.wasm, tempMemUint32 = wasm._tempMemUint32;
+    if (wasm._wl_mesh_get_attribute(this._id, attr, wasm._tempMem), tempMemUint32[0] == 255)
+      return null;
+    let arraySize = tempMemUint32[5];
+    return new AttributeAccessor(this.engine, { attribute: tempMemUint32[0], offset: tempMemUint32[1], stride: tempMemUint32[2], formatSize: tempMemUint32[3], componentCount: tempMemUint32[4], arraySize: arraySize || 1, length: this.vertexCount, bufferType: attr !== 5 ? Float32Array : Uint16Array });
+  }
+  destroy() {
+    this.engine.wasm._wl_mesh_destroy(this._id), this.engine.meshes._destroy(this);
+  }
+  toString() {
+    return this.isDestroyed ? "Mesh(destroyed)" : `Mesh(${this._index})`;
+  }
+};
+var AttributeAccessor = class {
+  length = 0;
+  _engine;
+  _attribute = -1;
+  _offset = 0;
+  _stride = 0;
+  _formatSize = 0;
+  _componentCount = 0;
+  _arraySize = 1;
+  _bufferType;
+  _tempBufferGetter;
+  constructor(engine, options) {
+    this._engine = engine, this._attribute = options.attribute, this._offset = options.offset, this._stride = options.stride, this._formatSize = options.formatSize, this._componentCount = options.componentCount, this._arraySize = options.arraySize, this._bufferType = options.bufferType, this.length = options.length;
+    let wasm = this._engine.wasm;
+    this._tempBufferGetter = this._bufferType === Float32Array ? wasm.getTempBufferF32.bind(wasm) : wasm.getTempBufferU16.bind(wasm);
+  }
+  createArray(count = 1) {
+    return count = count > this.length ? this.length : count, new this._bufferType(count * this._componentCount * this._arraySize);
+  }
+  get(index, out = this.createArray()) {
+    if (out.length % this._componentCount !== 0)
+      throw new Error(`out.length, ${out.length} is not a multiple of the attribute vector components, ${this._componentCount}`);
+    let componentCount = this._componentCount * this._arraySize, len4 = Math.min(out.length, componentCount * this.length), dest = this._tempBufferGetter(len4), elementSize = this._bufferType.BYTES_PER_ELEMENT, destSize = elementSize * len4, srcFormatSize = this._formatSize * this._arraySize, destFormatSize = this._componentCount * elementSize * this._arraySize;
+    this.engine.wasm._wl_mesh_get_attribute_values(this._attribute, srcFormatSize, this._offset + index * this._stride, this._stride, destFormatSize, dest.byteOffset, destSize);
+    for (let i = 0; i < len4; ++i)
+      out[i] = dest[i];
+    return out;
+  }
+  set(i, v) {
+    if (v.length % this._componentCount !== 0)
+      throw new Error(`out.length, ${v.length} is not a multiple of the attribute vector components, ${this._componentCount}`);
+    let componentCount = this._componentCount * this._arraySize, len4 = Math.min(v.length, componentCount * this.length), elementSize = this._bufferType.BYTES_PER_ELEMENT, srcSize = elementSize * len4, srcFormatSize = componentCount * elementSize, destFormatSize = this._formatSize * this._arraySize, wasm = this.engine.wasm;
+    if (v.buffer != wasm.HEAPU8.buffer) {
+      let dest = this._tempBufferGetter(len4);
+      dest.set(v), v = dest;
+    }
+    return wasm._wl_mesh_set_attribute_values(this._attribute, srcFormatSize, v.byteOffset, srcSize, destFormatSize, this._offset + i * this._stride, this._stride), this;
+  }
+  get engine() {
+    return this._engine;
+  }
+};
+var temp2d = null;
+var Texture = class extends Resource {
+  static getResourceType() {
+    return 3;
+  }
+  constructor(engine, param) {
+    if (isImageLike(param)) {
+      let texture = engine.textures.create(param);
+      return super(engine, texture._index), texture;
+    }
+    super(engine, param);
+  }
+  get valid() {
+    return !this.isDestroyed && this.width !== 0 && this.height !== 0;
+  }
+  get id() {
+    return this.index;
+  }
+  update() {
+    let image = this._imageIndex;
+    !this.valid || !image || this.engine.wasm._wl_image_markDirty(image);
+  }
+  get width() {
+    let wasm = this.engine.wasm;
+    return wasm._wl_image_size(this._imageIndex, wasm._tempMem), wasm._tempMemUint32[0];
+  }
+  get height() {
+    let wasm = this.engine.wasm;
+    return wasm._wl_image_size(this._imageIndex, wasm._tempMem), wasm._tempMemUint32[1];
+  }
+  get htmlElement() {
+    let image = this._imageIndex;
+    if (!image)
+      return null;
+    let wasm = this.engine.wasm, jsImageIndex = wasm._wl_image_get_jsImage_index(image);
+    return wasm._images[jsImageIndex];
+  }
+  updateSubImage(srcX, srcY, srcWidth, srcHeight, dstX = srcX, dstY = srcY, content) {
+    if (this.isDestroyed)
+      return false;
+    let image = this._imageIndex;
+    if (!image)
+      return false;
+    let wasm = this.engine.wasm;
+    wasm._wl_image_borderPadding(image) && this.engine.log.warn(0, "Image created with border padding should be updated using Texture.update(), or visual results might be unexpected. Create a texture without border padding using engine.textures.create(image, {border: false})");
+    let img = content ?? this.htmlElement;
+    if (!img)
+      return false;
+    let isImageBitmap = img instanceof ImageBitmap, flipY = !isImageBitmap;
+    if (srcX || srcY) {
+      if (img instanceof ImageData)
+        throw new Error("Texture.updateSubImage(): ImageData does not support non-zero srcX/srcY offsets.");
+      if (!temp2d) {
+        let canvas2 = document.createElement("canvas"), ctx = canvas2.getContext("2d");
+        if (!ctx)
+          throw new Error("Texture.updateSubImage(): Failed to obtain CanvasRenderingContext2D.");
+        temp2d = { canvas: canvas2, ctx };
+      }
+      temp2d.canvas.width = srcWidth, temp2d.canvas.height = srcHeight, temp2d.ctx.drawImage(img, srcX, isImageBitmap ? img.height - srcY - srcHeight : srcY, srcWidth, srcHeight, 0, 0, srcWidth, srcHeight), img = temp2d.canvas;
+    }
+    wasm._images[0] = img;
+    let width = srcWidth - Math.max(srcWidth + dstX - this.width, 0), height = srcHeight - Math.max(srcHeight + dstY - this.height, 0), dstReversedY = this.height - dstY - height, ret = wasm._wl_renderer_updateImage(image, 0, width, height, dstX, dstReversedY, flipY);
+    return wasm._images[0] = null, !!ret;
+  }
+  destroy() {
+    let wasm = this.engine.wasm, imageIndex = this._imageIndex, jsImageIndex = wasm._wl_image_get_jsImage_index(imageIndex);
+    if (jsImageIndex) {
+      let img = wasm._images[jsImageIndex];
+      img instanceof ImageBitmap && img.close(), wasm._images[jsImageIndex] = null;
+    }
+    wasm._wl_image_destroy(imageIndex), wasm._wl_texture_destroy(this._id), this.engine.textures._destroy(this);
+  }
+  toString() {
+    return this.isDestroyed ? "Texture(destroyed)" : `Texture(${this._index})`;
+  }
+  get _imageIndex() {
+    return this.engine.wasm._wl_texture_get_image_index(this._id);
+  }
+};
+var AnimationGraph = class extends SceneResource {
+  setPlaybackSpeed(samplerIndex, speed) {
+    this.engine.wasm._wl_animationGraph_sampler_set_playbackSpeed(this._id, samplerIndex, speed);
+  }
+  toString() {
+    return this.isDestroyed ? "AnimationGraph(destroyed)" : `AnimationGraph(${this._index})`;
+  }
+};
+var version = "1.6.1";
+var matches = version.match(/([0-9]+).([0-9]+).([0-9]+)(?:-rc.([0-9]+))?/);
+(!matches || matches.length < 4) && console.error(`Invalid version '${version}'. Expected: major.minor.patch[-rc.x]`);
+var APIVersion = { major: Number.parseInt(matches[1]), minor: Number.parseInt(matches[2]), patch: Number.parseInt(matches[3]), rc: matches[4] !== void 0 ? Number.parseInt(matches[4]) : 0 };
+var MaterialParamType = ((MaterialParamType2) => (MaterialParamType2[MaterialParamType2.UnsignedInt = 0] = "UnsignedInt", MaterialParamType2[MaterialParamType2.Int = 1] = "Int", MaterialParamType2[MaterialParamType2.HalfFloat = 2] = "HalfFloat", MaterialParamType2[MaterialParamType2.Float = 3] = "Float", MaterialParamType2[MaterialParamType2.Sampler = 4] = "Sampler", MaterialParamType2[MaterialParamType2.Font = 5] = "Font", MaterialParamType2))(MaterialParamType || {});
+var SceneType = ((SceneType2) => (SceneType2[SceneType2.Prefab = 0] = "Prefab", SceneType2[SceneType2.Main = 1] = "Main", SceneType2[SceneType2.Dependency = 2] = "Dependency", SceneType2))(SceneType || {});
+var DestroyedPrefabInstance = createDestroyedProxy2("prefab/scene");
+function assert(bit) {
+  if (bit >= 32)
+    throw new Error(`BitSet.enable(): Value ${bit} is over 31`);
+}
+var BitSet = class {
+  _bits = 0;
+  enable(...bits) {
+    for (let bit of bits)
+      assert(bit), this._bits |= 1 << bit >>> 0;
+    return this;
+  }
+  enableAll() {
+    return this._bits = -1, this;
+  }
+  disable(...bits) {
+    for (let bit of bits)
+      assert(bit), this._bits &= ~(1 << bit >>> 0);
+    return this;
+  }
+  disableAll() {
+    return this._bits = 0, this;
+  }
+  enabled(bit) {
+    return !!(this._bits & 1 << bit >>> 0);
+  }
+};
+var LogLevel = ((LogLevel2) => (LogLevel2[LogLevel2.Info = 0] = "Info", LogLevel2[LogLevel2.Warn = 1] = "Warn", LogLevel2[LogLevel2.Error = 2] = "Error", LogLevel2))(LogLevel || {});
+var Logger = class {
+  levels = new BitSet();
+  tags = new BitSet().enableAll();
+  onLog = new Emitter();
+  constructor(...levels) {
+    this.levels.enable(...levels);
+  }
+  info(tag, ...msg) {
+    return this.levels.enabled(0) && this.tags.enabled(tag) && console.log(...msg), this.onLog.notify(0, msg, tag), this;
+  }
+  warn(tag, ...msg) {
+    return this.levels.enabled(1) && this.tags.enabled(tag) && console.warn(...msg), this.onLog.notify(1, msg, tag), this;
+  }
+  error(tag, ...msg) {
+    return this.levels.enabled(2) && this.tags.enabled(tag) && console.error(...msg), this.onLog.notify(2, msg, tag), this;
+  }
+};
+var WASM = class {
+  wasm = null;
+  canvas = null;
+  preinitializedWebGPUDevice = null;
+  UTF8ViewToString;
+  _log = new Logger();
+  _deactivate_component_on_error = false;
+  _tempMem = null;
+  _tempMemSize = 0;
+  _tempMemFloat = null;
+  _tempMemInt = null;
+  _tempMemUint8 = null;
+  _tempMemUint32 = null;
+  _tempMemUint16 = null;
+  _loadingScreen = null;
+  _sceneLoadedCallback = [];
+  _images = [null];
+  _imageSources = [null];
+  _components = null;
+  _componentTypes = [];
+  _componentTypeIndices = {};
+  _engine = null;
+  _withPhysX = false;
+  _utf8Decoder = new TextDecoder("utf8");
+  _brokenComponentIndex = 0;
+  constructor(threads2) {
+    threads2 ? this.UTF8ViewToString = (s, e) => s ? this._utf8Decoder.decode(this.HEAPU8.slice(s, e)) : "" : this.UTF8ViewToString = (s, e) => s ? this._utf8Decoder.decode(this.HEAPU8.subarray(s, e)) : "", this._brokenComponentIndex = this._registerComponent(BrokenComponent);
+  }
+  get runtimeVersion() {
+    let tempBuf = this._malloc(8), tempVersion = new Uint16Array(this.HEAP8.buffer, tempBuf, 4);
+    this._wl_runtime_version(tempBuf);
+    let version2 = { major: tempVersion[0], minor: tempVersion[1], patch: tempVersion[2], rc: tempVersion[3] };
+    return this._free(tempBuf), version2;
+  }
+  reset() {
+    this._wl_reset(), this._components = null, this._images.length = 1, this._imageSources.length = 1, this.allocateTempMemory(1024), this._componentTypes = [], this._componentTypeIndices = {}, this._brokenComponentIndex = this._registerComponent(BrokenComponent);
+  }
+  isRegistered(type) {
+    return type in this._componentTypeIndices;
+  }
+  _registerComponentLegacy(typeName, params, object) {
+    let ctor = class extends Component3 {
+    };
+    return ctor.TypeName = typeName, ctor.Properties = params, Object.assign(ctor.prototype, object), this._registerComponent(ctor);
+  }
+  _registerComponent(ctor) {
+    if (!ctor.TypeName)
+      throw new Error("no name provided for component.");
+    if (!ctor.prototype._triggerInit)
+      throw new Error(`registerComponent(): Component ${ctor.TypeName} must extend Component`);
+    setupComponentClass(ctor);
+    let typeIndex = ctor.TypeName in this._componentTypeIndices ? this._componentTypeIndices[ctor.TypeName] : this._componentTypes.length;
+    return this._componentTypes[typeIndex] = ctor, this._componentTypeIndices[ctor.TypeName] = typeIndex, ctor === BrokenComponent || (this._log.info(0, "Registered component", ctor.TypeName, `(class ${ctor.name})`, "with index", typeIndex), ctor.onRegister && ctor.onRegister(this._engine)), typeIndex;
+  }
+  allocateTempMemory(size) {
+    this._log.info(0, "Allocating temp mem:", size), this._tempMemSize = size, this._tempMem && this._free(this._tempMem), this._tempMem = this._malloc(this._tempMemSize), this.updateTempMemory();
+  }
+  requireTempMem(size) {
+    this._tempMemSize >= size || this.allocateTempMemory(Math.ceil(size / 1024) * 1024);
+  }
+  updateTempMemory() {
+    this._tempMemFloat = new Float32Array(this.HEAP8.buffer, this._tempMem, this._tempMemSize >> 2), this._tempMemInt = new Int32Array(this.HEAP8.buffer, this._tempMem, this._tempMemSize >> 2), this._tempMemUint32 = new Uint32Array(this.HEAP8.buffer, this._tempMem, this._tempMemSize >> 2), this._tempMemUint16 = new Uint16Array(this.HEAP8.buffer, this._tempMem, this._tempMemSize >> 1), this._tempMemUint8 = new Uint8Array(this.HEAP8.buffer, this._tempMem, this._tempMemSize);
+  }
+  getTempBufferU8(count) {
+    return this.requireTempMem(count), this._tempMemUint8;
+  }
+  getTempBufferU16(count) {
+    return this.requireTempMem(count * 2), this._tempMemUint16;
+  }
+  getTempBufferU32(count) {
+    return this.requireTempMem(count * 4), this._tempMemUint32;
+  }
+  getTempBufferI32(count) {
+    return this.requireTempMem(count * 4), this._tempMemInt;
+  }
+  getTempBufferF32(count) {
+    return this.requireTempMem(count * 4), this._tempMemFloat;
+  }
+  tempUTF8(str5, byteOffset = 0) {
+    let strLen = this.lengthBytesUTF8(str5) + 1;
+    this.requireTempMem(strLen + byteOffset);
+    let ptr = this._tempMem + byteOffset;
+    return this.stringToUTF8(str5, ptr, strLen), ptr;
+  }
+  copyBufferToHeap(buffer) {
+    let size = buffer.byteLength, ptr = this._malloc(size);
+    return this.HEAPU8.set(new Uint8Array(buffer), ptr), ptr;
+  }
+  get withPhysX() {
+    return this._withPhysX;
+  }
+  _setEngine(engine) {
+    this._engine = engine;
+  }
+  _wljs_reload(filenamePtr) {
+    let filename = filenamePtr ? this.UTF8ToString(filenamePtr) : null;
+    this._engine._reloadRequest(filename);
+  }
+  _wljs_init(withPhysX) {
+    this._withPhysX = withPhysX, this.allocateTempMemory(1024);
+  }
+  _wljs_scene_switch(index) {
+    let scene = this._engine._scenes[index];
+    this._components = scene?._jsComponents ?? null;
+  }
+  _wljs_destroy_image(index) {
+    let img = this._images[index];
+    img && (this._images[index] = null, img.src !== void 0 && (img.src = ""), img.onload !== void 0 && (img.onload = null), img.onerror !== void 0 && (img.onerror = null));
+  }
+  _wljs_objects_markDestroyed(sceneIndex, idsPtr, count) {
+    let scene = this._engine._scenes[sceneIndex], start = idsPtr >>> 1;
+    for (let i = 0; i < count; ++i) {
+      let id = this.HEAPU16[start + i];
+      scene._destroyObject(id);
+    }
+  }
+  _wljs_scene_initialize(sceneIndex, idsPtr, idsEnd, paramDataPtr, paramDataEndPtr, offsetsPtr, offsetsEndPtr) {
+    let cborEncoded = this.HEAPU8.subarray(paramDataPtr, paramDataEndPtr), offsets = this.HEAPU32.subarray(offsetsPtr >>> 2, offsetsEndPtr >>> 2), ids = this.HEAPU16.subarray(idsPtr >>> 1, idsEnd >>> 1), scene = this._engine._scenes[sceneIndex], components = scene._jsComponents, cbor = new CBORReader(cborEncoded), componentsCount = 0;
+    {
+      let typeInfo = cbor.readTypeInfo();
+      if (getType(typeInfo) !== 0) {
+        this._log.error(0, "Parameters data must be an array");
+        return;
+      }
+      componentsCount = cbor.readArrayLength(typeInfo);
+    }
+    if (componentsCount !== ids.length) {
+      this._log.error(0, `Parameters set for ${componentsCount} components, but expected ${ids.length}`);
+      return;
+    }
+    let decoder = new ComponentPropertyDecoder(scene, offsets);
+    for (let i = 0; i < componentsCount; ++i) {
+      let id = Component3._pack(sceneIndex, ids[i]), index = this._wl_get_js_component_index_for_id(id), component = components[index];
+      decoder.decode(cbor, component);
+    }
+  }
+  _wljs_set_component_param_translation(scene, component, param, valuePtr, valueEndPtr) {
+    let comp = this._engine._scenes[scene]._jsComponents[component], value = this.UTF8ViewToString(valuePtr, valueEndPtr), paramName = comp.constructor._propertyOrder[param];
+    comp[paramName] = value;
+  }
+  _wljs_get_component_type_index(namePtr, nameEndPtr) {
+    let typename = this.UTF8ViewToString(namePtr, nameEndPtr), index = this._componentTypeIndices[typename];
+    return index === void 0 ? this._brokenComponentIndex : index;
+  }
+  _wljs_component_create(sceneIndex, index, id, type, object) {
+    this._engine._scenes[sceneIndex]._createComponentJs(index, id, type, object);
+  }
+  _wljs_component_init(scene, component) {
+    this._engine._scenes[scene]._jsComponents[component]._triggerInit();
+  }
+  _wljs_component_onActivate(component) {
+    this._components[component]._triggerOnActivate();
+  }
+  _wljs_component_onDeactivate(component) {
+    this._components[component]._triggerOnDeactivate();
+  }
+  _wljs_component_markDestroyed(sceneIndex, manager, componentId) {
+    this._engine._scenes[sceneIndex]._destroyComponent(manager, componentId);
+  }
+  _wljs_swap(scene, a, b) {
+    let components = this._engine._scenes[scene]._jsComponents, componentA = components[a];
+    components[a] = components[b], components[b] = componentA;
+  }
+  _wljs_copy(srcSceneIndex, srcIndex, dstSceneIndex, dstIndex, offsetsPtr, copyInfoPtr) {
+    let srcScene = this._engine._scenes[srcSceneIndex], destComp = this._engine._scenes[dstSceneIndex]._jsComponents[dstIndex], srcComp = srcScene._jsComponents[srcIndex];
+    destComp._copy(srcComp, offsetsPtr, copyInfoPtr);
+  }
+  _wljs_scene_postUpdate(dt) {
+    this._engine.scene._runUpdateJs(dt);
+  }
+  _wljs_trigger_animationEvent(componentId, namePtr, nameEndPtr) {
+    let comp = this._engine.scene._components.wrapAnimation(componentId), nameStr = this.UTF8ViewToString(namePtr, nameEndPtr);
+    comp.onEvent.notify(nameStr);
+  }
+  _wljs_renderer_onPreRenderDraw(pipelineId) {
+    let pipeline = this._engine.pipelines.wrap(pipelineId);
+    pipeline && pipeline.onPreRender.notify();
+  }
+  _wljs_renderer_onPostRenderDraw(pipelineId) {
+    let pipeline = this._engine.pipelines.wrap(pipelineId);
+    pipeline && pipeline.onPostRender.notify();
+  }
+};
+function throwInvalidRuntime(version2) {
+  return function() {
+    throw new Error(`Feature added in version ${version2}.
+	\u2192 Please use a Wonderland Engine editor version >= ${version2}`);
+  };
+}
+var requireRuntime1_5_1 = throwInvalidRuntime("1.5.1");
+WASM.prototype._wl_pipeline_get_name = requireRuntime1_5_1;
+WASM.prototype._wl_pipeline_get_api_object = requireRuntime1_5_1;
+WASM.prototype._wl_pipeline_findByName = requireRuntime1_5_1;
+
 // node_modules/@wonderlandengine/components/dist/8thwall-camera.js
-import { Component } from "@wonderlandengine/api";
-import { property } from "@wonderlandengine/api/decorators.js";
 var __decorate = function(decorators, target, key, desc) {
   var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
   if (typeof Reflect === "object" && typeof Reflect.decorate === "function")
@@ -538,17 +2552,13 @@ var __decorate = function(decorators, target, key, desc) {
         r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
   return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-var ARCamera8thwall = class extends Component {
+var ARCamera8thwall = class extends Component3 {
   deprecated;
 };
 __publicField(ARCamera8thwall, "TypeName", "8thwall-camera");
 __decorate([
   property.bool(true)
 ], ARCamera8thwall.prototype, "deprecated", void 0);
-
-// node_modules/@wonderlandengine/components/dist/anchor.js
-import { Component as Component2, Emitter } from "@wonderlandengine/api";
-import { property as property2 } from "@wonderlandengine/api/decorators.js";
 
 // node_modules/@wonderlandengine/components/dist/utils/webxr.js
 var tempVec = new Float32Array(3);
@@ -582,7 +2592,7 @@ var __decorate2 = function(decorators, target, key, desc) {
 var tempVec3 = new Float32Array(3);
 var tempQuat2 = new Float32Array(4);
 var _anchors, _addAnchor, addAnchor_fn, _removeAnchor, removeAnchor_fn, _getFrame, getFrame_fn, _createAnchor, createAnchor_fn, _onAddAnchor, onAddAnchor_fn, _onRestoreAnchor, onRestoreAnchor_fn, _onCreate, onCreate_fn;
-var _Anchor = class extends Component2 {
+var _Anchor = class extends Component3 {
   constructor() {
     super(...arguments);
     __privateAdd(this, _getFrame);
@@ -658,8 +2668,8 @@ var _Anchor = class extends Component2 {
     }
   }
   onDestroy() {
-    var _a;
-    __privateMethod(_a = _Anchor, _removeAnchor, removeAnchor_fn).call(_a, this);
+    var _a12;
+    __privateMethod(_a12 = _Anchor, _removeAnchor, removeAnchor_fn).call(_a12, this);
   }
 };
 var Anchor = _Anchor;
@@ -704,10 +2714,10 @@ onAddAnchor_fn = function(anchor) {
   if (this.persist) {
     if (anchor.requestPersistentHandle !== void 0) {
       anchor.requestPersistentHandle().then((uuid) => {
-        var _a;
+        var _a12;
         this.uuid = uuid;
         __privateMethod(this, _onCreate, onCreate_fn).call(this, anchor);
-        __privateMethod(_a = _Anchor, _addAnchor, addAnchor_fn).call(_a, this);
+        __privateMethod(_a12 = _Anchor, _addAnchor, addAnchor_fn).call(_a12, this);
       });
       return;
     } else {
@@ -731,27 +2741,26 @@ __publicField(Anchor, "TypeName", "anchor");
 /* Static management of all anchors */
 __privateAdd(Anchor, _anchors, []);
 __decorate2([
-  property2.bool(false)
+  property.bool(false)
 ], Anchor.prototype, "persist", void 0);
 __decorate2([
-  property2.string()
+  property.string()
 ], Anchor.prototype, "uuid", void 0);
 
 // node_modules/@wonderlandengine/components/dist/cursor-target.js
-import { Component as Component3, Emitter as Emitter2 } from "@wonderlandengine/api";
 var CursorTarget = class extends Component3 {
   /** Emitter for events when the target is hovered */
-  onHover = new Emitter2();
+  onHover = new Emitter();
   /** Emitter for events when the target is unhovered */
-  onUnhover = new Emitter2();
+  onUnhover = new Emitter();
   /** Emitter for events when the target is clicked */
-  onClick = new Emitter2();
+  onClick = new Emitter();
   /** Emitter for events when the cursor moves on the target */
-  onMove = new Emitter2();
+  onMove = new Emitter();
   /** Emitter for events when the user pressed the select button on the target */
-  onDown = new Emitter2();
+  onDown = new Emitter();
   /** Emitter for events when the user unpressed the select button on the target */
-  onUp = new Emitter2();
+  onUp = new Emitter();
   /**
    * @deprecated Use the emitter instead.
    *
@@ -863,10 +2872,6 @@ var CursorTarget = class extends Component3 {
 };
 __publicField(CursorTarget, "TypeName", "cursor-target");
 __publicField(CursorTarget, "Properties", {});
-
-// node_modules/@wonderlandengine/components/dist/cursor.js
-import { Component as Component5, InputComponent, ViewComponent, Emitter as Emitter4 } from "@wonderlandengine/api";
-import { property as property4 } from "@wonderlandengine/api/decorators.js";
 
 // node_modules/gl-matrix/esm/common.js
 var EPSILON = 1e-6;
@@ -3529,8 +5534,6 @@ function equals4(a, b) {
 }
 
 // node_modules/@wonderlandengine/components/dist/hit-test-location.js
-import { Component as Component4, Emitter as Emitter3 } from "@wonderlandengine/api";
-import { property as property3 } from "@wonderlandengine/api/decorators.js";
 var __decorate3 = function(decorators, target, key, desc) {
   var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
   if (typeof Reflect === "object" && typeof Reflect.decorate === "function")
@@ -3541,7 +5544,7 @@ var __decorate3 = function(decorators, target, key, desc) {
         r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
   return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-var HitTestLocation = class extends Component4 {
+var HitTestLocation = class extends Component3 {
   tempScaling = new Float32Array(3);
   visible = false;
   xrHitTestSource = null;
@@ -3553,9 +5556,9 @@ var HitTestLocation = class extends Component4 {
    */
   scaleObject = true;
   /** Emits an event when the hit test switches from visible to invisible */
-  onHitLost = new Emitter3();
+  onHitLost = new Emitter();
   /** Emits an event when the hit test switches from invisible to visible */
-  onHitFound = new Emitter3();
+  onHitFound = new Emitter();
   onSessionStartCallback = null;
   onSessionEndCallback = null;
   start() {
@@ -3631,7 +5634,7 @@ var HitTestLocation = class extends Component4 {
 };
 __publicField(HitTestLocation, "TypeName", "hit-test-location");
 __decorate3([
-  property3.bool(true)
+  property.bool(true)
 ], HitTestLocation.prototype, "scaleObject", void 0);
 
 // node_modules/@wonderlandengine/components/dist/cursor.js
@@ -3649,19 +5652,19 @@ var tempVec2 = new Float32Array(3);
 var ZERO = [0, 0, 0];
 var CursorTargetEmitters = class {
   /** Emitter for events when the target is hovered */
-  onHover = new Emitter4();
+  onHover = new Emitter();
   /** Emitter for events when the target is unhovered */
-  onUnhover = new Emitter4();
+  onUnhover = new Emitter();
   /** Emitter for events when the target is clicked */
-  onClick = new Emitter4();
+  onClick = new Emitter();
   /** Emitter for events when the cursor moves on the target */
-  onMove = new Emitter4();
+  onMove = new Emitter();
   /** Emitter for events when the user pressed the select button on the target */
-  onDown = new Emitter4();
+  onDown = new Emitter();
   /** Emitter for events when the user unpressed the select button on the target */
-  onUp = new Emitter4();
+  onUp = new Emitter();
 };
-var Cursor = class extends Component5 {
+var Cursor = class extends Component3 {
   static onRegister(engine) {
     engine.registerComponent(HitTestLocation);
   }
@@ -4056,42 +6059,40 @@ __publicField(Cursor, "TypeName", "cursor");
  * with 1.0.0-rc2 until 1.0.0 is released */
 __publicField(Cursor, "Dependencies", [HitTestLocation]);
 __decorate4([
-  property4.int(1)
+  property.int(1)
 ], Cursor.prototype, "collisionGroup", void 0);
 __decorate4([
-  property4.object()
+  property.object()
 ], Cursor.prototype, "cursorRayObject", void 0);
 __decorate4([
-  property4.enum(["x", "y", "z", "none"], "z")
+  property.enum(["x", "y", "z", "none"], "z")
 ], Cursor.prototype, "cursorRayScalingAxis", void 0);
 __decorate4([
-  property4.object()
+  property.object()
 ], Cursor.prototype, "cursorObject", void 0);
 __decorate4([
-  property4.enum(["input component", "left", "right", "none"], "input component")
+  property.enum(["input component", "left", "right", "none"], "input component")
 ], Cursor.prototype, "handedness", void 0);
 __decorate4([
-  property4.object()
+  property.object()
 ], Cursor.prototype, "inputObject", void 0);
 __decorate4([
-  property4.object()
+  property.object()
 ], Cursor.prototype, "viewObject", void 0);
 __decorate4([
-  property4.enum(["collision", "physx"], "collision")
+  property.enum(["collision", "physx"], "collision")
 ], Cursor.prototype, "rayCastMode", void 0);
 __decorate4([
-  property4.float(100)
+  property.float(100)
 ], Cursor.prototype, "maxDistance", void 0);
 __decorate4([
-  property4.bool(true)
+  property.bool(true)
 ], Cursor.prototype, "styleCursor", void 0);
 __decorate4([
-  property4.bool(false)
+  property.bool(false)
 ], Cursor.prototype, "useWebXRHitTest", void 0);
 
 // node_modules/@wonderlandengine/components/dist/debug-object.js
-import { Component as Component6 } from "@wonderlandengine/api";
-import { property as property5 } from "@wonderlandengine/api/decorators.js";
 var __decorate5 = function(decorators, target, key, desc) {
   var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
   if (typeof Reflect === "object" && typeof Reflect.decorate === "function")
@@ -4102,7 +6103,7 @@ var __decorate5 = function(decorators, target, key, desc) {
         r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
   return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-var DebugObject = class extends Component6 {
+var DebugObject = class extends Component3 {
   /** A second object to print the name of */
   obj = null;
   start() {
@@ -4117,18 +6118,10 @@ var DebugObject = class extends Component6 {
 };
 __publicField(DebugObject, "TypeName", "debug-object");
 __decorate5([
-  property5.object()
+  property.object()
 ], DebugObject.prototype, "obj", void 0);
 
-// node_modules/@wonderlandengine/components/dist/device-orientation-look.js
-import { Component as Component7 } from "@wonderlandengine/api";
-
-// node_modules/@wonderlandengine/components/dist/finger-cursor.js
-import { CollisionComponent, Component as Component8 } from "@wonderlandengine/api";
-
 // node_modules/@wonderlandengine/components/dist/fixed-foveation.js
-import { Component as Component9 } from "@wonderlandengine/api";
-import { property as property6 } from "@wonderlandengine/api/decorators.js";
 var __decorate6 = function(decorators, target, key, desc) {
   var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
   if (typeof Reflect === "object" && typeof Reflect.decorate === "function")
@@ -4139,7 +6132,7 @@ var __decorate6 = function(decorators, target, key, desc) {
         r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
   return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-var FixedFoveation = class extends Component9 {
+var FixedFoveation = class extends Component3 {
   /** Amount to apply from 0 (none) to 1 (full) */
   fixedFoveation;
   onActivate() {
@@ -4154,12 +6147,10 @@ var FixedFoveation = class extends Component9 {
 };
 __publicField(FixedFoveation, "TypeName", "fixed-foveation");
 __decorate6([
-  property6.float(0.5)
+  property.float(0.5)
 ], FixedFoveation.prototype, "fixedFoveation", void 0);
 
 // node_modules/@wonderlandengine/components/dist/hand-tracking.js
-import { Component as Component10, MeshComponent } from "@wonderlandengine/api";
-import { property as property7 } from "@wonderlandengine/api/decorators.js";
 var __decorate7 = function(decorators, target, key, desc) {
   var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
   if (typeof Reflect === "object" && typeof Reflect.decorate === "function")
@@ -4201,7 +6192,7 @@ var invTranslation = vec3_exports.create();
 var invRotation = quat_exports.create();
 var tempVec0 = vec3_exports.create();
 var tempVec1 = vec3_exports.create();
-var HandTracking = class extends Component10 {
+var HandTracking = class extends Component3 {
   /** Handedness determining whether to receive tracking input from right or left hand */
   handedness = 0;
   /** (optional) Mesh to use to visualize joints */
@@ -4339,33 +6330,25 @@ var HandTracking = class extends Component10 {
 };
 __publicField(HandTracking, "TypeName", "hand-tracking");
 __decorate7([
-  property7.enum(["left", "right"])
+  property.enum(["left", "right"])
 ], HandTracking.prototype, "handedness", void 0);
 __decorate7([
-  property7.mesh()
+  property.mesh()
 ], HandTracking.prototype, "jointMesh", void 0);
 __decorate7([
-  property7.material()
+  property.material()
 ], HandTracking.prototype, "jointMaterial", void 0);
 __decorate7([
-  property7.skin()
+  property.skin()
 ], HandTracking.prototype, "handSkin", void 0);
 __decorate7([
-  property7.bool(true)
+  property.bool(true)
 ], HandTracking.prototype, "deactivateChildrenWithoutPose", void 0);
 __decorate7([
-  property7.object()
+  property.object()
 ], HandTracking.prototype, "controllerToDeactivate", void 0);
 
-// node_modules/@wonderlandengine/components/dist/howler-audio-listener.js
-import { Component as Component13, Type } from "@wonderlandengine/api";
-
-// node_modules/@wonderlandengine/spatial-audio/dist/audio-source.js
-import { Component as Component12, Emitter as Emitter6 } from "@wonderlandengine/api";
-import { property as property8 } from "@wonderlandengine/api/decorators.js";
-
 // node_modules/@wonderlandengine/spatial-audio/dist/audio-listener.js
-import { Component as Component11 } from "@wonderlandengine/api";
 var SAMPLE_RATE = 48e3;
 var FADE_DURATION = 5 / 1e3;
 var tempVec4 = new Float32Array(3);
@@ -4394,7 +6377,7 @@ async function _unlockAudioContext() {
     window.addEventListener("mousedown", unlockHandler);
   });
 }
-var AudioListener = class extends Component11 {
+var AudioListener = class extends Component3 {
   /**
    * The WebAudio listener instance associated with this component.
    */
@@ -4435,9 +6418,6 @@ var AudioListener = class extends Component11 {
 };
 __publicField(AudioListener, "TypeName", "audio-listener");
 __publicField(AudioListener, "Properties", {});
-
-// node_modules/@wonderlandengine/spatial-audio/dist/audio-manager.js
-import { Emitter as Emitter5 } from "@wonderlandengine/api";
 
 // node_modules/@wonderlandengine/spatial-audio/dist/audio-players.js
 var MIN_RAMP_TIME = 5 / 1e3;
@@ -4593,7 +6573,7 @@ var AudioManager = class {
    * });
    * ```
    */
-  emitter = new Emitter5();
+  emitter = new Emitter();
   /**
    * Sets the random function the manager will use for selecting buffers.
    *
@@ -4982,7 +6962,7 @@ function removeBufferFromCache(source) {
     bufferCache.delete(source);
   }
 }
-var AudioSource = class extends Component12 {
+var AudioSource = class extends Component3 {
   static onRegister(engine) {
     engine.registerComponent(AudioListener);
   }
@@ -5029,7 +7009,7 @@ var AudioSource = class extends Component12 {
    * The emitter will notify all subscribers when a state change occurs.
    * @see PlayState
    */
-  emitter = new Emitter6();
+  emitter = new Emitter();
   _pannerOptions = {};
   _buffer;
   _pannerNode = new PannerNode(_audioContext);
@@ -5240,50 +7220,44 @@ var AudioSource = class extends Component12 {
  */
 __publicField(AudioSource, "TypeName", "audio-source");
 __decorate8([
-  property8.string()
+  property.string()
 ], AudioSource.prototype, "src", void 0);
 __decorate8([
-  property8.float(1)
+  property.float(1)
 ], AudioSource.prototype, "volume", void 0);
 __decorate8([
-  property8.bool(false)
+  property.bool(false)
 ], AudioSource.prototype, "loop", void 0);
 __decorate8([
-  property8.bool(false)
+  property.bool(false)
 ], AudioSource.prototype, "autoplay", void 0);
 __decorate8([
-  property8.enum(["none", "panning", "hrtf"], PanningType.Regular)
+  property.enum(["none", "panning", "hrtf"], PanningType.Regular)
 ], AudioSource.prototype, "spatial", void 0);
 __decorate8([
-  property8.bool(false)
+  property.bool(false)
 ], AudioSource.prototype, "isStationary", void 0);
 __decorate8([
-  property8.enum(["linear", "inverse", "exponential"], "exponential")
+  property.enum(["linear", "inverse", "exponential"], "exponential")
 ], AudioSource.prototype, "distanceModel", void 0);
 __decorate8([
-  property8.float(1e4)
+  property.float(1e4)
 ], AudioSource.prototype, "maxDistance", void 0);
 __decorate8([
-  property8.float(1)
+  property.float(1)
 ], AudioSource.prototype, "refDistance", void 0);
 __decorate8([
-  property8.float(1)
+  property.float(1)
 ], AudioSource.prototype, "rolloffFactor", void 0);
 __decorate8([
-  property8.float(360)
+  property.float(360)
 ], AudioSource.prototype, "coneInnerAngle", void 0);
 __decorate8([
-  property8.float(0)
+  property.float(0)
 ], AudioSource.prototype, "coneOuterAngle", void 0);
 __decorate8([
-  property8.float(0)
+  property.float(0)
 ], AudioSource.prototype, "coneOuterGain", void 0);
-
-// node_modules/@wonderlandengine/components/dist/howler-audio-source.js
-import { Component as Component14, Type as Type2 } from "@wonderlandengine/api";
-
-// node_modules/@wonderlandengine/components/dist/image-texture.js
-import { Component as Component15 } from "@wonderlandengine/api";
 
 // node_modules/@wonderlandengine/components/dist/utils/utils.js
 function setFirstMaterialTexture(mat, texture, customTextureProperty) {
@@ -5321,7 +7295,6 @@ function rad2deg(value) {
 }
 
 // node_modules/@wonderlandengine/components/dist/image-texture.js
-import { property as property9 } from "@wonderlandengine/api/decorators.js";
 var __decorate9 = function(decorators, target, key, desc) {
   var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
   if (typeof Reflect === "object" && typeof Reflect.decorate === "function")
@@ -5332,7 +7305,7 @@ var __decorate9 = function(decorators, target, key, desc) {
         r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
   return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-var ImageTexture = class extends Component15 {
+var ImageTexture = class extends Component3 {
   /** URL to download the image from */
   url;
   /** Material to apply the video texture to */
@@ -5355,18 +7328,16 @@ var ImageTexture = class extends Component15 {
 };
 __publicField(ImageTexture, "TypeName", "image-texture");
 __decorate9([
-  property9.string()
+  property.string()
 ], ImageTexture.prototype, "url", void 0);
 __decorate9([
-  property9.material({ required: true })
+  property.material({ required: true })
 ], ImageTexture.prototype, "material", void 0);
 __decorate9([
-  property9.string("auto")
+  property.string("auto")
 ], ImageTexture.prototype, "textureProperty", void 0);
 
 // node_modules/@wonderlandengine/components/dist/mouse-look.js
-import { Component as Component16 } from "@wonderlandengine/api";
-import { property as property10 } from "@wonderlandengine/api/decorators.js";
 var __decorate10 = function(decorators, target, key, desc) {
   var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
   if (typeof Reflect === "object" && typeof Reflect.decorate === "function")
@@ -5382,7 +7353,7 @@ var preventDefault = (e) => {
 };
 var TEMP_ROT = new Float32Array(4);
 var ROT_MUL = 180 / Math.PI / 100;
-var MouseLookComponent = class extends Component16 {
+var MouseLookComponent = class extends Component3 {
   /** Mouse look sensitivity */
   sensitity = 0.25;
   /** Require a mouse button to be pressed to control view.
@@ -5457,21 +7428,19 @@ var MouseLookComponent = class extends Component16 {
 };
 __publicField(MouseLookComponent, "TypeName", "mouse-look");
 __decorate10([
-  property10.float(0.25)
+  property.float(0.25)
 ], MouseLookComponent.prototype, "sensitity", void 0);
 __decorate10([
-  property10.bool(true)
+  property.bool(true)
 ], MouseLookComponent.prototype, "requireMouseDown", void 0);
 __decorate10([
-  property10.int()
+  property.int()
 ], MouseLookComponent.prototype, "mouseButtonIndex", void 0);
 __decorate10([
-  property10.bool(false)
+  property.bool(false)
 ], MouseLookComponent.prototype, "pointerLockOnClick", void 0);
 
 // node_modules/@wonderlandengine/components/dist/player-height.js
-import { Component as Component17 } from "@wonderlandengine/api";
-import { property as property11 } from "@wonderlandengine/api/decorators.js";
 var __decorate11 = function(decorators, target, key, desc) {
   var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
   if (typeof Reflect === "object" && typeof Reflect.decorate === "function")
@@ -5482,7 +7451,7 @@ var __decorate11 = function(decorators, target, key, desc) {
         r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
   return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-var PlayerHeight = class extends Component17 {
+var PlayerHeight = class extends Component3 {
   height = 1.75;
   onSessionStartCallback;
   onSessionEndCallback;
@@ -5516,12 +7485,10 @@ var PlayerHeight = class extends Component17 {
 };
 __publicField(PlayerHeight, "TypeName", "player-height");
 __decorate11([
-  property11.float(1.75)
+  property.float(1.75)
 ], PlayerHeight.prototype, "height", void 0);
 
 // node_modules/@wonderlandengine/components/dist/target-framerate.js
-import { Component as Component18 } from "@wonderlandengine/api";
-import { property as property12 } from "@wonderlandengine/api/decorators.js";
 var __decorate12 = function(decorators, target, key, desc) {
   var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
   if (typeof Reflect === "object" && typeof Reflect.decorate === "function")
@@ -5532,7 +7499,7 @@ var __decorate12 = function(decorators, target, key, desc) {
         r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
   return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-var TargetFramerate = class extends Component18 {
+var TargetFramerate = class extends Component3 {
   framerate;
   onActivate() {
     this.engine.onXRSessionStart.add(this.setTargetFramerate);
@@ -5550,12 +7517,11 @@ var TargetFramerate = class extends Component18 {
 };
 __publicField(TargetFramerate, "TypeName", "target-framerate");
 __decorate12([
-  property12.float(90)
+  property.float(90)
 ], TargetFramerate.prototype, "framerate", void 0);
 
 // node_modules/@wonderlandengine/components/dist/teleport.js
-import { Component as Component19, Type as Type3 } from "@wonderlandengine/api";
-var TeleportComponent = class extends Component19 {
+var TeleportComponent = class extends Component3 {
   init() {
     this._prevThumbstickAxis = new Float32Array(2);
     this._tempVec = new Float32Array(3);
@@ -5746,42 +7712,40 @@ var TeleportComponent = class extends Component19 {
 __publicField(TeleportComponent, "TypeName", "teleport");
 __publicField(TeleportComponent, "Properties", {
   /** Object that will be placed as indiciation forwhere the player will teleport to. */
-  teleportIndicatorMeshObject: { type: Type3.Object },
+  teleportIndicatorMeshObject: { type: Type.Object },
   /** Root of the player, the object that will be positioned on teleportation. */
-  camRoot: { type: Type3.Object },
+  camRoot: { type: Type.Object },
   /** Non-vr camera for use outside of VR */
-  cam: { type: Type3.Object },
+  cam: { type: Type.Object },
   /** Left eye for use in VR*/
-  eyeLeft: { type: Type3.Object },
+  eyeLeft: { type: Type.Object },
   /** Right eye for use in VR*/
-  eyeRight: { type: Type3.Object },
+  eyeRight: { type: Type.Object },
   /** Handedness for VR cursors to accept trigger events only from respective controller. */
   handedness: {
-    type: Type3.Enum,
+    type: Type.Enum,
     values: ["input component", "left", "right", "none"],
     default: "input component"
   },
   /** Collision group of valid "floor" objects that can be teleported on */
-  floorGroup: { type: Type3.Int, default: 1 },
+  floorGroup: { type: Type.Int, default: 1 },
   /** How far the thumbstick needs to be pushed to have the teleport target indicator show up */
-  thumbstickActivationThreshhold: { type: Type3.Float, default: -0.7 },
+  thumbstickActivationThreshhold: { type: Type.Float, default: -0.7 },
   /** How far the thumbstick needs to be released to execute the teleport */
-  thumbstickDeactivationThreshhold: { type: Type3.Float, default: 0.3 },
+  thumbstickDeactivationThreshhold: { type: Type.Float, default: 0.3 },
   /** Offset to apply to the indicator object, e.g. to avoid it from Z-fighting with the floor */
-  indicatorYOffset: { type: Type3.Float, default: 0.01 },
+  indicatorYOffset: { type: Type.Float, default: 0.01 },
   /** Mode for raycasting, whether to use PhysX or simple collision components */
   rayCastMode: {
-    type: Type3.Enum,
+    type: Type.Enum,
     values: ["collision", "physx"],
     default: "collision"
   },
   /** Max distance for PhysX raycast */
-  maxDistance: { type: Type3.Float, default: 100 }
+  maxDistance: { type: Type.Float, default: 100 }
 });
 
 // node_modules/@wonderlandengine/components/dist/trail.js
-import { Component as Component20, Mesh, MeshIndexType, MeshAttribute } from "@wonderlandengine/api";
-import { property as property13 } from "@wonderlandengine/api/decorators.js";
 var __decorate13 = function(decorators, target, key, desc) {
   var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
   if (typeof Reflect === "object" && typeof Reflect.decorate === "function")
@@ -5796,7 +7760,7 @@ var direction = vec3_exports.create();
 var offset = vec3_exports.create();
 var normal = vec3_exports.create();
 var UP = vec3_exports.fromValues(0, 1, 0);
-var Trail = class extends Component20 {
+var Trail = class extends Component3 {
   /** The material to apply to the trail mesh */
   material = null;
   /** The number of segments in the trail mesh */
@@ -5921,26 +7885,25 @@ var Trail = class extends Component20 {
 };
 __publicField(Trail, "TypeName", "trail");
 __decorate13([
-  property13.material()
+  property.material()
 ], Trail.prototype, "material", void 0);
 __decorate13([
-  property13.int(50)
+  property.int(50)
 ], Trail.prototype, "segments", void 0);
 __decorate13([
-  property13.float(0.1)
+  property.float(0.1)
 ], Trail.prototype, "interval", void 0);
 __decorate13([
-  property13.float(1)
+  property.float(1)
 ], Trail.prototype, "width", void 0);
 __decorate13([
-  property13.bool(true)
+  property.bool(true)
 ], Trail.prototype, "taper", void 0);
 __decorate13([
-  property13.float(1)
+  property.float(1)
 ], Trail.prototype, "resetThreshold", void 0);
 
 // node_modules/@wonderlandengine/components/dist/two-joint-ik-solver.js
-import { Component as Component21, Property } from "@wonderlandengine/api";
 function clamp(v, a, b) {
   return Math.max(a, Math.min(v, b));
 }
@@ -5989,7 +7952,7 @@ var twoJointIK = function() {
     middle.rotateAxisAngleRadObject(axis0, ba_bc_1 - ba_bc_0);
   };
 }();
-var TwoJointIkSolver = class extends Component21 {
+var TwoJointIkSolver = class extends Component3 {
   time = 0;
   middlePos = new Float32Array(3);
   endPos = new Float32Array(3);
@@ -6043,8 +8006,6 @@ __publicField(TwoJointIkSolver, "Properties", {
 });
 
 // node_modules/@wonderlandengine/components/dist/video-texture.js
-import { Component as Component22 } from "@wonderlandengine/api";
-import { property as property14 } from "@wonderlandengine/api/decorators.js";
 var __decorate14 = function(decorators, target, key, desc) {
   var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
   if (typeof Reflect === "object" && typeof Reflect.decorate === "function")
@@ -6055,7 +8016,7 @@ var __decorate14 = function(decorators, target, key, desc) {
         r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
   return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-var VideoTexture = class extends Component22 {
+var VideoTexture = class extends Component3 {
   /** URL to download video from */
   url;
   /** Material to apply the video texture to */
@@ -6136,27 +8097,26 @@ var VideoTexture = class extends Component22 {
 };
 __publicField(VideoTexture, "TypeName", "video-texture");
 __decorate14([
-  property14.string()
+  property.string()
 ], VideoTexture.prototype, "url", void 0);
 __decorate14([
-  property14.material({ required: true })
+  property.material({ required: true })
 ], VideoTexture.prototype, "material", void 0);
 __decorate14([
-  property14.bool(true)
+  property.bool(true)
 ], VideoTexture.prototype, "loop", void 0);
 __decorate14([
-  property14.bool(true)
+  property.bool(true)
 ], VideoTexture.prototype, "autoplay", void 0);
 __decorate14([
-  property14.bool(true)
+  property.bool(true)
 ], VideoTexture.prototype, "muted", void 0);
 __decorate14([
-  property14.string("auto")
+  property.string("auto")
 ], VideoTexture.prototype, "textureProperty", void 0);
 
 // node_modules/@wonderlandengine/components/dist/vr-mode-active-switch.js
-import { Component as Component23, Type as Type4 } from "@wonderlandengine/api";
-var VrModeActiveSwitch = class extends Component23 {
+var VrModeActiveSwitch = class extends Component3 {
   start() {
     this.components = [];
     this.getComponents(this.object);
@@ -6199,17 +8159,15 @@ __publicField(VrModeActiveSwitch, "TypeName", "vr-mode-active-switch");
 __publicField(VrModeActiveSwitch, "Properties", {
   /** When components should be active: In VR or when not in VR */
   activateComponents: {
-    type: Type4.Enum,
+    type: Type.Enum,
     values: ["in VR", "in non-VR"],
     default: "in VR"
   },
   /** Whether child object's components should be affected */
-  affectChildren: { type: Type4.Bool, default: true }
+  affectChildren: { type: Type.Bool, default: true }
 });
 
 // node_modules/@wonderlandengine/components/dist/plane-detection.js
-import { Collider, CollisionComponent as CollisionComponent2, Component as Component24, Emitter as Emitter7, Mesh as Mesh2, MeshAttribute as MeshAttribute2, MeshComponent as MeshComponent2, MeshIndexType as MeshIndexType2 } from "@wonderlandengine/api";
-import { property as property15 } from "@wonderlandengine/api/decorators.js";
 var import_earcut = __toESM(require_earcut(), 1);
 var __decorate15 = function(decorators, target, key, desc) {
   var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -6243,20 +8201,20 @@ function planeMeshFromContour(engine, points, meshToUpdate = null) {
     vertices[d + 1] = points[i].z;
   }
   const triangles = (0, import_earcut.default)(vertices);
-  const mesh = meshToUpdate || new Mesh2(engine, {
+  const mesh = meshToUpdate || new Mesh(engine, {
     vertexCount,
     /* Assumption here that we will never have more than 256 points
      * in the detected plane meshes! */
-    indexType: MeshIndexType2.UnsignedByte,
+    indexType: MeshIndexType.UnsignedByte,
     indexData: triangles
   });
   if (mesh.vertexCount !== vertexCount) {
     console.warn("vertexCount of meshToUpdate did not match required vertexCount");
     return mesh;
   }
-  const positions = mesh.attribute(MeshAttribute2.Position);
-  const textureCoords = mesh.attribute(MeshAttribute2.TextureCoordinate);
-  const normals = mesh.attribute(MeshAttribute2.Normal);
+  const positions = mesh.attribute(MeshAttribute.Position);
+  const textureCoords = mesh.attribute(MeshAttribute.TextureCoordinate);
+  const normals = mesh.attribute(MeshAttribute.Normal);
   tempVec32[1] = 0;
   for (let i = 0, s = 0; i < vertexCount; ++i, s += 2) {
     tempVec32[0] = vertices[s];
@@ -6277,7 +8235,7 @@ function planeMeshFromContour(engine, points, meshToUpdate = null) {
   return mesh;
 }
 var _planeLost, planeLost_fn, _planeFound, planeFound_fn, _planeUpdate, planeUpdate_fn, _planeUpdatePose, planeUpdatePose_fn;
-var PlaneDetection = class extends Component24 {
+var PlaneDetection = class extends Component3 {
   constructor() {
     super(...arguments);
     __privateAdd(this, _planeLost);
@@ -6298,9 +8256,9 @@ var PlaneDetection = class extends Component24 {
     /** Objects generated for each XRPlane */
     __publicField(this, "planeObjects", /* @__PURE__ */ new Map());
     /** Called when a plane starts tracking */
-    __publicField(this, "onPlaneFound", new Emitter7());
+    __publicField(this, "onPlaneFound", new Emitter());
     /** Called when a plane stops tracking */
-    __publicField(this, "onPlaneLost", new Emitter7());
+    __publicField(this, "onPlaneLost", new Emitter());
   }
   update() {
     if (!this.engine.xr?.frame)
@@ -6342,7 +8300,7 @@ planeFound_fn = function(plane) {
   const o = this.engine.scene.addObject(this.object);
   this.planeObjects.set(plane, o);
   if (this.planeMaterial) {
-    o.addComponent(MeshComponent2, {
+    o.addComponent(MeshComponent, {
       mesh: planeMeshFromContour(this.engine, plane.polygon),
       material: this.planeMaterial
     });
@@ -6350,7 +8308,7 @@ planeFound_fn = function(plane) {
   if (this.collisionMask >= 0) {
     extentsFromContour(tempVec32, plane.polygon);
     tempVec32[1] = 0.025;
-    o.addComponent(CollisionComponent2, {
+    o.addComponent(CollisionComponent, {
       group: this.collisionMask,
       collider: Collider.Box,
       extents: tempVec32
@@ -6361,7 +8319,7 @@ planeFound_fn = function(plane) {
 _planeUpdate = new WeakSet();
 planeUpdate_fn = function(plane) {
   this.planes.set(plane, plane.lastChangedTime);
-  const planeMesh = this.planeObjects.get(plane).getComponent(MeshComponent2);
+  const planeMesh = this.planeObjects.get(plane).getComponent(MeshComponent);
   if (!planeMesh)
     return;
   planeMeshFromContour(this.engine, plane.polygon, planeMesh.mesh);
@@ -6378,15 +8336,13 @@ planeUpdatePose_fn = function(plane) {
 };
 __publicField(PlaneDetection, "TypeName", "plane-detection");
 __decorate15([
-  property15.material()
+  property.material()
 ], PlaneDetection.prototype, "planeMaterial", void 0);
 __decorate15([
-  property15.int()
+  property.int()
 ], PlaneDetection.prototype, "collisionMask", void 0);
 
 // node_modules/@wonderlandengine/components/dist/vrm.js
-import { Component as Component25 } from "@wonderlandengine/api";
-import { property as property16 } from "@wonderlandengine/api/decorators.js";
 var __decorate16 = function(decorators, target, key, desc) {
   var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
   if (typeof Reflect === "object" && typeof Reflect.decorate === "function")
@@ -6414,7 +8370,7 @@ var Rad2Deg = 180 / Math.PI;
 var RightVector = vec3_exports.fromValues(1, 0, 0);
 var UpVector = vec3_exports.fromValues(0, 1, 0);
 var ForwardVector = vec3_exports.fromValues(0, 0, 1);
-var Vrm = class extends Component25 {
+var Vrm = class extends Component3 {
   /** URL to a VRM file to load */
   src;
   /** Object the VRM is looking at */
@@ -6938,15 +8894,13 @@ var Vrm = class extends Component25 {
 };
 __publicField(Vrm, "TypeName", "vrm");
 __decorate16([
-  property16.string()
+  property.string()
 ], Vrm.prototype, "src", void 0);
 __decorate16([
-  property16.object()
+  property.object()
 ], Vrm.prototype, "lookAtTarget", void 0);
 
 // node_modules/@wonderlandengine/components/dist/wasd-controls.js
-import { Component as Component26 } from "@wonderlandengine/api";
-import { property as property17 } from "@wonderlandengine/api/decorators.js";
 var __decorate17 = function(decorators, target, key, desc) {
   var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
   if (typeof Reflect === "object" && typeof Reflect.decorate === "function")
@@ -6959,7 +8913,7 @@ var __decorate17 = function(decorators, target, key, desc) {
 };
 var _direction = new Float32Array(3);
 var _tempDualQuat = new Float32Array(8);
-var WasdControlsComponent = class extends Component26 {
+var WasdControlsComponent = class extends Component3 {
   /** Movement speed in m/s. */
   speed;
   /** Flag for only moving the object on the global x & z planes */
@@ -7022,18 +8976,16 @@ var WasdControlsComponent = class extends Component26 {
 };
 __publicField(WasdControlsComponent, "TypeName", "wasd-controls");
 __decorate17([
-  property17.float(0.1)
+  property.float(0.1)
 ], WasdControlsComponent.prototype, "speed", void 0);
 __decorate17([
-  property17.bool(false)
+  property.bool(false)
 ], WasdControlsComponent.prototype, "lockY", void 0);
 __decorate17([
-  property17.object()
+  property.object()
 ], WasdControlsComponent.prototype, "headObject", void 0);
 
 // node_modules/@wonderlandengine/components/dist/input-profile.js
-import { Component as Component27, Emitter as Emitter8 } from "@wonderlandengine/api";
-import { property as property18 } from "@wonderlandengine/api/decorators.js";
 var __decorate18 = function(decorators, target, key, desc) {
   var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
   if (typeof Reflect === "object" && typeof Reflect.decorate === "function")
@@ -7051,7 +9003,7 @@ var _tempRotation2 = new Float32Array(4);
 var minTemp = new Float32Array(3);
 var maxTemp = new Float32Array(3);
 var hands = ["left", "right"];
-var _InputProfile = class extends Component27 {
+var _InputProfile = class extends Component3 {
   _gamepadObjects = {};
   _controllerModel = null;
   _defaultControllerComponents;
@@ -7066,7 +9018,7 @@ var _InputProfile = class extends Component27 {
   /**
    * A reference to the emitter which triggered on model lodaed event.
    */
-  onModelLoaded = new Emitter8();
+  onModelLoaded = new Emitter();
   /**
    * Returns url of input profile json file
    */
@@ -7307,30 +9259,28 @@ __publicField(InputProfile, "TypeName", "input-profile");
  */
 __publicField(InputProfile, "Cache", /* @__PURE__ */ new Map());
 __decorate18([
-  property18.enum(hands, 0)
+  property.enum(hands, 0)
 ], InputProfile.prototype, "handedness", void 0);
 __decorate18([
-  property18.string("https://cdn.jsdelivr.net/npm/@webxr-input-profiles/assets@latest/dist/profiles/")
+  property.string("https://cdn.jsdelivr.net/npm/@webxr-input-profiles/assets@latest/dist/profiles/")
 ], InputProfile.prototype, "defaultBasePath", void 0);
 __decorate18([
-  property18.string()
+  property.string()
 ], InputProfile.prototype, "customBasePath", void 0);
 __decorate18([
-  property18.object()
+  property.object()
 ], InputProfile.prototype, "defaultController", void 0);
 __decorate18([
-  property18.object()
+  property.object()
 ], InputProfile.prototype, "trackedHand", void 0);
 __decorate18([
-  property18.bool(false)
+  property.bool(false)
 ], InputProfile.prototype, "mapToDefaultController", void 0);
 __decorate18([
-  property18.bool(true)
+  property.bool(true)
 ], InputProfile.prototype, "addVrModeSwitch", void 0);
 
 // node_modules/@wonderlandengine/components/dist/orbital-camera.js
-import { Component as Component28 } from "@wonderlandengine/api";
-import { property as property19 } from "@wonderlandengine/api/decorators.js";
 var __decorate19 = function(decorators, target, key, desc) {
   var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
   if (typeof Reflect === "object" && typeof Reflect.decorate === "function")
@@ -7348,7 +9298,7 @@ var tempVec5 = [0, 0, 0];
 var tempquat = quat_exports.create();
 var tempquat2 = quat_exports.create();
 var tempVec33 = vec3_exports.create();
-var OrbitalCamera = class extends Component28 {
+var OrbitalCamera = class extends Component3 {
   mouseButtonIndex = 0;
   radial = 5;
   minElevation = 0;
@@ -7574,42 +9524,38 @@ var OrbitalCamera = class extends Component28 {
 };
 __publicField(OrbitalCamera, "TypeName", "orbital-camera");
 __decorate19([
-  property19.int()
+  property.int()
 ], OrbitalCamera.prototype, "mouseButtonIndex", void 0);
 __decorate19([
-  property19.float(5)
+  property.float(5)
 ], OrbitalCamera.prototype, "radial", void 0);
 __decorate19([
-  property19.float()
+  property.float()
 ], OrbitalCamera.prototype, "minElevation", void 0);
 __decorate19([
-  property19.float(89.99)
+  property.float(89.99)
 ], OrbitalCamera.prototype, "maxElevation", void 0);
 __decorate19([
-  property19.float()
+  property.float()
 ], OrbitalCamera.prototype, "minZoom", void 0);
 __decorate19([
-  property19.float(10)
+  property.float(10)
 ], OrbitalCamera.prototype, "maxZoom", void 0);
 __decorate19([
-  property19.float(0.5)
+  property.float(0.5)
 ], OrbitalCamera.prototype, "xSensitivity", void 0);
 __decorate19([
-  property19.float(0.5)
+  property.float(0.5)
 ], OrbitalCamera.prototype, "ySensitivity", void 0);
 __decorate19([
-  property19.float(0.02)
+  property.float(0.02)
 ], OrbitalCamera.prototype, "zoomSensitivity", void 0);
 __decorate19([
-  property19.float(0.9)
+  property.float(0.9)
 ], OrbitalCamera.prototype, "damping", void 0);
 __decorate19([
-  property19.object()
+  property.object()
 ], OrbitalCamera.prototype, "target", void 0);
-
-// node_modules/wle-stats/dist/components/stats-base.js
-import { Component as Component29 } from "@wonderlandengine/api";
-import { property as property20 } from "@wonderlandengine/api/decorators.js";
 
 // node_modules/wle-stats/dist/colors.js
 var BACKGROUND = "#222222";
@@ -7734,7 +9680,7 @@ var StatsType;
   StatsType2[StatsType2["Fps"] = 0] = "Fps";
   StatsType2[StatsType2["Milliseconds"] = 1] = "Milliseconds";
 })(StatsType || (StatsType = {}));
-var StatsComponentBase = class extends Component29 {
+var StatsComponentBase = class extends Component3 {
   /** Stats type. */
   statsType = 0;
   /**
@@ -7800,20 +9746,19 @@ var StatsComponentBase = class extends Component29 {
   }
 };
 __decorate20([
-  property20.enum(["fps", "milliseconds"], 0)
+  property.enum(["fps", "milliseconds"], 0)
 ], StatsComponentBase.prototype, "statsType", void 0);
 __decorate20([
-  property20.float(500)
+  property.float(500)
 ], StatsComponentBase.prototype, "updateRateMs", void 0);
 __decorate20([
-  property20.float(0)
+  property.float(0)
 ], StatsComponentBase.prototype, "minY", null);
 __decorate20([
-  property20.float(120)
+  property.float(120)
 ], StatsComponentBase.prototype, "maxY", null);
 
 // node_modules/wle-stats/dist/components/stats-html-component.js
-import { property as property21 } from "@wonderlandengine/api/decorators.js";
 var __decorate21 = function(decorators, target, key, desc) {
   var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
   if (typeof Reflect === "object" && typeof Reflect.decorate === "function")
@@ -7897,15 +9842,13 @@ __publicField(StatsHtmlComponent, "TypeName", "stats-html");
 /** @override */
 __publicField(StatsHtmlComponent, "Properties", Object.assign({}, StatsComponentBase.Properties));
 __decorate21([
-  property21.string()
+  property.string()
 ], StatsHtmlComponent.prototype, "parentContainer", void 0);
 __decorate21([
-  property21.string(MAIN_COLOR)
+  property.string(MAIN_COLOR)
 ], StatsHtmlComponent.prototype, "color", null);
 
 // node_modules/wle-stats/dist/components/stats3d-component.js
-import { TextComponent, Texture } from "@wonderlandengine/api";
-import { property as property22 } from "@wonderlandengine/api/decorators.js";
 var __decorate22 = function(decorators, target, key, desc) {
   var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
   if (typeof Reflect === "object" && typeof Reflect.decorate === "function")
@@ -8048,34 +9991,32 @@ __publicField(Stats3dComponent, "TypeName", "stats-3d");
 /** @override */
 __publicField(Stats3dComponent, "Properties", Object.assign({}, StatsComponentBase.Properties));
 __decorate22([
-  property22.enum(["Static", "Overlay"], 0)
+  property.enum(["Static", "Overlay"], 0)
 ], Stats3dComponent.prototype, "mode", void 0);
 __decorate22([
-  property22.object()
+  property.object()
 ], Stats3dComponent.prototype, "mesh", void 0);
 __decorate22([
-  property22.object()
+  property.object()
 ], Stats3dComponent.prototype, "text", void 0);
 __decorate22([
-  property22.int(200)
+  property.int(200)
 ], Stats3dComponent.prototype, "width", void 0);
 __decorate22([
-  property22.int(150)
+  property.int(150)
 ], Stats3dComponent.prototype, "height", void 0);
 __decorate22([
-  property22.float(5)
+  property.float(5)
 ], Stats3dComponent.prototype, "distance", void 0);
 __decorate22([
-  property22.float(1)
+  property.float(1)
 ], Stats3dComponent.prototype, "positionSpeed", void 0);
 __decorate22([
-  property22.float(1)
+  property.float(1)
 ], Stats3dComponent.prototype, "rotationSpeed", void 0);
 
 // js/follow-xz.ts
-import { Component as Component30 } from "@wonderlandengine/api";
-import { property as property23 } from "@wonderlandengine/api/decorators.js";
-var FollowXZ = class extends Component30 {
+var FollowXZ = class extends Component3 {
   target;
   _selfPos = new Float32Array(3);
   _targetPos = new Float32Array(3);
@@ -8091,16 +10032,8 @@ var FollowXZ = class extends Component30 {
 };
 __publicField(FollowXZ, "TypeName", "follow-xz");
 __decorateClass([
-  property23.object()
+  property.object()
 ], FollowXZ.prototype, "target", 2);
-
-// js/grass.ts
-import {
-  Component as Component32,
-  MeshAttribute as MeshAttribute3,
-  MeshComponent as MeshComponent3
-} from "@wonderlandengine/api";
-import { property as property24 } from "@wonderlandengine/api/decorators.js";
 
 // js/floating-origin.ts
 var activeFloatingOrigin = null;
@@ -8129,8 +10062,7 @@ function isFloatingOriginSource(value) {
 }
 
 // js/wasd-movement.ts
-import { Component as Component31, Type as Type5 } from "@wonderlandengine/api";
-var WasdMovement = class extends Component31 {
+var WasdMovement = class extends Component3 {
   /* -- Declared by Properties -- */
   speed;
   sprintMultiplier;
@@ -8503,35 +10435,35 @@ var WasdMovement = class extends Component31 {
 __publicField(WasdMovement, "TypeName", "wasd-movement");
 __publicField(WasdMovement, "Properties", {
   /** Peak movement speed in metres per second */
-  speed: { type: Type5.Float, default: 5 },
+  speed: { type: Type.Float, default: 5 },
   /** Sprint multiplier (applied while holding Shift) */
-  sprintMultiplier: { type: Type5.Float, default: 2 },
+  sprintMultiplier: { type: Type.Float, default: 2 },
   /** Rate of velocity gain */
-  acceleration: { type: Type5.Float, default: 50 },
+  acceleration: { type: Type.Float, default: 50 },
   /** Rate of velocity frictional decay */
-  damping: { type: Type5.Float, default: 10 },
+  damping: { type: Type.Float, default: 10 },
   /** Constrain movement force to the global XZ plane */
-  lockY: { type: Type5.Bool, default: true },
+  lockY: { type: Type.Bool, default: true },
   /** The Camera or Head. It receives Pitch/Yaw rotation, and optionally TPP Zoom offset */
-  headObject: { type: Type5.Object },
+  headObject: { type: Type.Object },
   /** Optional VR Camera to automatically take over upon XR Session start */
-  vrCamera: { type: Type5.Object },
-  mouseSensitivity: { type: Type5.Float, default: 0.2 },
-  zoomSensitivity: { type: Type5.Float, default: 0.02 },
+  vrCamera: { type: Type.Object },
+  mouseSensitivity: { type: Type.Float, default: 0.2 },
+  zoomSensitivity: { type: Type.Float, default: 0.02 },
   /** TPP Camera offset distance */
-  startZoom: { type: Type5.Float, default: 5 },
-  minZoom: { type: Type5.Float, default: 0 },
-  maxZoom: { type: Type5.Float, default: 30 },
+  startZoom: { type: Type.Float, default: 5 },
+  minZoom: { type: Type.Float, default: 0 },
+  maxZoom: { type: Type.Float, default: 30 },
   /** True to only allow view movement upon click dragging */
-  requireMouseDown: { type: Type5.Bool, default: true },
+  requireMouseDown: { type: Type.Bool, default: true },
   /** Activate Pointer Lock over canvas upon clicking */
-  pointerLockOnClick: { type: Type5.Bool, default: false },
+  pointerLockOnClick: { type: Type.Bool, default: false },
   /** The procedural planet mesh to walk on */
-  planetObject: { type: Type5.Object },
+  planetObject: { type: Type.Object },
   /** If planetObject is assigned, what is the eye level offset to remain above the terrain? */
-  playerHeight: { type: Type5.Float, default: 1.6 },
+  playerHeight: { type: Type.Float, default: 1.6 },
   /** Render-space recenter distance before the world is shifted back near the origin */
-  floatingOriginThreshold: { type: Type5.Float, default: 512 }
+  floatingOriginThreshold: { type: Type.Float, default: 512 }
 });
 
 // js/grass.ts
@@ -8540,7 +10472,7 @@ var DEFAULT_VERTEX_LIMIT = 64e3;
 var MAX_INSTANCED_BLADES_PER_EFFECT = 6e4;
 var tempParticleTransform = new Float32Array(8);
 var tempParticleScaling = new Float32Array(3);
-var SimpleCircularGrass = class extends Component32 {
+var SimpleCircularGrass = class extends Component3 {
   radius;
   blockSide;
   bladesPerBlock;
@@ -8728,13 +10660,13 @@ var SimpleCircularGrass = class extends Component32 {
           vertexCount: positions.length / 3,
           indexData: indices
         });
-        mesh.attribute(MeshAttribute3.Position)?.set(0, positions);
-        mesh.attribute(MeshAttribute3.Color)?.set(0, colors);
-        mesh.attribute(MeshAttribute3.TextureCoordinate)?.set(0, uvs);
-        mesh.attribute(MeshAttribute3.Normal)?.set(0, normals);
+        mesh.attribute(MeshAttribute.Position)?.set(0, positions);
+        mesh.attribute(MeshAttribute.Color)?.set(0, colors);
+        mesh.attribute(MeshAttribute.TextureCoordinate)?.set(0, uvs);
+        mesh.attribute(MeshAttribute.Normal)?.set(0, normals);
         mesh.update();
         this._generatedMeshes.push(mesh);
-        blockObj.addComponent(MeshComponent3, {
+        blockObj.addComponent(MeshComponent, {
           mesh,
           material: this.material
         });
@@ -8823,7 +10755,7 @@ var SimpleCircularGrass = class extends Component32 {
     });
     const baseColor = this._lerpColor(0);
     const tipColor = this._lerpColor(1);
-    mesh.attribute(MeshAttribute3.Position)?.set(
+    mesh.attribute(MeshAttribute.Position)?.set(
       0,
       new Float32Array([
         -0.5,
@@ -8837,7 +10769,7 @@ var SimpleCircularGrass = class extends Component32 {
         0
       ])
     );
-    mesh.attribute(MeshAttribute3.Normal)?.set(
+    mesh.attribute(MeshAttribute.Normal)?.set(
       0,
       new Float32Array([
         0,
@@ -8851,7 +10783,7 @@ var SimpleCircularGrass = class extends Component32 {
         1
       ])
     );
-    mesh.attribute(MeshAttribute3.Color)?.set(
+    mesh.attribute(MeshAttribute.Color)?.set(
       0,
       new Float32Array([
         baseColor[0],
@@ -8868,7 +10800,7 @@ var SimpleCircularGrass = class extends Component32 {
         tipColor[3]
       ])
     );
-    mesh.attribute(MeshAttribute3.TextureCoordinate)?.set(
+    mesh.attribute(MeshAttribute.TextureCoordinate)?.set(
       0,
       new Float32Array([
         0,
@@ -8999,42 +10931,35 @@ var SimpleCircularGrass = class extends Component32 {
 __publicField(SimpleCircularGrass, "TypeName", "simpleCircularGrass");
 __publicField(SimpleCircularGrass, "UpdateAfter", [WasdMovement]);
 __decorateClass([
-  property24.float(100)
+  property.float(100)
 ], SimpleCircularGrass.prototype, "radius", 2);
 __decorateClass([
-  property24.float(10)
+  property.float(10)
 ], SimpleCircularGrass.prototype, "blockSide", 2);
 __decorateClass([
-  property24.int(180)
+  property.int(180)
 ], SimpleCircularGrass.prototype, "bladesPerBlock", 2);
 __decorateClass([
-  property24.float(0.8)
+  property.float(0.8)
 ], SimpleCircularGrass.prototype, "bladeHeight", 2);
 __decorateClass([
-  property24.float(0.4)
+  property.float(0.4)
 ], SimpleCircularGrass.prototype, "bladeHeightVariation", 2);
 __decorateClass([
-  property24.float(0.08)
+  property.float(0.08)
 ], SimpleCircularGrass.prototype, "bladeWidth", 2);
 __decorateClass([
-  property24.material()
+  property.material()
 ], SimpleCircularGrass.prototype, "material", 2);
 __decorateClass([
-  property24.object()
+  property.object()
 ], SimpleCircularGrass.prototype, "terrain", 2);
 __decorateClass([
-  property24.bool(false)
+  property.bool(false)
 ], SimpleCircularGrass.prototype, "useCircularMask", 2);
 __decorateClass([
-  property24.bool(false)
+  property.bool(false)
 ], SimpleCircularGrass.prototype, "useInstancing", 2);
-
-// js/lod-spawner.ts
-import { Component as Component34 } from "@wonderlandengine/api";
-import { property as property26 } from "@wonderlandengine/api/decorators.js";
-
-// js/planet.ts
-import { Component as Component33, MeshAttribute as MeshAttribute4, MeshIndexType as MeshIndexType3, property as property25 } from "@wonderlandengine/api";
 
 // js/heightmap-generator.ts
 function sampleBakedHeight(x, z, data, meta) {
@@ -9093,7 +11018,7 @@ function valueNoise(x, y) {
   const v11 = hash(ix + 1, iy + 1);
   return v00 + ux * (v10 - v00) + uy * (v01 - v00) + ux * uy * (v00 - v10 - v01 + v11);
 }
-var _Planet = class extends Component33 {
+var _Planet = class extends Component3 {
   material;
   resolution;
   size;
@@ -9162,12 +11087,12 @@ var _Planet = class extends Component33 {
     this.mesh = this.engine.meshes.create({
       vertexCount,
       indexData: this.indexData,
-      indexType: MeshIndexType3.UnsignedInt
+      indexType: MeshIndexType.UnsignedInt
     });
     this.meshComp.mesh = this.mesh;
-    this._positions = this.mesh.attribute(MeshAttribute4.Position);
-    this._normals = this.mesh.attribute(MeshAttribute4.Normal);
-    this._texCoords = this.mesh.attribute(MeshAttribute4.TextureCoordinate);
+    this._positions = this.mesh.attribute(MeshAttribute.Position);
+    this._normals = this.mesh.attribute(MeshAttribute.Normal);
+    this._texCoords = this.mesh.attribute(MeshAttribute.TextureCoordinate);
     this._gl = this.engine.canvas.getContext("webgl2");
     this._heightData = new Float32Array(HEIGHTMAP_RES * HEIGHTMAP_RES);
     this.heightmapWorldSize = this.size;
@@ -9466,26 +11391,26 @@ __publicField(Planet, "UpdateAfter", [WasdMovement]);
 /** Border width (world units) for blending baked→procedural at edges */
 __publicField(Planet, "BLEND_BORDER", 50);
 __decorateClass([
-  property25.material()
+  property.material()
 ], Planet.prototype, "material", 2);
 __decorateClass([
-  property25.int(64)
+  property.int(64)
 ], Planet.prototype, "resolution", 2);
 __decorateClass([
-  property25.float(200)
+  property.float(200)
 ], Planet.prototype, "size", 2);
 __decorateClass([
-  property25.float(15)
+  property.float(15)
 ], Planet.prototype, "amplitude", 2);
 __decorateClass([
-  property25.object()
+  property.object()
 ], Planet.prototype, "cameraObject", 2);
 __decorateClass([
-  property25.string("")
+  property.string("")
 ], Planet.prototype, "bakedMapUrl", 2);
 
 // js/lod-spawner.ts
-var LodSpawner = class extends Component34 {
+var LodSpawner = class extends Component3 {
   prefabHigh;
   prefabLow;
   count;
@@ -9789,46 +11714,44 @@ var LodSpawner = class extends Component34 {
 __publicField(LodSpawner, "TypeName", "lod-spawner");
 __publicField(LodSpawner, "UpdateAfter", [Planet]);
 __decorateClass([
-  property26.object()
+  property.object()
 ], LodSpawner.prototype, "prefabHigh", 2);
 __decorateClass([
-  property26.object()
+  property.object()
 ], LodSpawner.prototype, "prefabLow", 2);
 __decorateClass([
-  property26.int(4e3)
+  property.int(4e3)
 ], LodSpawner.prototype, "count", 2);
 __decorateClass([
-  property26.float(50)
+  property.float(50)
 ], LodSpawner.prototype, "lodDistance", 2);
 __decorateClass([
-  property26.float(200)
+  property.float(200)
 ], LodSpawner.prototype, "spawnArea", 2);
 __decorateClass([
-  property26.object()
+  property.object()
 ], LodSpawner.prototype, "cameraObject", 2);
 __decorateClass([
-  property26.object()
+  property.object()
 ], LodSpawner.prototype, "planetObject", 2);
 __decorateClass([
-  property26.float(0)
+  property.float(0)
 ], LodSpawner.prototype, "waterLevel", 2);
 __decorateClass([
-  property26.float(0.35)
+  property.float(0.35)
 ], LodSpawner.prototype, "waterClearance", 2);
 __decorateClass([
-  property26.float(8)
+  property.float(8)
 ], LodSpawner.prototype, "lodHysteresis", 2);
 __decorateClass([
-  property26.int(0)
+  property.int(0)
 ], LodSpawner.prototype, "maxHighPrefab", 2);
 __decorateClass([
-  property26.float(0)
+  property.float(0)
 ], LodSpawner.prototype, "groundOffset", 2);
 
 // js/move.ts
-import { Component as Component35 } from "@wonderlandengine/api";
-import { property as property27 } from "@wonderlandengine/api/decorators.js";
-var Move = class extends Component35 {
+var Move = class extends Component3 {
   speed;
   update(dt) {
     this.object.translateLocal([this.speed * dt, 0, 0]);
@@ -9836,7 +11759,7 @@ var Move = class extends Component35 {
 };
 __publicField(Move, "TypeName", "move");
 __decorateClass([
-  property27.float(1)
+  property.float(1)
 ], Move.prototype, "speed", 2);
 
 // js/index.js

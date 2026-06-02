@@ -2521,10 +2521,14 @@
         },
         "scripting": {
             "application": {
-                "output": "tree.wlp-app.js"
+                "output": "tree.wlp-app.js",
+                "bundling": "esbuild",
+                "esbuildFlags": "--format=esm --target=es2022 "
             },
             "components": {
-                "output": "tree.wlp-bundle.js"
+                "output": "tree.wlp-bundle.js",
+                "bundling": "esbuild",
+                "esbuildFlags": "--format=esm --target=es2022 "
             }
         },
         "rendering": {
