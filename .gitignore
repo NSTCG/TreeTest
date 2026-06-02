@@ -3,6 +3,5 @@ cache/
 .cache/
 .autosave/
 .editor/
-deploy/
 *.zip
 *.log
